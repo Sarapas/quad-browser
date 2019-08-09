@@ -1,0 +1,19 @@
+{
+  "name": "quad-browser",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "electron .",
+    "package-windows": "electron-packager . --overwrite --platform=win32 --arch=x64 --prune=true --out=dist",
+    "package-mac": "electron-packager . --overwrite --platform=darwin --arch=x64 --prune=true --out=dist",
+    "package-mac-dmg": "npm run package-mac & electron-installer-dmg dist/quad-browser-darwin-x64 quad-browser"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "electron": "^6.0.1",
+    "electron-installer-dmg": "^3.0.0",
+    "electron-packager": "^14.0.4"
+  }
+}
