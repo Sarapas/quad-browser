@@ -139,12 +139,7 @@ app.on('ready', () => {
     win.on('closed', () => {
         win = null
     })
-
-    // closing 
-    setTimeout(() => {
-        win.close();
-    }, 10 * 60 * 1000);
-
+    
     win.show();
 });
 
