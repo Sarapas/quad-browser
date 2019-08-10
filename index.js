@@ -129,15 +129,19 @@ app.on('ready', () => {
     Menu.setApplicationMenu(menu);
 
     const updateSize = () => {
-        var windowSize = win.getBounds();
 
-        let viewWidth = Math.floor(windowSize.width / 2);
-        let viewHeight = Math.floor(windowSize.height / 2);
+        // to avoid hiding webviews under the windowmenu
+        let bounds = win.getBounds();
+        let contentBouds = win.getContentBounds();
+        let heightOffset = bounds.height - contentBouds.height;
 
-        view1.setBounds({ x: 0, y: 0, width: viewWidth, height: viewHeight });
-        view2.setBounds({ x: viewWidth, y: 0, width: viewWidth, height: viewHeight });
-        view3.setBounds({ x: 0, y: viewHeight, width: viewWidth, height: viewHeight });
-        view4.setBounds({ x: viewWidth, y: viewHeight, width: viewWidth, height: viewHeight });
+        let viewWidth = Math.floor(contentBouds.width / 2);
+        let viewHeight = Math.floor(contentBouds.height / 2);
+
+        view1.setBounds({ x: 0, y: heightOffset, width: viewWidth, height: viewHeight });
+        view2.setBounds({ x: viewWidth, y: heightOffset, width: viewWidth, height: viewHeight });
+        view3.setBounds({ x: 0, y: heightOffset + viewHeight, width: viewWidth, height: viewHeight });
+        view4.setBounds({ x: viewWidth, y: heightOffset + viewHeight, width: viewWidth, height: viewHeight });
     };
 
     win.on('enter-full-screen', () => {
