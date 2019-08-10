@@ -9,17 +9,51 @@ app.on('window-all-closed', function () {
 });
 
 app.on('ready', () => {
-
     let win = new BrowserWindow({
-        fullscreen: true,
-        resizable: false,
+        title: "Quad Browser",
+        width: 1024, 
+        height: 800,
         show: false,
-        icon: path.join(__dirname, 'assets/icons/png/64x64.png')
+        icon: path.join(__dirname, 'assets/icons/png/64x64.png'),
+        autoHideMenuBar: true
     });
 
-    // hiding menu
-    win.setMenuBarVisibility(false);
-    
+    let view1 = new BrowserView();
+    let view2 = new BrowserView();
+    let view3 = new BrowserView();
+    let view4 = new BrowserView();
+    let views = [ view1, view2, view3, view4 ];
+
+    views.forEach((view) => {
+        view.webContents.setAudioMuted(true);
+        win.addBrowserView(view);
+    });
+
+    win.on('show', () => {        
+        view1.webContents.loadURL('https://www.nflgamepass.com/en/games/2019/colts-bills-2019080853#highlights')
+        view2.webContents.loadURL('https://www.nflgamepass.com/en/games/2019/jets-giants-2019080860#highlights')
+        view3.webContents.loadURL('https://www.nflgamepass.com/en/games/2019/jaguars-ravens-2019080852#highlights')
+        view4.webContents.loadURL('https://www.nflgamepass.com/en/games/2019/redskins-browns-2019080855#highlights')
+
+        updateSize();
+    })
+
+    const updateSize = () => {
+        var windowSize = win.getBounds();
+
+        let viewWidth = windowSize.width / 2;
+        let viewHeight = windowSize.height / 2;
+
+        view1.setBounds({ x: 0, y: 0, width: viewWidth, height: viewHeight });
+        view2.setBounds({ x: viewWidth, y: 0, width: viewWidth, height: viewHeight });
+        view3.setBounds({ x: 0, y: viewHeight, width: viewWidth, height: viewHeight });
+        view4.setBounds({ x: viewWidth, y: viewHeight, width: viewWidth, height: viewHeight });
+    };
+
+    win.on('resize', () => {
+        updateSize();
+    });
+
     win.on('closed', () => {
         win = null
     })
@@ -28,38 +62,6 @@ app.on('ready', () => {
     setTimeout(() => {
         win.close();
     }, 10 * 60 * 1000);
-
-    win.on('show', () => {
-        var windowSize = win.getBounds();
-
-        let viewWidth = windowSize.width / 2;
-        let viewHeigh = windowSize.height / 2;
-
-        let view1 = new BrowserView();
-        
-        win.addBrowserView(view1)
-        view1.webContents.setAudioMuted(true);
-        view1.setBounds({ x: 0, y: 0, width: viewWidth, height: viewHeigh })
-        view1.webContents.loadURL('https://www.nflgamepass.com/en/games/2019/colts-bills-2019080853#highlights')
-
-        let view2 = new BrowserView();
-        win.addBrowserView(view2)
-        view2.webContents.setAudioMuted(true);
-        view2.setBounds({ x: viewWidth, y: 0, width: viewWidth, height: viewHeigh })
-        view2.webContents.loadURL('https://www.nflgamepass.com/en/games/2019/jets-giants-2019080860#highlights')
-    
-        let view3 = new BrowserView();
-        win.addBrowserView(view3)
-        view3.webContents.setAudioMuted(true);
-        view3.setBounds({ x: 0, y: viewHeigh, width: viewWidth, height: viewHeigh })
-        view3.webContents.loadURL('https://www.nflgamepass.com/en/games/2019/jaguars-ravens-2019080852#highlights')
-
-        let view4 = new BrowserView();
-        win.addBrowserView(view4)
-        view4.webContents.setAudioMuted(true);
-        view4.setBounds({ x: viewWidth, y: viewHeigh, width: viewWidth, height: viewHeigh })
-        view4.webContents.loadURL('https://www.nflgamepass.com/en/games/2019/redskins-browns-2019080855#highlights')
-    })
 
     win.show();
 });
