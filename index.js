@@ -65,33 +65,22 @@ app.on('ready', () => {
     const template = [
         // { role: 'appMenu' }
         ...(isMac ? [{
+          id: '1',
           label: app.getName(),
           submenu: [
             { role: 'about' },
-            { type: 'separator' },
-            { role: 'services' },
-            { type: 'separator' },
-            { role: 'hide' },
-            { role: 'hideothers' },
-            { role: 'unhide' },
-            { type: 'separator' },
             { role: 'quit' }
           ]
         }] : []),
-        // { role: 'fileMenu' }
         {
-          label: 'File',
-          submenu: [
-            isMac ? { role: 'close' } : { role: 'quit' }
-          ]
-        },
-        {
+            id: '3',
             label: 'View',
             submenu: [
                 { role: 'togglefullscreen' }
             ]
         },
         {
+          id: '4',
           label: 'Address',
           submenu: [
             { label: view1.title, click: () => { changeAddress(view1) } },
@@ -103,6 +92,16 @@ app.on('ready', () => {
       ]
     
     const menu = Menu.buildFromTemplate(template);
+    if (!isMac) {
+        menu.append({
+            id: '2',
+            label: 'File',
+            submenu: [
+              isMac ? { role: 'close' } : { role: 'quit' }
+            ],
+            beforeGroupContaining: ['3']
+          });
+    }
     Menu.setApplicationMenu(menu);
 
     const updateSize = () => {
