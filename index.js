@@ -1,9 +1,9 @@
 const electron = require('electron')
 const { BrowserView, BrowserWindow, app, Menu } = electron;
-var path = require('path');
+const path = require('path');
 const prompt = require('electron-prompt');
-
 const isMac = process.platform === 'darwin';
+const defaultURL = 'https://www.nflgamepass.com';
 
 app.on('ready', () => {
     let win = new BrowserWindow({
@@ -31,14 +31,10 @@ app.on('ready', () => {
     views.forEach((view) => {
         view.webContents.setAudioMuted(true);
         win.addBrowserView(view);
+        view.webContents.loadURL(defaultURL);
     });
 
     win.on('show', () => {        
-        view1.webContents.loadURL('https://www.nflgamepass.com/en/games/2019/colts-bills-2019080853#highlights')
-        view2.webContents.loadURL('https://www.nflgamepass.com/en/games/2019/jets-giants-2019080860#highlights')
-        view3.webContents.loadURL('https://www.nflgamepass.com/en/games/2019/jaguars-ravens-2019080852#highlights')
-        view4.webContents.loadURL('https://www.nflgamepass.com/en/games/2019/redskins-browns-2019080855#highlights')
-
         updateSize();
     });
 
