@@ -48,15 +48,10 @@ app.on('ready', () => {
     view3.title = "Bottom left";
     view4.title = "Bottom right";
 
-    view1.webContents.loadURL("https://www.youtube.com/watch?v=wvsE8jm1GzE");
-    view2.webContents.loadURL("https://www.youtube.com/watch?v=apXkd39xDVI");
-    view3.webContents.loadURL("https://www.youtube.com/watch?v=FTbne_FuwYc");
-    view4.webContents.loadURL("https://www.youtube.com/watch?v=aj5KWpxDrc0");
-
     views.forEach((view) => {
         view.webContents.setAudioMuted(true);
         win.addBrowserView(view);
-        //view.webContents.loadURL(defaultURL);
+        view.webContents.loadURL(defaultURL);
     });
 
     win.on('show', () => {        
