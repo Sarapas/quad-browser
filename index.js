@@ -1,5 +1,6 @@
 const electron = require('electron')
 const { BrowserView, BrowserWindow, app } = electron;
+var path = require('path');
 
 app.commandLine.appendSwitch('--enable-features', 'OverlayScrollbar')
 
@@ -12,7 +13,8 @@ app.on('ready', () => {
     let win = new BrowserWindow({
         fullscreen: true,
         resizable: false,
-        show: false
+        show: false,
+        icon: path.join(__dirname, 'assets/icons/png/64x64.png')
     });
 
     // hiding menu
