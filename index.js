@@ -1,5 +1,5 @@
 const electron = require('electron')
-const { BrowserView, BrowserWindow, app, Menu } = electron;
+const { BrowserView, BrowserWindow, app, Menu, globalShortcut } = electron;
 const path = require('path');
 const prompt = require('electron-prompt');
 const isMac = process.platform === 'darwin';
@@ -13,6 +13,26 @@ app.on('ready', () => {
         show: false,
         icon: path.join(__dirname, 'assets/icons/png/64x64.png')
     });
+
+    globalShortcut.register('CommandOrControl+1', () => {
+        unmute(view1);
+    });
+    globalShortcut.register('CommandOrControl+2', () => {
+        unmute(view2);
+    });
+    globalShortcut.register('CommandOrControl+3', () => {
+        unmute(view3);
+    });
+    globalShortcut.register('CommandOrControl+4', () => {
+        unmute(view4);
+    });
+
+    const unmute = (view) => {
+        views.forEach((v) => {
+            v.webContents.setAudioMuted(true);
+        });
+        view.webContents.setAudioMuted(false);
+    };
 
     win.setFullScreen(true);
     win.setMenuBarVisibility(false);
@@ -28,10 +48,15 @@ app.on('ready', () => {
     view3.title = "Bottom left";
     view4.title = "Bottom right";
 
+    view1.webContents.loadURL("https://www.youtube.com/watch?v=wvsE8jm1GzE");
+    view2.webContents.loadURL("https://www.youtube.com/watch?v=apXkd39xDVI");
+    view3.webContents.loadURL("https://www.youtube.com/watch?v=FTbne_FuwYc");
+    view4.webContents.loadURL("https://www.youtube.com/watch?v=aj5KWpxDrc0");
+
     views.forEach((view) => {
         view.webContents.setAudioMuted(true);
         win.addBrowserView(view);
-        view.webContents.loadURL(defaultURL);
+        //view.webContents.loadURL(defaultURL);
     });
 
     win.on('show', () => {        
