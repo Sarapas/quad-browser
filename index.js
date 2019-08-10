@@ -3,9 +3,14 @@ const { BrowserView, BrowserWindow, app, Menu, globalShortcut } = electron;
 const path = require('path');
 const prompt = require('electron-prompt');
 const isMac = process.platform === 'darwin';
+const contextMenu = require('electron-context-menu');
 const defaultURL = 'https://www.nflgamepass.com';
 
 app.on('ready', () => {
+    contextMenu({
+        showLookUpSelection: false
+    });
+
     let win = new BrowserWindow({
         title: "Quad Browser",
         fullscreenable: true,
@@ -93,6 +98,17 @@ app.on('ready', () => {
             ]
         }]),
         {
+        label: "Edit",
+        submenu: [
+            { label: "Undo", accelerator: "CmdOrCtrl+Z", selector: "undo:" },
+            { label: "Redo", accelerator: "Shift+CmdOrCtrl+Z", selector: "redo:" },
+            { type: "separator" },
+            { label: "Cut", accelerator: "CmdOrCtrl+X", selector: "cut:" },
+            { label: "Copy", accelerator: "CmdOrCtrl+C", selector: "copy:" },
+            { label: "Paste", accelerator: "CmdOrCtrl+V", selector: "paste:" },
+            { label: "Select All", accelerator: "CmdOrCtrl+A", selector: "selectAll:" }
+        ]},
+        {
             label: 'View',
             submenu: [
                 { role: 'togglefullscreen' }
@@ -138,7 +154,7 @@ app.on('ready', () => {
 
     win.on('closed', () => {
         win = null
-    })
+    });
     
     win.show();
 });
