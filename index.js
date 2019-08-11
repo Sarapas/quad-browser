@@ -23,18 +23,18 @@ function createWindow() {
         icon: path.join(__dirname, 'assets/icons/png/64x64.png')
     });
 
-    // globalShortcut.register('1', () => {
-    //     unmute(view1);
-    // });
-    // globalShortcut.register('2', () => {
-    //     unmute(view2);
-    // });
-    // globalShortcut.register('3', () => {
-    //     unmute(view3);
-    // });
-    // globalShortcut.register('4', () => {
-    //     unmute(view4);
-    // });
+    globalShortcut.register('CommandOrControl+1', () => {
+        unmute(view1);
+    });
+    globalShortcut.register('CommandOrControl+2', () => {
+        unmute(view2);
+    });
+    globalShortcut.register('CommandOrControl+3', () => {
+        unmute(view3);
+    });
+    globalShortcut.register('CommandOrControl+4', () => {
+        unmute(view4);
+    });
 
     const unmute = (view) => {
         views.forEach((v) => {
