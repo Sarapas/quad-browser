@@ -2,16 +2,20 @@ const electron = require('electron')
 const { BrowserView, BrowserWindow, app, Menu, globalShortcut } = electron;
 const path = require('path');
 const prompt = require('electron-prompt');
+const ioHook = require('iohook');
 const isMac = process.platform === 'darwin';
 const contextMenu = require('electron-context-menu');
 const defaultURL = 'https://www.nflgamepass.com';
 
-app.on('ready', () => {
+let win;
+let views;
+
+function createWindow() {
     contextMenu({
         showLookUpSelection: false
     });
 
-    let win = new BrowserWindow({
+    win = new BrowserWindow({
         title: "Quad Browser",
         fullscreenable: true,
         resizable: true,
@@ -19,18 +23,18 @@ app.on('ready', () => {
         icon: path.join(__dirname, 'assets/icons/png/64x64.png')
     });
 
-    globalShortcut.register('1', () => {
-        unmute(view1);
-    });
-    globalShortcut.register('2', () => {
-        unmute(view2);
-    });
-    globalShortcut.register('3', () => {
-        unmute(view3);
-    });
-    globalShortcut.register('4', () => {
-        unmute(view4);
-    });
+    // globalShortcut.register('1', () => {
+    //     unmute(view1);
+    // });
+    // globalShortcut.register('2', () => {
+    //     unmute(view2);
+    // });
+    // globalShortcut.register('3', () => {
+    //     unmute(view3);
+    // });
+    // globalShortcut.register('4', () => {
+    //     unmute(view4);
+    // });
 
     const unmute = (view) => {
         views.forEach((v) => {
@@ -39,25 +43,71 @@ app.on('ready', () => {
         view.webContents.setAudioMuted(false);
     };
 
+    ioHook.on('mouseclick', event => {
+        if (!win || !win.isFocused() || !win.isVisible()) return;
+        if (!viewBounds || viewBounds.length != 4) return;
+        
+        let winPosition = win.getPosition();
+        
+        viewBounds.forEach((vb) => {
+            let viewLeft = winPosition[0] + vb.bounds.x;
+            let viewRight = viewLeft + vb.bounds.width;
+            let viewTop = winPosition[1] + vb.bounds.y;
+            let viewBottom = viewTop + vb.bounds.height;
+
+            let matchX = (event.x > viewLeft && event.x < viewRight);
+            let matchY = (event.y > viewTop && event.y < viewBottom);
+
+            if (matchX && matchY) {
+                unmute(vb.view);
+                return;
+            }
+        });
+    });
+    ioHook.start();
+
     win.setFullScreen(true);
     win.setMenuBarVisibility(false);
 
-    let view1 = new BrowserView();
-    let view2 = new BrowserView();
-    let view3 = new BrowserView();
-    let view4 = new BrowserView();
-    let views = [ view1, view2, view3, view4 ];
-    
-    view1.title = "Top left";
-    view2.title = "Top right";
-    view3.title = "Bottom left";
-    view4.title = "Bottom right";
+    let view1;
+    let view2;
+    let view3;
+    let view4;
 
+    // avoiding recreation of views
+    if (!views || views.length == 0) {
+        view1 = new BrowserView();
+        view2 = new BrowserView();
+        view3 = new BrowserView();
+        view4 = new BrowserView();
+        views = [ view1, view2, view3, view4 ];
+
+        view1.title = "Top left";
+        view2.title = "Top right";
+        view3.title = "Bottom left";
+        view4.title = "Bottom right";
+    
+        views.forEach((view) => {
+            view.webContents.loadURL(defaultURL);
+        });
+    } else {
+        view1 = views[0];
+        view2 = views[1];
+        view3 = views[2];
+        view4 = views[3];   
+    }
+
+    let viewBounds;
+    
     views.forEach((view) => {
-        view.webContents.setAudioMuted(true);
         win.addBrowserView(view);
-        view.webContents.loadURL(defaultURL);
+        view.webContents.setAudioMuted(true);
     });
+
+    // view1.webContents.loadURL("https://www.youtube.com/watch?v=VHuiGljnxTw");
+    // view2.webContents.loadURL("https://www.youtube.com/watch?v=vKAteau0CrA");
+    // view3.webContents.loadURL("https://www.youtube.com/watch?v=_t707pWG7-U");
+    // view4.webContents.loadURL("https://www.youtube.com/watch?v=3u-4fxKX8as");
 
     win.on('show', () => {        
         updateSize();
@@ -138,10 +188,23 @@ app.on('ready', () => {
         let viewWidth = Math.floor(contentBouds.width / 2);
         let viewHeight = Math.floor(contentBouds.height / 2);
 
-        view1.setBounds({ x: 0, y: heightOffset, width: viewWidth, height: viewHeight });
-        view2.setBounds({ x: viewWidth, y: heightOffset, width: viewWidth, height: viewHeight });
-        view3.setBounds({ x: 0, y: heightOffset + viewHeight, width: viewWidth, height: viewHeight });
-        view4.setBounds({ x: viewWidth, y: heightOffset + viewHeight, width: viewWidth, height: viewHeight });
+        let bounds1 = { x: 0, y: heightOffset, width: viewWidth, height: viewHeight };
+        let bounds2 = { x: viewWidth, y: heightOffset, width: viewWidth, height: viewHeight };
+        let bounds3 = { x: 0, y: heightOffset + viewHeight, width: viewWidth, height: viewHeight };
+        let bounds4 = { x: viewWidth, y: heightOffset + viewHeight, width: viewWidth, height: viewHeight };
+
+        view1.setBounds(bounds1);
+        view2.setBounds(bounds2);
+        view3.setBounds(bounds3);
+        view4.setBounds(bounds4);
+
+        // preserving view bounds for later reference
+        viewBounds = [ 
+            { view: view1, bounds: bounds1},
+            { view: view2, bounds: bounds2},
+            { view: view3, bounds: bounds3},
+            { view: view4, bounds: bounds4},
+        ];
     };
 
     win.on('enter-full-screen', () => {
@@ -155,16 +218,26 @@ app.on('ready', () => {
     win.on('resize', () => {
         updateSize();
     });
-
+    
     win.on('closed', () => {
         win = null
     });
     
     win.show();
-});
+};
+
+app.on('ready', createWindow);
+
+app.on('activate', function () {
+    // On macOS it's common to re-create a window in the app when the
+    // dock icon is clicked and there are no other windows open.
+    if (win === null) createWindow()
+  })
 
 app.commandLine.appendSwitch('--enable-features', 'OverlayScrollbar')
 
 app.on('window-all-closed', function () {
-    app.quit()
+    // On macOS it is common for applications and their menu bar
+    // to stay active until the user quits explicitly with Cmd + Q
+    if (!isMac) app.quit()
 });
