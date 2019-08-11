@@ -43,26 +43,49 @@ function createWindow() {
         view.webContents.setAudioMuted(false);
     };
 
-    ioHook.on('mouseclick', event => {
+    function mouseClick(mouseX, mouseY) {
         if (!win || !win.isFocused() || !win.isVisible()) return;
         if (!viewBounds || viewBounds.length != 4) return;
         
+        if (!isMac) {
+            let scaleFactor = electron.screen.getPrimaryDisplay().scaleFactor;
+            mouseX = Math.floor(mouseX / scaleFactor);
+            mouseY = Math.floor(mouseY / scaleFactor);
+        }
+
         let winPosition = win.getPosition();
-        
+        let winX = winPosition[0];
+        let winY = winPosition[1];
+
+        // console.log("------------------");
+        // console.log(`click: x: ${mouseX} y: ${mouseY}`);
+        // console.log(`winpos: x: ${winX} y: ${winY}`);
+
         viewBounds.forEach((vb) => {
-            let viewLeft = winPosition[0] + vb.bounds.x;
+            let viewLeft = winX + vb.bounds.x;
             let viewRight = viewLeft + vb.bounds.width;
-            let viewTop = winPosition[1] + vb.bounds.y;
+            let viewTop = winY + vb.bounds.y;
             let viewBottom = viewTop + vb.bounds.height;
 
-            let matchX = (event.x > viewLeft && event.x < viewRight);
-            let matchY = (event.y > viewTop && event.y < viewBottom);
+            let matchX = (mouseX > viewLeft && mouseX < viewRight);
+            let matchY = (mouseY > viewTop && mouseY < viewBottom);
+
+            // let match = "";
+            // if (matchX && matchY) {
+            //     match = "(MATCH)";
+            // }
+
+            // console.log(`${match} ${vb.view.title} x: ${viewLeft}-${viewRight} y: ${viewTop}-${viewBottom}`)
 
             if (matchX && matchY) {
                 unmute(vb.view);
                 return;
             }
         });
+    }
+
+    ioHook.on('mouseclick', event => {
+        mouseClick(event.x, event.y);
     });
     ioHook.start();
 
@@ -183,7 +206,7 @@ function createWindow() {
         // to avoid hiding webviews under the windowmenu
         let bounds = win.getBounds();
         let contentBouds = win.getContentBounds();
-        let heightOffset = bounds.height - contentBouds.height;
+        let heightOffset = isMac ? bounds.height - contentBouds.height : 0;
 
         let viewWidth = Math.floor(contentBouds.width / 2);
         let viewHeight = Math.floor(contentBouds.height / 2);
