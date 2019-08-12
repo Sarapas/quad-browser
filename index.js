@@ -9,6 +9,7 @@ const defaultURL = 'https://www.nflgamepass.com';
 
 let win;
 let views;
+let audibleView;
 
 function createWindow() {
     contextMenu({
@@ -20,8 +21,22 @@ function createWindow() {
         fullscreenable: true,
         resizable: true,
         show: false,
-        icon: path.join(__dirname, 'assets/icons/png/64x64.png')
+        icon: path.join(__dirname, 'assets/icons/png/64x64.png'),
     });
+
+    let frame = new BrowserWindow({
+        frame: false,
+        transparent: true,
+        show: false,
+        skipTaskbar: true,
+        parent: win,
+        closable: false,
+        focusable: false,
+        fullscreenable: false
+    });
+
+    frame.loadFile("frame.html");
+    frame.setIgnoreMouseEvents(true);
 
     globalShortcut.register('CommandOrControl+1', () => {
         unmute(view1);
@@ -35,13 +50,34 @@ function createWindow() {
     globalShortcut.register('CommandOrControl+4', () => {
         unmute(view4);
     });
+    globalShortcut.register('Esc', () => {
+        win.setFullScreen(false);
+    });
 
     const unmute = (view) => {
         views.forEach((v) => {
             v.webContents.setAudioMuted(true);
         });
-        view.webContents.setAudioMuted(false);
+
+        audibleView = view;
+        audibleView.webContents.setAudioMuted(false);
+        showFrame(audibleView);
     };
+
+    function showFrame(view) {
+        if (!win.isVisible()) {
+            frame.hide();
+            return;
+        }
+
+        let vb = viewBounds.find(vb => vb.view === view);
+        let contentBounds = win.getContentBounds();
+        const x = contentBounds.x + vb.bounds.x;
+        const y = contentBounds.y + vb.bounds.y;
+        let frameBounds = { x: x, y: y, width: vb.bounds.width, height: vb.bounds.height};
+        frame.setBounds(frameBounds);
+        frame.show();
+    }
 
     function mouseClick(mouseX, mouseY) {
         if (!win || !win.isFocused() || !win.isVisible()) return;
@@ -53,22 +89,22 @@ function createWindow() {
             mouseY = Math.floor(mouseY / scaleFactor);
         }
 
-        let winPosition = win.getPosition();
-        let winX = winPosition[0];
-        let winY = winPosition[1];
+        let initialPos = win.getContentBounds();
 
         // console.log("------------------");
         // console.log(`click: x: ${mouseX} y: ${mouseY}`);
         // console.log(`winpos: x: ${winX} y: ${winY}`);
 
         viewBounds.forEach((vb) => {
-            let viewLeft = winX + vb.bounds.x;
+            let viewLeft = initialPos.x + vb.bounds.x;
             let viewRight = viewLeft + vb.bounds.width;
-            let viewTop = winY + vb.bounds.y;
+            let viewTop = initialPos.y + vb.bounds.y;
             let viewBottom = viewTop + vb.bounds.height;
 
-            let matchX = (mouseX > viewLeft && mouseX < viewRight);
-            let matchY = (mouseY > viewTop && mouseY < viewBottom);
+            let tolerance = 10;
+
+            let matchX = (mouseX > viewLeft + tolerance && mouseX < viewRight - tolerance);
+            let matchY = (mouseY > viewTop + tolerance && mouseY < viewBottom - tolerance);
 
             // let match = "";
             // if (matchX && matchY) {
@@ -84,7 +120,7 @@ function createWindow() {
         });
     }
 
-    ioHook.on('mouseclick', event => {
+    ioHook.on('mousedown', event => {
         mouseClick(event.x, event.y);
     });
     ioHook.start();
@@ -228,6 +264,9 @@ function createWindow() {
             { view: view3, bounds: bounds3},
             { view: view4, bounds: bounds4},
         ];
+
+        if (audibleView)
+            showFrame(audibleView); // update location and size
     };
 
     win.on('enter-full-screen', () => {
@@ -241,6 +280,10 @@ function createWindow() {
     win.on('resize', () => {
         updateSize();
     });
+
+    win.on('minimize', () => {
+        frame.hide();
+    })
     
     win.on('closed', () => {
         win = null
