@@ -12,6 +12,7 @@ let views;
 let audibleView;
 let frame;
 let viewBounds;
+let aspect_ratio = 16/9;
 
 function createWindow() {
     contextMenu({
@@ -24,6 +25,7 @@ function createWindow() {
         resizable: true,
         show: false,
         icon: path.join(__dirname, 'assets/icons/png/64x64.png'),
+        backgroundColor: "#000"
     });
 
     globalShortcut.register('CommandOrControl+1', () => {
@@ -171,7 +173,7 @@ function createWindow() {
         view.webContents.setAudioMuted(true);
     });
 
-    // view1.webContents.loadURL("https://www.youtube.com/watch?v=VHuiGljnxTw");
+    // view1.webContents.loadURL("https://www.youtube.com/watch?v=K6tzeZLjUNE");
     // view2.webContents.loadURL("https://www.youtube.com/watch?v=vKAteau0CrA");
     // view3.webContents.loadURL("https://www.youtube.com/watch?v=_t707pWG7-U");
     // view4.webContents.loadURL("https://www.youtube.com/watch?v=3u-4fxKX8as");
@@ -228,7 +230,13 @@ function createWindow() {
         {
             label: 'View',
             submenu: [
-                { role: 'togglefullscreen' }
+                { role: 'togglefullscreen' },
+                // { label: "Aspect ratio",
+                //     submenu: [
+                //         { label: "4:3", type: "checkbox", click: () => { aspect_ratio = 4/3;} },
+                //         { label: "16:9", type: "checkbox", click: () => { aspect_ratio = 16/9; } },
+                //     ]
+                // }
             ]
         },
         {
@@ -246,19 +254,31 @@ function createWindow() {
     Menu.setApplicationMenu(menu);
 
     const updateSize = () => {
-
-        // to avoid hiding webviews under the windowmenu
+        let viewWidth = 0;
+        let viewHeight = 0;
         let bounds = win.getBounds();
-        let contentBouds = win.getContentBounds();
-        let heightOffset = isMac ? bounds.height - contentBouds.height : 0;
+        let contentBounds = win.getContentBounds();
+        let offsetY = isMac ? bounds.height - contentBounds.height : 0; // to avoid hiding webviews under the windowmenu
+        let offsetX = 0;
 
-        let viewWidth = Math.floor(contentBouds.width / 2);
-        let viewHeight = Math.floor(contentBouds.height / 2);
+        if (contentBounds.width / contentBounds.height < aspect_ratio) {
+            let newHeight = contentBounds.width / aspect_ratio;
+            const barHeight = Math.floor((contentBounds.height - newHeight) / 2);
+            offsetY += barHeight;
+            viewWidth = Math.floor(contentBounds.width / 2);
+            viewHeight = Math.floor(newHeight / 2);
+        } else {
+            let newWidth = contentBounds.height * aspect_ratio;
+            const barWidth = Math.floor((contentBounds.width - newWidth) / 2);
+            offsetX += barWidth;
+            viewWidth = Math.floor(newWidth / 2);
+            viewHeight = Math.floor(contentBounds.height / 2);
+        }
 
-        let bounds1 = { x: 0, y: heightOffset, width: viewWidth, height: viewHeight };
-        let bounds2 = { x: viewWidth, y: heightOffset, width: viewWidth, height: viewHeight };
-        let bounds3 = { x: 0, y: heightOffset + viewHeight, width: viewWidth, height: viewHeight };
-        let bounds4 = { x: viewWidth, y: heightOffset + viewHeight, width: viewWidth, height: viewHeight };
+        let bounds1 = { x: offsetX, y: offsetY, width: viewWidth, height: viewHeight };
+        let bounds2 = { x: offsetX + viewWidth, y: offsetY, width: viewWidth, height: viewHeight };
+        let bounds3 = { x: offsetX, y: offsetY + viewHeight, width: viewWidth, height: viewHeight };
+        let bounds4 = { x: offsetX + viewWidth, y: offsetY + viewHeight, width: viewWidth, height: viewHeight };
 
         view1.setBounds(bounds1);
         view2.setBounds(bounds2);
