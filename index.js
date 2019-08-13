@@ -10,6 +10,8 @@ const defaultURL = 'https://www.nflgamepass.com';
 let win;
 let views;
 let audibleView;
+let frame;
+let viewBounds;
 
 function createWindow() {
     contextMenu({
@@ -23,20 +25,6 @@ function createWindow() {
         show: false,
         icon: path.join(__dirname, 'assets/icons/png/64x64.png'),
     });
-
-    let frame = new BrowserWindow({
-        frame: false,
-        transparent: true,
-        show: false,
-        skipTaskbar: true,
-        parent: win,
-        closable: false,
-        focusable: false,
-        fullscreenable: false
-    });
-
-    frame.loadFile("frame.html");
-    frame.setIgnoreMouseEvents(true);
 
     globalShortcut.register('CommandOrControl+1', () => {
         unmute(view1);
@@ -66,15 +54,37 @@ function createWindow() {
 
     function showFrame(view) {
         if (!win.isVisible()) {
-            frame.hide();
+            if (frame)
+                frame.hide();
             return;
         }
 
+        if (!frame) {
+            frame = new BrowserWindow({
+                frame: false,
+                transparent: true,
+                show: false,
+                skipTaskbar: true,
+                parent: win,
+                closable: false,
+                focusable: false,
+                fullscreenable: false
+            });
+        
+            frame.loadFile("frame.html");
+            frame.setIgnoreMouseEvents(true);
+        }
+
         let vb = viewBounds.find(vb => vb.view === view);
-        let contentBounds = win.getContentBounds();
-        const x = contentBounds.x + vb.bounds.x;
-        const y = contentBounds.y + vb.bounds.y;
-        let frameBounds = { x: x, y: y, width: vb.bounds.width, height: vb.bounds.height};
+        let initialPos = isMac ? win.getBounds() : win.getContentBounds();
+
+        let frameBounds = {
+            x: initialPos.x + vb.bounds.x,
+            y: initialPos.y + vb.bounds.y,
+            width: vb.bounds.width,
+            height: vb.bounds.height
+        };
+
         frame.setBounds(frameBounds);
         frame.show();
     }
@@ -89,7 +99,7 @@ function createWindow() {
             mouseY = Math.floor(mouseY / scaleFactor);
         }
 
-        let initialPos = win.getContentBounds();
+        let initialPos = isMac ? win.getBounds() : win.getContentBounds();
 
         // console.log("------------------");
         // console.log(`click: x: ${mouseX} y: ${mouseY}`);
@@ -155,8 +165,6 @@ function createWindow() {
         view3 = views[2];
         view4 = views[3];   
     }
-
-    let viewBounds;
     
     views.forEach((view) => {
         win.addBrowserView(view);
@@ -168,7 +176,7 @@ function createWindow() {
     // view3.webContents.loadURL("https://www.youtube.com/watch?v=_t707pWG7-U");
     // view4.webContents.loadURL("https://www.youtube.com/watch?v=3u-4fxKX8as");
 
-    win.on('show', () => {        
+    win.on('show', () => {
         updateSize();
     });
 
@@ -271,6 +279,8 @@ function createWindow() {
 
     win.on('enter-full-screen', () => {
         win.setMenuBarVisibility(false);
+        if (audibleView)
+            showFrame(audibleView);
     });
 
     win.on('leave-full-screen', () => {
@@ -284,9 +294,18 @@ function createWindow() {
     win.on('minimize', () => {
         frame.hide();
     })
+
+    win.on('restore', () => {
+        if (audibleView)
+            showFrame(audibleView);
+    })
     
     win.on('closed', () => {
-        win = null
+        win = null;
+        if (frame && !frame.isDestroyed()) {
+            frame.close();
+        }
+        frame = null;
     });
     
     win.show();
