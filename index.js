@@ -350,3 +350,7 @@ app.on('window-all-closed', function () {
     // to stay active until the user quits explicitly with Cmd + Q
     if (!isMac) app.quit()
 });
+
+app.on('before-quit', () => {
+    ioHook.unload(); // since iohook prevents app from quitting on mac
+})
