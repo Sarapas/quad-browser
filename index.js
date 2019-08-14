@@ -300,12 +300,12 @@ function createWindow() {
     });
 
     win.on('minimize', () => {
-        //frame.hide();
+        frame.hide();
     })
 
     win.on('restore', () => {
-        // if (audibleView)
-        //     showFrame(audibleView);
+        if (audibleView)
+            showFrame(audibleView);
     })
     
     win.on('closed', () => {
