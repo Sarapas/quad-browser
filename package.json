@@ -1,25 +1,50 @@
 {
-  "name": "QuadBrowser",
+  "name": "quad-browser",
+  "productName": "quad-browser",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "description": "My Electron application description",
+  "main": "src/index.js",
   "scripts": {
-    "start": "electron .",
-    "package-windows": "electron-packager . QuadBrowser --overwrite --icon=assets/icons/win/icon.ico --platform=win32 --arch=x64 --prune=true --out=dist",
-    "package-mac": "electron-packager . QuadBrowser --overwrite --icon=assets/icons/mac/icon.hqx --platform=darwin --arch=x64 --prune=true --out=dist",
-    "package-mac-dmg": "electron-installer-dmg dist/QuadBrowser-darwin-x64 QuadBrowser icon=assets/icons/mac/icon.hqx"
+    "start": "electron-forge start",
+    "package": "electron-forge package",
+    "make": "electron-forge make",
+    "publish": "electron-forge publish",
+    "lint": "eslint src --color"
   },
-  "author": "",
-  "license": "ISC",
-  "devDependencies": {
-    "electron": "^6.0.1",
-    "electron-installer-dmg": "^3.0.0",
-    "electron-packager": "^14.0.4"
-  },
-  "dependencies": {
-    "electron-context-menu": "^0.14.0",
-    "electron-prompt": "^1.3.1",
-    "iohook": "^0.6.1"
+  "keywords": [],
+  "author": "justassarapas",
+  "license": "MIT",
+  "config": {
+    "forge": {
+      "make_targets": {
+        "win32": [
+          "squirrel"
+        ],
+        "darwin": [
+          "zip"
+        ],
+        "linux": [
+          "deb",
+          "rpm"
+        ]
+      },
+      "electronPackagerConfig": {
+        "packageManager": "npm"
+      },
+      "electronWinstallerConfig": {
+        "name": "quad_browser"
+      },
+      "electronInstallerDebian": {},
+      "electronInstallerRedhat": {},
+      "github_repository": {
+        "owner": "",
+        "name": ""
+      },
+      "windowsStoreConfig": {
+        "packageName": "",
+        "name": "quadbrowser"
+      }
+    }
   },
   "iohook": {
     "targets": [
@@ -33,5 +58,24 @@
     "arches": [
       "x64"
     ]
+  },
+  "dependencies": {
+    "electron-compile": "^6.4.4",
+    "electron-squirrel-startup": "^1.0.0",
+    "electron-context-menu": "^0.14.0",
+    "electron-prompt": "^1.3.1",
+    "iohook": "^0.6.1"
+  },
+  "devDependencies": {
+    "babel-plugin-transform-async-to-generator": "^6.24.1",
+    "babel-preset-env": "^1.7.0",
+    "babel-preset-react": "^6.24.1",
+    "electron-forge": "^5.2.4",
+    "electron-prebuilt-compile": "4.0.0",
+    "eslint": "^3",
+    "eslint-config-airbnb": "^15",
+    "eslint-plugin-import": "^2",
+    "eslint-plugin-jsx-a11y": "^5",
+    "eslint-plugin-react": "^7"
   }
 }
