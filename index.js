@@ -28,6 +28,8 @@ function createWindow() {
         backgroundColor: "#000"
     });
 
+    if (!frame) createFrame(win);
+
     globalShortcut.register('CommandOrControl+1', () => {
         unmute(view1);
     });
@@ -61,21 +63,7 @@ function createWindow() {
             return;
         }
 
-        if (!frame) {
-            frame = new BrowserWindow({
-                frame: false,
-                transparent: true,
-                show: false,
-                skipTaskbar: true,
-                parent: win,
-                closable: false,
-                focusable: false,
-                fullscreenable: false
-            });
-        
-            frame.loadFile("frame.html");
-            frame.setIgnoreMouseEvents(true);
-        }
+        if (!frame) createFrame(win);
 
         let vb = viewBounds.find(vb => vb.view === view);
         let initialPos = isMac ? win.getBounds() : win.getContentBounds();
@@ -312,12 +300,12 @@ function createWindow() {
     });
 
     win.on('minimize', () => {
-        frame.hide();
+        //frame.hide();
     })
 
     win.on('restore', () => {
-        if (audibleView)
-            showFrame(audibleView);
+        // if (audibleView)
+        //     showFrame(audibleView);
     })
     
     win.on('closed', () => {
@@ -330,6 +318,22 @@ function createWindow() {
     
     win.show();
 };
+
+function createFrame(parent) {
+    frame = new BrowserWindow({
+        frame: false,
+        transparent: true,
+        show: false,
+        skipTaskbar: true,
+        parent: parent,
+        closable: false,
+        focusable: false,
+        fullscreenable: false
+    });
+
+    frame.loadFile("frame.html");
+    frame.setIgnoreMouseEvents(true);
+}
 
 app.on('ready', createWindow);
 
