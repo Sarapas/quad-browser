@@ -170,9 +170,10 @@ function createWindow() {
         updateSize();
     });
 
-    const changeAddress = (view) => {
+    const changeAddress = (view = null) => {
+        let title = view ? `${view.title} address` : "Change address for all";
         prompt({
-            title: `${view.title} address`,
+            title: title,
             label: 'Address:',
             height: 150,
             width: 400,
@@ -184,7 +185,13 @@ function createWindow() {
         }, win)
         .then((result) => {
             if(result !== null) {
-                view.webContents.loadURL(result);
+                if (view) {
+                    view.webContents.loadURL(result);
+                } else {
+                    views.forEach((v) => {
+                        v.webContents.loadURL(result);
+                    });
+                }
             }
         })
         .catch(console.error);
@@ -218,13 +225,7 @@ function createWindow() {
         {
             label: 'View',
             submenu: [
-                { role: 'togglefullscreen' },
-                // { label: "Aspect ratio",
-                //     submenu: [
-                //         { label: "4:3", type: "checkbox", click: () => { aspect_ratio = 4/3;} },
-                //         { label: "16:9", type: "checkbox", click: () => { aspect_ratio = 16/9; } },
-                //     ]
-                // }
+                { role: 'togglefullscreen' }
             ]
         },
         {
@@ -233,7 +234,8 @@ function createWindow() {
             { label: view1.title, click: () => { changeAddress(view1) } },
             { label: view2.title, click: () => { changeAddress(view2) } },
             { label: view3.title, click: () => { changeAddress(view3) } },
-            { label: view4.title, click: () => { changeAddress(view4) }}
+            { label: view4.title, click: () => { changeAddress(view4) }},
+            { label: "All", click: () => { changeAddress() }}
           ]
         }
       ];
