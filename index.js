@@ -11,6 +11,7 @@ const viewManager = require("./view-manager");
 
 let win;
 let hoverMode = false;
+let layout = "Quad"; // "Quad" or "Vertical"
 
 function createWindow() {
     contextMenu({
@@ -23,10 +24,10 @@ function createWindow() {
         resizable: true,
         show: false,
         icon: path.join(__dirname, 'assets/icons/png/64x64.png'),
-        backgroundColor: "#000"
+        backgroundColor: "#000",
     });
 
-    viewManager.init(win, "Vertical");
+    viewManager.init(win, layout);
     let views = viewManager.getViews();
 
     for (var i = 0; i < views.length; i++) {
@@ -137,6 +138,9 @@ function createWindow() {
             submenu: [
                 { role: 'togglefullscreen' },
                 { type: "separator" },
+                { label: "Quad Screen", type: "radio", checked: layout === "Quad", click: () => { changeLayout("Quad"); }},
+                { label: "Dual Screen", type: "radio", checked: layout === "Vertical", click: () => { changeLayout("Vertical"); }},
+                { type: "separator" },
                 { label: "Hover mode", type: "checkbox", accelerator: "CmdOrCtrl+H", click: () => { hoverMode = !hoverMode; }}
             ]
         },
@@ -176,11 +180,29 @@ function createWindow() {
     
     win.on('closed', () => {
         win = null;
+        globalShortcut.unregisterAll();
         viewManager.unload();
     });
     
     win.show();
 };
+
+function changeLayout(newLayout) {
+    if (newLayout !== layout) {
+        suspendClose = true; // closing window would close the app on windows so we want to avoid that
+        win.close();
+        suspendClose = false;
+        layout = newLayout;
+        createWindow();
+
+        // on windows, frame stops being transparent after recreating (not sure why)
+        // but minimizing fixes that, so here's a nasty workaround
+        if (!isMac) {
+            win.minimize();
+            win.restore();
+        }
+    }
+}
 
 app.on('ready', createWindow);
 
@@ -192,10 +214,11 @@ app.on('activate', function () {
 
 app.commandLine.appendSwitch('--enable-features', 'OverlayScrollbar')
 
+let suspendClose = false;
 app.on('window-all-closed', function () {
     // On macOS it is common for applications and their menu bar
     // to stay active until the user quits explicitly with Cmd + Q
-    if (!isMac) app.quit()
+    if (!isMac && !suspendClose) app.quit()
 });
 
 app.on('before-quit', () => {
