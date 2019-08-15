@@ -6,6 +6,7 @@ const ioHook = require('iohook');
 const isMac = process.platform === 'darwin';
 const contextMenu = require('electron-context-menu');
 const defaultURL = 'https://www.nflgamepass.com';
+//var robot = require("robotjs");
 
 let win;
 let views;
