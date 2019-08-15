@@ -13,6 +13,7 @@ let audibleView;
 let frame;
 let viewBounds;
 let aspect_ratio = 16/9;
+let hoverMode = false;
 
 function createWindow() {
     contextMenu({
@@ -79,9 +80,9 @@ function createWindow() {
         frame.show();
     }
 
-    function mouseClick(mouseX, mouseY) {
-        if (!win || !win.isFocused() || !win.isVisible()) return;
-        if (!viewBounds || viewBounds.length != 4) return;
+    function mouseInView(mouseX, mouseY) {
+        if (!win || !win.isFocused() || !win.isVisible()) return null;
+        if (!viewBounds || viewBounds.length != 4) return null;
         
         if (!isMac) {
             let scaleFactor = electron.screen.getPrimaryDisplay().scaleFactor;
@@ -95,7 +96,7 @@ function createWindow() {
         // console.log(`click: x: ${mouseX} y: ${mouseY}`);
         // console.log(`winpos: x: ${winX} y: ${winY}`);
 
-        viewBounds.forEach((vb) => {
+        let found = viewBounds.find((vb) => {
             let viewLeft = initialPos.x + vb.bounds.x;
             let viewRight = viewLeft + vb.bounds.width;
             let viewTop = initialPos.y + vb.bounds.y;
@@ -114,15 +115,34 @@ function createWindow() {
             // console.log(`${match} ${vb.view.title} x: ${viewLeft}-${viewRight} y: ${viewTop}-${viewBottom}`)
 
             if (matchX && matchY) {
-                unmute(vb.view);
-                return;
+                return vb;
             }
         });
+
+        if (!found)
+            return null;
+
+        return found.view;
     }
 
     ioHook.on('mousedown', event => {
-        mouseClick(event.x, event.y);
+        if (!hoverMode) {
+            let view = mouseInView(event.x, event.y);
+            if (view && view !== audibleView) {
+                unmute(view);
+            }
+        }
     });
+
+    ioHook.on('mousemove', event => {
+        if (hoverMode) {
+            let view = mouseInView(event.x, event.y);
+            if (view && view !== audibleView) {
+                unmute(view);
+            }
+        }
+    });
+
     ioHook.start();
 
     win.setFullScreen(true);
@@ -225,7 +245,9 @@ function createWindow() {
         {
             label: 'View',
             submenu: [
-                { role: 'togglefullscreen' }
+                { role: 'togglefullscreen' },
+                { type: "separator" },
+                { label: "Hover mode", type: "checkbox", accelerator: "CmdOrCtrl+H", click: () => { hoverMode = !hoverMode; }}
             ]
         },
         {
