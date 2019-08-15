@@ -1,19 +1,15 @@
 const electron = require('electron')
-const { BrowserView, BrowserWindow, app, Menu, globalShortcut } = electron;
+const { BrowserWindow, app, Menu, globalShortcut } = electron;
 const path = require('path');
 const prompt = require('electron-prompt');
 const ioHook = require('iohook');
 const isMac = process.platform === 'darwin';
 const contextMenu = require('electron-context-menu');
 const defaultURL = 'https://www.nflgamepass.com';
+const viewManager = require("./view-manager");
 //var robot = require("robotjs");
 
 let win;
-let views;
-let audibleView;
-let frame;
-let viewBounds;
-let aspect_ratio = 16/9;
 let hoverMode = false;
 
 function createWindow() {
@@ -30,116 +26,40 @@ function createWindow() {
         backgroundColor: "#000"
     });
 
-    if (!frame) createFrame(win);
+    viewManager.init(win, "Vertical");
+    let views = viewManager.getViews();
 
-    globalShortcut.register('CommandOrControl+1', () => {
-        unmute(view1);
-    });
-    globalShortcut.register('CommandOrControl+2', () => {
-        unmute(view2);
-    });
-    globalShortcut.register('CommandOrControl+3', () => {
-        unmute(view3);
-    });
-    globalShortcut.register('CommandOrControl+4', () => {
-        unmute(view4);
-    });
+    for (var i = 0; i < views.length; i++) {
+        globalShortcut.register(`CommandOrControl+${i + 1}`, () => {
+            let view = views[i];
+            setAudible(view);
+        });
+    }
+
+    function setAudible(view) {
+        viewManager.setAudible(view);
+    }
+
     globalShortcut.register('Esc', () => {
-        win.setFullScreen(false);
+        if (win != null) {
+            win.setFullScreen(false);
+        }
     });
-
-    const unmute = (view) => {
-        views.forEach((v) => {
-            v.webContents.setAudioMuted(true);
-        });
-
-        audibleView = view;
-        audibleView.webContents.setAudioMuted(false);
-        showFrame(audibleView);
-    };
-
-    function showFrame(view) {
-        if (!win.isVisible()) {
-            if (frame)
-                frame.hide();
-            return;
-        }
-
-        if (!frame) createFrame(win);
-
-        let vb = viewBounds.find(vb => vb.view === view);
-        let initialPos = isMac ? win.getBounds() : win.getContentBounds();
-
-        let frameBounds = {
-            x: initialPos.x + vb.bounds.x,
-            y: initialPos.y + vb.bounds.y,
-            width: vb.bounds.width,
-            height: vb.bounds.height
-        };
-
-        frame.setBounds(frameBounds);
-        frame.show();
-    }
-
-    function mouseInView(mouseX, mouseY) {
-        if (!win || !win.isFocused() || !win.isVisible()) return null;
-        if (!viewBounds || viewBounds.length != 4) return null;
-        
-        if (!isMac) {
-            let scaleFactor = electron.screen.getPrimaryDisplay().scaleFactor;
-            mouseX = Math.floor(mouseX / scaleFactor);
-            mouseY = Math.floor(mouseY / scaleFactor);
-        }
-
-        let initialPos = isMac ? win.getBounds() : win.getContentBounds();
-
-        // console.log("------------------");
-        // console.log(`click: x: ${mouseX} y: ${mouseY}`);
-        // console.log(`winpos: x: ${winX} y: ${winY}`);
-
-        let found = viewBounds.find((vb) => {
-            let viewLeft = initialPos.x + vb.bounds.x;
-            let viewRight = viewLeft + vb.bounds.width;
-            let viewTop = initialPos.y + vb.bounds.y;
-            let viewBottom = viewTop + vb.bounds.height;
-
-            let tolerance = 10;
-
-            let matchX = (mouseX > viewLeft + tolerance && mouseX < viewRight - tolerance);
-            let matchY = (mouseY > viewTop + tolerance && mouseY < viewBottom - tolerance);
-
-            // let match = "";
-            // if (matchX && matchY) {
-            //     match = "(MATCH)";
-            // }
-
-            // console.log(`${match} ${vb.view.title} x: ${viewLeft}-${viewRight} y: ${viewTop}-${viewBottom}`)
-
-            if (matchX && matchY) {
-                return vb;
-            }
-        });
-
-        if (!found)
-            return null;
-
-        return found.view;
-    }
 
     ioHook.on('mousedown', event => {
         if (!hoverMode) {
-            let view = mouseInView(event.x, event.y);
-            if (view && view !== audibleView) {
-                unmute(view);
+            let view = viewManager.inView(event.x, event.y);
+            if (view) {
+                setAudible(view);
             }
         }
     });
 
     ioHook.on('mousemove', event => {
         if (hoverMode) {
-            let view = mouseInView(event.x, event.y);
-            if (view && view !== audibleView) {
-                unmute(view);
+            let view = viewManager.inView(event.x, event.y);
+            if (view) {
+                setAudible(view);
             }
         }
     });
@@ -149,46 +69,15 @@ function createWindow() {
     win.setFullScreen(true);
     win.setMenuBarVisibility(false);
 
-    let view1;
-    let view2;
-    let view3;
-    let view4;
+    viewManager.loadURL(defaultURL);
 
-    // avoiding recreation of views
-    if (!views || views.length == 0) {
-        view1 = new BrowserView();
-        view2 = new BrowserView();
-        view3 = new BrowserView();
-        view4 = new BrowserView();
-        views = [ view1, view2, view3, view4 ];
-
-        view1.title = "Top left";
-        view2.title = "Top right";
-        view3.title = "Bottom left";
-        view4.title = "Bottom right";
-    
-        views.forEach((view) => {
-            view.webContents.loadURL(defaultURL);
-        });
-    } else {
-        view1 = views[0];
-        view2 = views[1];
-        view3 = views[2];
-        view4 = views[3];   
-    }
-    
-    views.forEach((view) => {
-        win.addBrowserView(view);
-        view.webContents.setAudioMuted(true);
-    });
-
-    // view1.webContents.loadURL("https://www.youtube.com/watch?v=K6tzeZLjUNE");
-    // view2.webContents.loadURL("https://www.youtube.com/watch?v=vKAteau0CrA");
-    // view3.webContents.loadURL("https://www.youtube.com/watch?v=_t707pWG7-U");
-    // view4.webContents.loadURL("https://www.youtube.com/watch?v=3u-4fxKX8as");
+    // viewManager.loadURL("https://www.youtube.com/watch?v=K6tzeZLjUNE", views[0]);
+    // viewManager.loadURL("https://www.youtube.com/watch?v=KD3Qo5DKM2s", views[1]);
+    // viewManager.loadURL("https://www.youtube.com/watch?v=_t707pWG7-U", views[2]);
+    // viewManager.loadURL("https://www.youtube.com/watch?v=3u-4fxKX8as", views[3]);
 
     win.on('show', () => {
-        updateSize();
+        viewManager.updateSize();
     });
 
     const changeAddress = (view = null) => {
@@ -206,17 +95,17 @@ function createWindow() {
         }, win)
         .then((result) => {
             if(result !== null) {
-                if (view) {
-                    view.webContents.loadURL(result);
-                } else {
-                    views.forEach((v) => {
-                        v.webContents.loadURL(result);
-                    });
-                }
+                viewManager.loadURL(result, view); // loads all if view is null
             }
         })
         .catch(console.error);
     };
+
+    let addressSubmenu = views.map((view) => {
+        return { label: view.title, click: () => { changeAddress(view) } };
+    });
+
+    addressSubmenu.push({ label: "All", click: () => { changeAddress() }});
 
     const template = [
         ...(isMac ? [{
@@ -253,67 +142,20 @@ function createWindow() {
         },
         {
           label: 'Address',
-          submenu: [
-            { label: view1.title, click: () => { changeAddress(view1) } },
-            { label: view2.title, click: () => { changeAddress(view2) } },
-            { label: view3.title, click: () => { changeAddress(view3) } },
-            { label: view4.title, click: () => { changeAddress(view4) }},
-            { label: "All", click: () => { changeAddress() }}
-          ]
+          submenu: addressSubmenu
         }
       ];
     
     const menu = Menu.buildFromTemplate(template);
     Menu.setApplicationMenu(menu);
 
-    const updateSize = () => {
-        let viewWidth = 0;
-        let viewHeight = 0;
-        let bounds = win.getBounds();
-        let contentBounds = win.getContentBounds();
-        let offsetY = isMac ? bounds.height - contentBounds.height : 0; // to avoid hiding webviews under the windowmenu
-        let offsetX = 0;
-
-        if (contentBounds.width / contentBounds.height < aspect_ratio) {
-            let newHeight = contentBounds.width / aspect_ratio;
-            const barHeight = Math.floor((contentBounds.height - newHeight) / 2);
-            offsetY += barHeight;
-            viewWidth = Math.floor(contentBounds.width / 2);
-            viewHeight = Math.floor(newHeight / 2);
-        } else {
-            let newWidth = contentBounds.height * aspect_ratio;
-            const barWidth = Math.floor((contentBounds.width - newWidth) / 2);
-            offsetX += barWidth;
-            viewWidth = Math.floor(newWidth / 2);
-            viewHeight = Math.floor(contentBounds.height / 2);
-        }
-
-        let bounds1 = { x: offsetX, y: offsetY, width: viewWidth, height: viewHeight };
-        let bounds2 = { x: offsetX + viewWidth, y: offsetY, width: viewWidth, height: viewHeight };
-        let bounds3 = { x: offsetX, y: offsetY + viewHeight, width: viewWidth, height: viewHeight };
-        let bounds4 = { x: offsetX + viewWidth, y: offsetY + viewHeight, width: viewWidth, height: viewHeight };
-
-        view1.setBounds(bounds1);
-        view2.setBounds(bounds2);
-        view3.setBounds(bounds3);
-        view4.setBounds(bounds4);
-
-        // preserving view bounds for later reference
-        viewBounds = [ 
-            { view: view1, bounds: bounds1},
-            { view: view2, bounds: bounds2},
-            { view: view3, bounds: bounds3},
-            { view: view4, bounds: bounds4},
-        ];
-
-        if (audibleView)
-            showFrame(audibleView); // update location and size
-    };
-
     win.on('enter-full-screen', () => {
         win.setMenuBarVisibility(false);
-        if (audibleView)
-            showFrame(audibleView);
+
+        // updating frame location
+        let audible = viewManager.getAudible();
+        if (audible)
+            viewManager.setAudible(audible);
     });
 
     win.on('leave-full-screen', () => {
@@ -321,44 +163,24 @@ function createWindow() {
     });
 
     win.on('resize', () => {
-        updateSize();
+        viewManager.updateSize();
     });
 
     win.on('minimize', () => {
-        frame.hide();
+        viewManager.suspendAudible();
     })
 
     win.on('restore', () => {
-        if (audibleView)
-            showFrame(audibleView);
+        viewManager.resumeAudible();
     })
     
     win.on('closed', () => {
         win = null;
-        if (frame && !frame.isDestroyed()) {
-            frame.close();
-        }
-        frame = null;
+        viewManager.unload();
     });
     
     win.show();
 };
-
-function createFrame(parent) {
-    frame = new BrowserWindow({
-        frame: false,
-        transparent: true,
-        show: false,
-        skipTaskbar: true,
-        parent: parent,
-        closable: false,
-        focusable: false,
-        fullscreenable: false
-    });
-
-    frame.loadFile("frame.html");
-    frame.setIgnoreMouseEvents(true);
-}
 
 app.on('ready', createWindow);
 
