@@ -77,10 +77,10 @@ function createWindow() {
 
     viewManager.loadURL(defaultURL);
 
-    viewManager.loadURL("https://www.youtube.com/watch?v=6vwy-pIivQU", views[0]);
-    viewManager.loadURL("https://www.youtube.com/watch?v=KD3Qo5DKM2s", views[1]);
-    viewManager.loadURL("https://www.youtube.com/watch?v=_t707pWG7-U", views[2]);
-    viewManager.loadURL("https://www.youtube.com/watch?v=3u-4fxKX8as", views[3]);
+    // viewManager.loadURL("https://www.youtube.com/watch?v=6vwy-pIivQU", views[0]);
+    // viewManager.loadURL("https://www.youtube.com/watch?v=KD3Qo5DKM2s", views[1]);
+    // viewManager.loadURL("https://www.youtube.com/watch?v=_t707pWG7-U", views[2]);
+    // viewManager.loadURL("https://www.youtube.com/watch?v=3u-4fxKX8as", views[3]);
 
     win.on('show', () => {
         viewManager.updateSize();

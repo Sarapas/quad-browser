@@ -6,11 +6,11 @@
   "scripts": {
     "start": "electron .",
     "package-windows": "electron-packager . QuadBrowser --overwrite --icon=assets/icons/win/icon.ico --platform=win32 --arch=x64 --prune=true --out=dist",
-    "package-mac": "electron-packager . QuadBrowser --overwrite --icon=assets/icons/mac/icon.hqx --platform=darwin --arch=x64 --prune=true --out=dist",
-    "package-mac-dmg": "electron-installer-dmg dist/QuadBrowser-darwin-x64 QuadBrowser icon=assets/icons/mac/icon.hqx"
+    "package-mac": "electron-packager . QuadBrowser --overwrite --icon=./assets/icons/mac/icon.icns --platform=darwin --arch=x64 --prune=true --out=dist",
+    "package-mac-dmg": "electron-installer-dmg ./dist/QuadBrowser-darwin-x64/QuadBrowser.app QuadBrowser --out=dist/ --icon=assets/icons/mac/icon.icns --icon-size=80 --overwrite --debug"
   },
   "author": "",
-  "license": "ISC",
+  "license": "MIT",
   "devDependencies": {
     "electron": "^6.0.1",
     "electron-installer-dmg": "^3.0.0",
