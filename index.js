@@ -50,24 +50,26 @@ function createWindow() {
         }
     });
 
-    ioHook.on('mousedown', event => {
-        if (!hoverMode) {
-            let view = viewManager.inView(event.x, event.y);
-            if (view) {
-                setAudible(view);
-            }
-        }
-    });
-
-    ioHook.on('mousemove', event => {
+    function onMouseMove(event) {
         if (hoverMode) {
             let view = viewManager.inView(event.x, event.y);
             if (view) {
                 setAudible(view);
             }
         }
-    });
+    }
 
+    function onMouseDown(event) {
+        if (!hoverMode) {
+            let view = viewManager.inView(event.x, event.y);
+            if (view) {
+                setAudible(view);
+            }
+        }
+    }
+
+    ioHook.on('mousedown', onMouseDown);
+    ioHook.on('mousemove', onMouseMove);
     ioHook.start();
 
     win.setFullScreen(true);
@@ -75,10 +77,10 @@ function createWindow() {
 
     viewManager.loadURL(defaultURL);
 
-    // viewManager.loadURL("https://www.youtube.com/watch?v=K6tzeZLjUNE", views[0]);
-    // viewManager.loadURL("https://www.youtube.com/watch?v=KD3Qo5DKM2s", views[1]);
-    // viewManager.loadURL("https://www.youtube.com/watch?v=_t707pWG7-U", views[2]);
-    // viewManager.loadURL("https://www.youtube.com/watch?v=3u-4fxKX8as", views[3]);
+    viewManager.loadURL("https://www.youtube.com/watch?v=6vwy-pIivQU", views[0]);
+    viewManager.loadURL("https://www.youtube.com/watch?v=KD3Qo5DKM2s", views[1]);
+    viewManager.loadURL("https://www.youtube.com/watch?v=_t707pWG7-U", views[2]);
+    viewManager.loadURL("https://www.youtube.com/watch?v=3u-4fxKX8as", views[3]);
 
     win.on('show', () => {
         viewManager.updateSize();
@@ -146,7 +148,7 @@ function createWindow() {
                 { type: "separator" },
                 { label: "Hover mode", type: "checkbox", accelerator: "CmdOrCtrl+H", click: () => { hoverMode = !hoverMode; }},
                 { type: "separator" },
-                { label: "Maximize players", accelerator: "CmdorCtrl+F", click: () => { maximizePlayers() }}
+                { label: "Fullscreen players", accelerator: "CmdorCtrl+F", click: () => { maximizePlayers() }}
             ]
         },
         {
@@ -175,9 +177,6 @@ function createWindow() {
 
     win.on('enter-full-screen', () => {
         win.setMenuBarVisibility(false);
-
-        maximizePlayers();
-
         // updating frame location
         let audible = viewManager.getAudible();
         if (audible)
@@ -199,11 +198,14 @@ function createWindow() {
     win.on('restore', () => {
         viewManager.resumeAudible();
     })
-    
+
     win.on('closed', () => {
-        win = null;
-        globalShortcut.unregisterAll();
+        console.log('closed');
         viewManager.unload();
+        globalShortcut.unregisterAll();
+        ioHook.removeListener('mousedown', onMouseDown);
+        ioHook.removeListener('mousemove', onMouseMove);
+        win = null;
     });
     
     win.show();
@@ -240,7 +242,8 @@ let suspendClose = false;
 app.on('window-all-closed', function () {
     // On macOS it is common for applications and their menu bar
     // to stay active until the user quits explicitly with Cmd + Q
-    if (!isMac && !suspendClose) app.quit()
+    //if (!isMac && !suspendClose) app.quit()
+    if (!suspendClose) app.quit();
 });
 
 app.on('before-quit', () => {

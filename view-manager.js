@@ -254,10 +254,10 @@ function inView(x, y) {
         let matchX = (x > viewLeft + tolerance && x < viewRight - tolerance);
         let matchY = (y > viewTop + tolerance && y < viewBottom - tolerance);
 
-        let match = "";
-        if (matchX && matchY) {
-            match = "(MATCH)";
-        }
+        // let match = "";
+        // if (matchX && matchY) {
+        //     match = "(MATCH)";
+        // }
 
         //console.log(`${match} ${vb.view.title} x: ${viewLeft}-${viewRight} y: ${viewTop}-${viewBottom}`)
 
@@ -289,13 +289,14 @@ function createFrame() {
 }
 
 function unload() {
+    if (!parent.isDestroyed()) {
+        parent.setBrowserView(null);
+    }
+    views.forEach((v) => {
+        v.destroy();
+    });
     views = [];
     viewBounds = [];
-    if (!parent.isDestroyed()) {
-        views.forEach((v) => {
-            parent.removeBrowserView(v);
-        });
-    }
     parent = null;
     isInitialized = false;
     audibleView = null;
