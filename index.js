@@ -7,7 +7,9 @@ const isMac = process.platform === 'darwin';
 const contextMenu = require('electron-context-menu');
 const defaultURL = 'https://www.nflgamepass.com';
 const viewManager = require("./view-manager");
-//var robot = require("robotjs");
+const fs = require('fs');
+const requestFullscreen = fs.readFileSync(path.resolve(__dirname, 'set-video-fullscreen.js'), 'utf8');
+const exitFullscreen = fs.readFileSync(path.resolve(__dirname, 'exit-video-fullscreen.js'), 'utf8');
 
 let win;
 let hoverMode = false;
@@ -24,7 +26,7 @@ function createWindow() {
         resizable: true,
         show: false,
         icon: path.join(__dirname, 'assets/icons/png/64x64.png'),
-        backgroundColor: "#000",
+        backgroundColor: "#000"
     });
 
     viewManager.init(win, layout);
@@ -44,6 +46,7 @@ function createWindow() {
     globalShortcut.register('Esc', () => {
         if (win != null) {
             win.setFullScreen(false);
+            minimizePlayers();
         }
     });
 
@@ -141,7 +144,9 @@ function createWindow() {
                 { label: "Quad Screen", type: "radio", checked: layout === "Quad", click: () => { changeLayout("Quad"); }},
                 { label: "Dual Screen", type: "radio", checked: layout === "Vertical", click: () => { changeLayout("Vertical"); }},
                 { type: "separator" },
-                { label: "Hover mode", type: "checkbox", accelerator: "CmdOrCtrl+H", click: () => { hoverMode = !hoverMode; }}
+                { label: "Hover mode", type: "checkbox", accelerator: "CmdOrCtrl+H", click: () => { hoverMode = !hoverMode; }},
+                { type: "separator" },
+                { label: "Maximize players", accelerator: "CmdorCtrl+F", click: () => { maximizePlayers() }}
             ]
         },
         {
@@ -153,8 +158,25 @@ function createWindow() {
     const menu = Menu.buildFromTemplate(template);
     Menu.setApplicationMenu(menu);
 
+    function maximizePlayers() {
+        let views = viewManager.getViews();
+        //views[0].webContents.openDevTools({mode: 'detach'});
+        views.forEach((v) => {
+            v.webContents.executeJavaScript(requestFullscreen, true).then((result) => {}).catch((error) => { console.log(`Fullscreen ${error}`); });
+        });
+    }
+
+    function minimizePlayers() {
+        let views = viewManager.getViews();
+        views.forEach((v) => {
+            v.webContents.executeJavaScript(exitFullscreen, true).then((result) => {}).catch((error) => { console.log(`Fullscreen ${error}`); });
+        });
+    }
+
     win.on('enter-full-screen', () => {
         win.setMenuBarVisibility(false);
+
+        maximizePlayers();
 
         // updating frame location
         let audible = viewManager.getAudible();

@@ -1,6 +1,0 @@
-Documentation
-
-On Windows:
-    * robot.js requires windows-build-tools, needs to be run from powershell in administrator mode
-        npm install --global --production windows-build-tools
-        It might also require node-gyp rebuild which in turn would require all kinds of other stuff like python and C++ feature in Visual studio and maybe other stuff - try to follow the error messages
