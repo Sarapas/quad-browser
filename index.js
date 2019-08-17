@@ -1,5 +1,5 @@
 const electron = require('electron')
-const { BrowserWindow, app, Menu, globalShortcut } = electron;
+const { BrowserWindow, app, Menu, globalShortcut, systemPreferences } = electron;
 const path = require('path');
 const prompt = require('electron-prompt');
 const ioHook = require('iohook');
@@ -14,8 +14,11 @@ const exitFullscreen = fs.readFileSync(path.resolve(__dirname, 'exit-video-fulls
 let win;
 let hoverMode = false;
 let layout = "Quad"; // "Quad" or "Vertical"
+let isTrustedAccesibility;
 
 function createWindow() {
+    isTrustedAccesibility = isMac ? systemPreferences.isTrustedAccessibilityClient(false) : true;
+
     contextMenu({
         showLookUpSelection: false
     });
@@ -32,11 +35,12 @@ function createWindow() {
     viewManager.init(win, layout);
     let views = viewManager.getViews();
 
-    for (var i = 0; i < views.length; i++) {
-        globalShortcut.register(`CommandOrControl+${i + 1}`, () => {
-            let view = views[i];
-            setAudible(view);
-        });
+    if (isTrustedAccesibility) {
+        for (var i = 0; i < views.length; i++) {
+            globalShortcut.register(`CommandOrControl+${i + 1}`, () => {
+                setAudible(views[i]);
+            });
+        }
     }
 
     function setAudible(view) {
@@ -68,9 +72,11 @@ function createWindow() {
         }
     }
 
-    ioHook.on('mousedown', onMouseDown);
-    ioHook.on('mousemove', onMouseMove);
-    ioHook.start();
+    if (isTrustedAccesibility) {
+        ioHook.on('mousedown', onMouseDown);
+        ioHook.on('mousemove', onMouseMove);
+        ioHook.start();
+    }
 
     win.setFullScreen(true);
     win.setMenuBarVisibility(false);
@@ -247,5 +253,7 @@ app.on('window-all-closed', function () {
 });
 
 app.on('before-quit', () => {
-    ioHook.unload(); // since iohook prevents app from quitting on mac
+    if (isTrustedAccesibility) {
+        ioHook.unload(); // since iohook prevents app from quitting on mac
+    }
 })
