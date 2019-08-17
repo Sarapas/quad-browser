@@ -36,11 +36,11 @@ function createWindow() {
     let views = viewManager.getViews();
 
     if (isTrustedAccesibility) {
-        for (var i = 0; i < views.length; i++) {
-            globalShortcut.register(`CommandOrControl+${i + 1}`, () => {
-                setAudible(views[i]);
+        views.forEach((v) => {
+            globalShortcut.register(`CommandOrControl+${v.number}`, () => {
+                setAudible(v);
             });
-        }
+        });
     }
 
     function setAudible(view) {
@@ -154,7 +154,8 @@ function createWindow() {
                 { type: "separator" },
                 { label: "Hover mode", type: "checkbox", accelerator: "CmdOrCtrl+H", click: () => { hoverMode = !hoverMode; }},
                 { type: "separator" },
-                { label: "Fullscreen players", accelerator: "CmdorCtrl+F", click: () => { maximizePlayers() }}
+                { label: "Fullscreen players", accelerator: "CmdorCtrl+F", click: () => { maximizePlayers() }},
+                { label: "Show single", type: "checkbox", visible: false, checked: false, accelerator: "CmdorCtrl+S", click: () => { toggleShowSingle() }},
             ]
         },
         {
@@ -179,6 +180,13 @@ function createWindow() {
         views.forEach((v) => {
             v.webContents.executeJavaScript(exitFullscreen, true).then((result) => {}).catch((error) => { console.log(`Fullscreen ${error}`); });
         });
+    }
+
+    function toggleShowSingle() {
+        let single = viewManager.toggleShowSingle();
+        if (single) {
+            maximizePlayers();
+        }
     }
 
     win.on('enter-full-screen', () => {

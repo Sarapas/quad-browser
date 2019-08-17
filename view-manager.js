@@ -11,6 +11,7 @@ let isInitialized;
 let audibleView;
 let frame;
 let layout;
+let singleView;
 
 function init(parentWindow, viewlayout) {
     if (isInitialized) throw new Error("Already initialized");
@@ -20,15 +21,15 @@ function init(parentWindow, viewlayout) {
 
     if (layout === "Quad") {
         views = [
-            createBrowserView("Top left"),
-            createBrowserView("Top right"),
-            createBrowserView("Bottom left"),
-            createBrowserView("Bottom right")
+            createBrowserView(1, "Top left"),
+            createBrowserView(2, "Top right"),
+            createBrowserView(3, "Bottom left"),
+            createBrowserView(4, "Bottom right")
         ];
     } else if (layout === "Vertical") {
         views = [
-            createBrowserView("Top"),
-            createBrowserView("Bottom")
+            createBrowserView(1, "Top"),
+            createBrowserView(2, "Bottom")
         ];
     } else if (layout === "Horizontal") {
         throw new Error("Not implemented");
@@ -44,9 +45,10 @@ function init(parentWindow, viewlayout) {
     isInitialized = true;
 }
 
-function createBrowserView(title) {
+function createBrowserView(number, title) {
     let browserView = new BrowserView();
     browserView.title = title;
+    browserView.number = number;
     return browserView;
 }
 
@@ -80,6 +82,11 @@ function resumeAudible() {
 }
 
 function updateSize() {
+    if (singleView) {
+        updateSingleView();
+        return;
+    }
+
     if (layout === "Quad") {
         updateQuadSize();
     } else if (layout === "Vertical") {
@@ -89,6 +96,21 @@ function updateSize() {
     } else {
         throw new Error("Unknown layout");
     }
+}
+
+function updateSingleView() {
+    let bounds = parent.getBounds();
+    let contentBounds = parent.getContentBounds();
+    let offsetY = isMac ? bounds.height - contentBounds.height : 0; // to avoid hiding webviews under the windowmenu
+
+    let vBounds = { x: 0, y: offsetY, width: contentBounds.width, height: contentBounds.height };
+
+    viewBounds = [ 
+        { view: singleView, bounds: vBounds},
+    ];
+
+    singleView.setBounds(vBounds);
+    setSelected(singleView);
 }
 
 function updateVerticalSize() {
@@ -166,6 +188,26 @@ function updateQuadSize() {
     }
 };
 
+function toggleShowSingle() {
+    if (singleView) {
+        parent.removeBrowserView(singleView);
+        singleView = null;
+        views.forEach((view) => {
+            parent.addBrowserView(view);
+        });
+        updateSize();
+        return false;
+    } else {
+        if (!audibleView)
+            return; // no view selected
+
+        singleView = audibleView;
+        parent.setBrowserView(singleView);
+        updateSize();
+        return true;
+    }
+}
+
 function checkInitialized() {
     if (!isInitialized) throw new Error("Init needs to be called first");
 }
@@ -179,7 +221,7 @@ function getAudible() {
 function setAudible(view) {
     checkInitialized();
 
-    if (!view)
+    if (!view || singleView)
         return;
 
     if (audibleView !== view || (audibleView && audibleView.webContents.isAudioMuted())) {
@@ -196,6 +238,11 @@ function setAudible(view) {
 
 function setSelected(view) {
     checkInitialized();
+
+    if (singleView && frame) {
+        frame.hide();
+        return;
+    }
 
     if (!parent.isVisible() || !view) {
         if (frame)
@@ -221,6 +268,9 @@ function setSelected(view) {
 
 function getViews() {
     checkInitialized();
+
+    if (singleView)
+        return [ singleView ];
 
     return views;
 }
@@ -314,6 +364,7 @@ var exports = module.exports = {
     resumeAudible: resumeAudible,
     inView: inView,
     getViews: getViews,
+    toggleShowSingle: toggleShowSingle,
     loadURL: loadURL,
     updateSize: updateSize,
     unload: unload
