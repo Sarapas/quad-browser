@@ -24,7 +24,7 @@ function createWindow() {
     });
 
     win = new BrowserWindow({
-        title: "Quad Browser",
+        title: "Quad Screens",
         fullscreenable: true,
         resizable: true,
         show: false,
