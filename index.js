@@ -5,16 +5,16 @@ const prompt = require('electron-prompt');
 const ioHook = require('iohook');
 const isMac = process.platform === 'darwin';
 const contextMenu = require('electron-context-menu');
-const defaultURL = 'https://www.nflgamepass.com';
 const viewManager = require("./view-manager");
-const fs = require('fs');
-const requestFullscreen = fs.readFileSync(path.resolve(__dirname, 'set-video-fullscreen.js'), 'utf8');
-const exitFullscreen = fs.readFileSync(path.resolve(__dirname, 'exit-video-fullscreen.js'), 'utf8');
+
+const defaultURL = 'https://www.nflgamepass.com';
 
 let win;
 let hoverMode = false;
-let layout = "Quad"; // "Quad" or "Vertical"
 let isTrustedAccesibility;
+
+let lastClickTime;
+let lastClickView;
 
 function createWindow() {
     isTrustedAccesibility = isMac ? systemPreferences.isTrustedAccessibilityClient(false) : true;
@@ -32,56 +32,70 @@ function createWindow() {
         backgroundColor: "#000"
     });
 
-    viewManager.init(win, layout);
-    let views = viewManager.getViews();
-
-    if (isTrustedAccesibility) {
-        views.forEach((v) => {
-            globalShortcut.register(`CommandOrControl+${v.number}`, () => {
-                setAudible(v);
-            });
-        });
-    }
-
-    function setAudible(view) {
-        viewManager.setAudible(view);
-    }
-
-    globalShortcut.register('Esc', () => {
-        if (win != null) {
-            win.setFullScreen(false);
-            minimizePlayers();
-        }
-    });
-
-    function onMouseMove(event) {
-        if (hoverMode) {
-            let view = viewManager.inView(event.x, event.y);
-            if (view) {
-                setAudible(view);
-            }
-        }
-    }
-
-    function onMouseDown(event) {
-        if (!hoverMode) {
-            let view = viewManager.inView(event.x, event.y);
-            if (view) {
-                setAudible(view);
-            }
-        }
-    }
-
-    if (isTrustedAccesibility) {
-        ioHook.on('mousedown', onMouseDown);
-        ioHook.on('mousemove', onMouseMove);
-        ioHook.start();
-    }
+    viewManager.init(win);
 
     win.setFullScreen(true);
     win.setMenuBarVisibility(false);
 
     viewManager.loadURL(defaultURL);
+
+    function onMouseMove(event) {
+        if (hoverMode) {
+            let view = viewManager.inView(event.x, event.y);
+            if (view) {
+                viewManager.setAudible(view);
+            }
+        }
+    }
+
+    function onMouseClick(event) {
+        if (!hoverMode) {
+            let view = viewManager.inView(event.x, event.y);
+            if (view) {
+                viewManager.setAudible(view);
+
+                let currentClickTime = new Date().getTime();
+                if (currentClickTime - lastClickTime < 500 && lastClickView === view) {
+                    // double click
+                    if (viewManager.isSingleLayout()) {
+                        viewManager.exitSingleLayout();
+                    } else {
+                        viewManager.setSingleLayout(view);
+                    }
+
+                    lastClickTime = null;
+                    lastClickView = null;
+                } else {
+                    lastClickTime = currentClickTime;
+                    lastClickView = view;
+                }
+            } else {
+                lastClickView = null;
+            }
+        }
+    }
+
+    if (isTrustedAccesibility) {
+        let viewNumbers = [ 1, 2, 3, 4 ];
+        viewNumbers.forEach((number) => {
+            globalShortcut.register(`CommandOrControl+${number}`, () => {
+                let view = viewManager.getViewByNumber(number);
+                if (view)
+                    viewManager.setAudible(view);
+            });
+        });
+
+        ioHook.on('mouseclick', onMouseClick);
+        ioHook.on('mousemove', onMouseMove);
+        ioHook.start();
+    }
+
+    globalShortcut.register('Esc', () => {
+        if (win != null) {
+            win.setFullScreen(false);
+            viewManager.minimizeViews();
+        }
+    });
 
     // viewManager.loadURL("https://www.youtube.com/watch?v=6vwy-pIivQU", views[0]);
     // viewManager.loadURL("https://www.youtube.com/watch?v=KD3Qo5DKM2s", views[1]);
@@ -89,7 +103,7 @@ function createWindow() {
     // viewManager.loadURL("https://www.youtube.com/watch?v=3u-4fxKX8as", views[3]);
 
     win.on('show', () => {
-        viewManager.updateSize();
+        viewManager.updateLayout();
     });
 
     const changeAddress = (view = null) => {
@@ -113,9 +127,11 @@ function createWindow() {
         .catch(console.error);
     };
 
-    let addressSubmenu = views.map((view) => {
-        return { label: view.title, click: () => { changeAddress(view) } };
-    });
+    // TODO: sort out building menu
+    let addressSubmenu = [];
+    // let addressSubmenu = views.map((view) => {
+    //     return { label: view.title, click: () => { changeAddress(view) } };
+    // });
 
     addressSubmenu.push({ label: "All", click: () => { changeAddress() }});
 
@@ -149,13 +165,12 @@ function createWindow() {
             submenu: [
                 { role: 'togglefullscreen' },
                 { type: "separator" },
-                { label: "Quad Screen", type: "radio", checked: layout === "Quad", click: () => { changeLayout("Quad"); }},
-                { label: "Dual Screen", type: "radio", checked: layout === "Vertical", click: () => { changeLayout("Vertical"); }},
+                { label: "Quad Screen", type: "radio", checked: viewManager.isQuadLayout(), click: () => { viewManager.setQuadLayout(); }},
+                { label: "Dual Screen", type: "radio", checked: viewManager.isDualLayout(), click: () => { viewManager.setDualLayout(); }},
                 { type: "separator" },
                 { label: "Hover mode", type: "checkbox", accelerator: "CmdOrCtrl+H", click: () => { hoverMode = !hoverMode; }},
                 { type: "separator" },
-                { label: "Fullscreen players", accelerator: "CmdorCtrl+F", click: () => { maximizePlayers() }},
-                { label: "Show single", type: "checkbox", visible: false, checked: false, accelerator: "CmdorCtrl+S", click: () => { toggleShowSingle() }},
+                { label: "Fullscreen players", accelerator: "CmdorCtrl+F", click: () => { viewManager.maximizeViews(); }}
             ]
         },
         {
@@ -166,28 +181,6 @@ function createWindow() {
     
     const menu = Menu.buildFromTemplate(template);
     Menu.setApplicationMenu(menu);
-
-    function maximizePlayers() {
-        let views = viewManager.getViews();
-        //views[0].webContents.openDevTools({mode: 'detach'});
-        views.forEach((v) => {
-            v.webContents.executeJavaScript(requestFullscreen, true).then((result) => {}).catch((error) => { console.log(`Fullscreen ${error}`); });
-        });
-    }
-
-    function minimizePlayers() {
-        let views = viewManager.getViews();
-        views.forEach((v) => {
-            v.webContents.executeJavaScript(exitFullscreen, true).then((result) => {}).catch((error) => { console.log(`Fullscreen ${error}`); });
-        });
-    }
-
-    function toggleShowSingle() {
-        let single = viewManager.toggleShowSingle();
-        if (single) {
-            maximizePlayers();
-        }
-    }
 
     win.on('enter-full-screen', () => {
         win.setMenuBarVisibility(false);
@@ -202,7 +195,7 @@ function createWindow() {
     });
 
     win.on('resize', () => {
-        viewManager.updateSize();
+        viewManager.updateLayout();
     });
 
     win.on('minimize', () => {
@@ -214,33 +207,15 @@ function createWindow() {
     })
 
     win.on('closed', () => {
-        console.log('closed');
         viewManager.unload();
         globalShortcut.unregisterAll();
-        ioHook.removeListener('mousedown', onMouseDown);
+        ioHook.removeListener('mouseclick', onMouseClick);
         ioHook.removeListener('mousemove', onMouseMove);
         win = null;
     });
     
     win.show();
 };
-
-function changeLayout(newLayout) {
-    if (newLayout !== layout) {
-        suspendClose = true; // closing window would close the app on windows so we want to avoid that
-        win.close();
-        suspendClose = false;
-        layout = newLayout;
-        createWindow();
-
-        // on windows, frame stops being transparent after recreating (not sure why)
-        // but minimizing fixes that, so here's a nasty workaround
-        if (!isMac) {
-            win.minimize();
-            win.restore();
-        }
-    }
-}
 
 app.on('ready', createWindow);
 

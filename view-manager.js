@@ -1,54 +1,51 @@
 const electron = require('electron')
 const { BrowserWindow, BrowserView } = electron;
+const path = require('path');
+const fs = require('fs');
+const requestFullscreen = fs.readFileSync(path.resolve(__dirname, 'set-video-fullscreen.js'), 'utf8');
+const exitFullscreen = fs.readFileSync(path.resolve(__dirname, 'exit-video-fullscreen.js'), 'utf8');
 
 const isMac = process.platform === 'darwin';
 let aspect_ratio = 16/9;
 
+let SINGLE = "Single";
+let QUAD = "Quad";
+let DUAL = "Dual";
+
 let views;
+let activeViews;
 let viewBounds;
 let parent;
 let isInitialized;
 let audibleView;
 let frame;
 let layout;
+let previousLayout;
 let singleView;
 
-function init(parentWindow, viewlayout) {
+function init(parentWindow) {
     if (isInitialized) throw new Error("Already initialized");
-    layout = viewlayout;
     parent = parentWindow;
     if (!frame) createFrame();
 
-    if (layout === "Quad") {
-        views = [
-            createBrowserView(1, "Top left"),
-            createBrowserView(2, "Top right"),
-            createBrowserView(3, "Bottom left"),
-            createBrowserView(4, "Bottom right")
-        ];
-    } else if (layout === "Vertical") {
-        views = [
-            createBrowserView(1, "Top"),
-            createBrowserView(2, "Bottom")
-        ];
-    } else if (layout === "Horizontal") {
-        throw new Error("Not implemented");
-    } else {
-        throw new Error("Unknown layout");
-    }
-
-    views.forEach((view) => {
-        parent.addBrowserView(view);
-        view.webContents.setAudioMuted(true);
-    });
+    // TODO: need to sort out what to do with view names and menu items
+    views = [
+        createBrowserView(1, "Top left"),
+        createBrowserView(2, "Top right"),
+        createBrowserView(3, "Bottom left"),
+        createBrowserView(4, "Bottom right")
+    ];
 
     isInitialized = true;
+
+    setQuadLayout(); // default layout
 }
 
 function createBrowserView(number, title) {
     let browserView = new BrowserView();
     browserView.title = title;
     browserView.number = number;
+    browserView.webContents.setAudioMuted(true);
     return browserView;
 }
 
@@ -81,24 +78,103 @@ function resumeAudible() {
     setSelected(audibleView);
 }
 
-function updateSize() {
-    if (singleView) {
-        updateSingleView();
-        return;
-    }
+function setQuadLayout() {
+    checkInitialized();
 
-    if (layout === "Quad") {
-        updateQuadSize();
-    } else if (layout === "Vertical") {
-        updateVerticalSize();
-    } else if (layout === "Horizontal") {
-        throw new Error("Not implemented");
+    if (layout != QUAD) {
+        previousLayout = layout;
+        layout = QUAD;
+        activeViews = views;
+
+        parent.setBrowserView(null); // clearing browserviews
+        activeViews.forEach((view) => {
+            parent.addBrowserView(view);
+        });
+
+        updateQuadLayout();
+    }
+}
+
+function setDualLayout() {
+    checkInitialized();
+
+    if (layout != DUAL) {
+        previousLayout = layout;
+        layout = DUAL;
+        activeViews = [ views[0], views[1] ];
+        
+        parent.setBrowserView(null); // clear browser views
+        activeViews.forEach((view) => {
+            parent.addBrowserView(view);
+        });
+
+        if (!activeViews.includes(audibleView)) {
+            setAudible(activeViews[0]);
+        }
+
+        updateDualLayout();
+    }
+}
+
+function setSingleLayout(view) {
+    checkInitialized();
+
+    if (layout != SINGLE || singleView != view) {
+        previousLayout = layout;
+        layout = SINGLE;
+        singleView = view;
+        activeViews = [ view ];
+        parent.setBrowserView(singleView);
+        updateSingleLayout();
+    }
+}
+
+function exitSingleLayout() {
+    checkInitialized();
+
+    if (layout != SINGLE || !singleView)
+        return;
+
+    singleView = null;
+
+    if (previousLayout === QUAD)
+        setQuadLayout();
+
+    if (previousLayout === DUAL)
+        setDualLayout();
+}
+
+function isSingleLayout() {
+    checkInitialized();
+
+    return layout === SINGLE;
+}
+
+function isDualLayout() {
+    checkInitialized();
+
+    return layout === DUAL;
+}
+
+function isQuadLayout() {
+    checkInitialized();
+
+    return layout === QUAD;
+}
+
+function updateLayout() {
+    if (layout === SINGLE) {
+        updateSingleLayout();
+    } else if (layout === QUAD) {
+        updateQuadLayout();
+    } else if (layout === DUAL) {
+        updateDualLayout();
     } else {
         throw new Error("Unknown layout");
     }
 }
 
-function updateSingleView() {
+function updateSingleLayout() {
     let bounds = parent.getBounds();
     let contentBounds = parent.getContentBounds();
     let offsetY = isMac ? bounds.height - contentBounds.height : 0; // to avoid hiding webviews under the windowmenu
@@ -113,7 +189,7 @@ function updateSingleView() {
     setSelected(singleView);
 }
 
-function updateVerticalSize() {
+function updateDualLayout() {
     checkInitialized();
 
     // not trying to maintain aspect ratio and letting vide players take care of that
@@ -141,7 +217,7 @@ function updateVerticalSize() {
     }
 }
 
-function updateQuadSize() {
+function updateQuadLayout() {
     checkInitialized();
 
     let viewWidth = 0;
@@ -188,26 +264,6 @@ function updateQuadSize() {
     }
 };
 
-function toggleShowSingle() {
-    if (singleView) {
-        parent.removeBrowserView(singleView);
-        singleView = null;
-        views.forEach((view) => {
-            parent.addBrowserView(view);
-        });
-        updateSize();
-        return false;
-    } else {
-        if (!audibleView)
-            return; // no view selected
-
-        singleView = audibleView;
-        parent.setBrowserView(singleView);
-        updateSize();
-        return true;
-    }
-}
-
 function checkInitialized() {
     if (!isInitialized) throw new Error("Init needs to be called first");
 }
@@ -239,7 +295,7 @@ function setAudible(view) {
 function setSelected(view) {
     checkInitialized();
 
-    if (singleView && frame) {
+    if (isSingleLayout() && frame) {
         frame.hide();
         return;
     }
@@ -266,13 +322,11 @@ function setSelected(view) {
     frame.show();
 }
 
-function getViews() {
+function getViewByNumber(number) {
     checkInitialized();
 
-    if (singleView)
-        return [ singleView ];
-
-    return views;
+    let view = views.find((v) => v.number === number);
+    return view;
 }
 
 function inView(x, y) {
@@ -338,6 +392,22 @@ function createFrame() {
     frame.setIgnoreMouseEvents(true);
 }
 
+function maximizeViews() {
+    checkInitialized();
+
+    activeViews.forEach((v) => {
+        v.webContents.executeJavaScript(requestFullscreen, true).then((result) => {}).catch((error) => { console.log(`Fullscreen ${error}`); });
+    });
+}
+
+function minimizeViews() {
+    checkInitialized();
+
+    activeViews.forEach((v) => {
+        v.webContents.executeJavaScript(exitFullscreen, true).then((result) => {}).catch((error) => { console.log(`Exit Fullscreen ${error}`); });
+    });
+}
+
 function unload() {
     if (!parent.isDestroyed()) {
         parent.setBrowserView(null);
@@ -363,9 +433,17 @@ var exports = module.exports = {
     suspendAudible: suspendAudible,
     resumeAudible: resumeAudible,
     inView: inView,
-    getViews: getViews,
-    toggleShowSingle: toggleShowSingle,
+    getViewByNumber: getViewByNumber,
+    setQuadLayout: setQuadLayout,
+    setDualLayout: setDualLayout,
+    setSingleLayout: setSingleLayout,
+    exitSingleLayout: exitSingleLayout,
+    isSingleLayout: isSingleLayout,
+    isDualLayout: isDualLayout,
+    isQuadLayout: isQuadLayout,
     loadURL: loadURL,
-    updateSize: updateSize,
+    updateLayout: updateLayout,
+    maximizeViews: maximizeViews,
+    minimizeViews: minimizeViews,
     unload: unload
 };
