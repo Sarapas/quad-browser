@@ -28,12 +28,11 @@ function init(parentWindow) {
     parent = parentWindow;
     if (!frame) createFrame();
 
-    // TODO: need to sort out what to do with view names and menu items
     views = [
-        createBrowserView(1, "Top left"),
-        createBrowserView(2, "Top right"),
-        createBrowserView(3, "Bottom left"),
-        createBrowserView(4, "Bottom right")
+        createBrowserView(1),
+        createBrowserView(2),
+        createBrowserView(3),
+        createBrowserView(4)
     ];
 
     isInitialized = true;
@@ -43,7 +42,6 @@ function init(parentWindow) {
 
 function createBrowserView(number, title) {
     let browserView = new BrowserView();
-    browserView.title = title;
     browserView.number = number;
     browserView.webContents.setAudioMuted(true);
     return browserView;
@@ -55,7 +53,7 @@ function loadURL(url, view) {
     if (view) {
         view.webContents.loadURL(url);
     } else {
-        views.forEach((view) => {
+        activeViews.forEach((view) => {
             view.webContents.loadURL(url);
         });
     }
@@ -92,6 +90,10 @@ function setQuadLayout() {
         });
 
         updateQuadLayout();
+
+        if (audibleView) {
+            setAudible(audibleView);
+        }
     }
 }
 
@@ -108,11 +110,15 @@ function setDualLayout() {
             parent.addBrowserView(view);
         });
 
-        if (!activeViews.includes(audibleView)) {
-            setAudible(activeViews[0]);
-        }
-
         updateDualLayout();
+
+        if (audibleView) {
+            if (!activeViews.includes(audibleView)) {
+                setAudible(activeViews[0]);
+            } else {
+                setAudible(audibleView);
+            }
+        }
     }
 }
 
@@ -126,6 +132,7 @@ function setSingleLayout(view) {
         activeViews = [ view ];
         parent.setBrowserView(singleView);
         updateSingleLayout();
+        setAudible(singleView);
     }
 }
 
@@ -172,6 +179,10 @@ function updateLayout() {
     } else {
         throw new Error("Unknown layout");
     }
+
+    if (audibleView) {
+        setSelected(audibleView); // updating size and location of the frame
+    }
 }
 
 function updateSingleLayout() {
@@ -186,7 +197,6 @@ function updateSingleLayout() {
     ];
 
     singleView.setBounds(vBounds);
-    setSelected(singleView);
 }
 
 function updateDualLayout() {
@@ -211,10 +221,6 @@ function updateDualLayout() {
         { view: views[0], bounds: bounds1},
         { view: views[1], bounds: bounds2}
     ];
-
-    if (audibleView) {
-        setSelected(audibleView); // update location and size
-    }
 }
 
 function updateQuadLayout() {
@@ -258,10 +264,6 @@ function updateQuadLayout() {
         { view: views[2], bounds: bounds3},
         { view: views[3], bounds: bounds4},
     ];
-
-    if (audibleView) {
-        setSelected(audibleView); // update location and size
-    }
 };
 
 function checkInitialized() {
@@ -277,7 +279,7 @@ function getAudible() {
 function setAudible(view) {
     checkInitialized();
 
-    if (!view || singleView)
+    if (!view || !activeViews.includes(view))
         return;
 
     if (audibleView !== view || (audibleView && audibleView.webContents.isAudioMuted())) {

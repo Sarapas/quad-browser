@@ -63,6 +63,8 @@ function createWindow() {
                         viewManager.setSingleLayout(view);
                     }
 
+                    Menu.setApplicationMenu(createMenu());
+
                     lastClickTime = null;
                     lastClickView = null;
                 } else {
@@ -97,90 +99,16 @@ function createWindow() {
         }
     });
 
-    // viewManager.loadURL("https://www.youtube.com/watch?v=6vwy-pIivQU", views[0]);
-    // viewManager.loadURL("https://www.youtube.com/watch?v=KD3Qo5DKM2s", views[1]);
-    // viewManager.loadURL("https://www.youtube.com/watch?v=_t707pWG7-U", views[2]);
-    // viewManager.loadURL("https://www.youtube.com/watch?v=3u-4fxKX8as", views[3]);
+    // viewManager.loadURL("https://www.youtube.com/watch?v=f9eoD_dR4fA", viewManager.getViewByNumber(1));
+    // viewManager.loadURL("https://www.youtube.com/watch?v=sLaBgT3zE-A", viewManager.getViewByNumber(2));
+    // viewManager.loadURL("https://www.youtube.com/watch?v=_t707pWG7-U", viewManager.getViewByNumber(3));
+    // viewManager.loadURL("https://www.youtube.com/watch?v=3u-4fxKX8as", viewManager.getViewByNumber(4));
 
     win.on('show', () => {
         viewManager.updateLayout();
     });
 
-    const changeAddress = (view = null) => {
-        let title = view ? `${view.title} address` : "Change address for all";
-        prompt({
-            title: title,
-            label: 'Address:',
-            height: 150,
-            width: 400,
-            resizable: false,
-            value: 'https://',
-            inputAttrs: {
-                type: 'url'
-            }
-        }, win)
-        .then((result) => {
-            if(result !== null) {
-                viewManager.loadURL(result, view); // loads all if view is null
-            }
-        })
-        .catch(console.error);
-    };
-
-    // TODO: sort out building menu
-    let addressSubmenu = [];
-    // let addressSubmenu = views.map((view) => {
-    //     return { label: view.title, click: () => { changeAddress(view) } };
-    // });
-
-    addressSubmenu.push({ label: "All", click: () => { changeAddress() }});
-
-    const template = [
-        ...(isMac ? [{
-          label: app.getName(),
-          submenu: [
-            { role: 'about' },
-            { role: 'quit' }
-          ]
-        }] : []),
-        ...(isMac ? [] :[{
-            label: 'File',
-            submenu: [
-                { role: 'quit' }
-            ]
-        }]),
-        {
-        label: "Edit",
-        submenu: [
-            { label: "Undo", accelerator: "CmdOrCtrl+Z", selector: "undo:" },
-            { label: "Redo", accelerator: "Shift+CmdOrCtrl+Z", selector: "redo:" },
-            { type: "separator" },
-            { label: "Cut", accelerator: "CmdOrCtrl+X", selector: "cut:" },
-            { label: "Copy", accelerator: "CmdOrCtrl+C", selector: "copy:" },
-            { label: "Paste", accelerator: "CmdOrCtrl+V", selector: "paste:" },
-            { label: "Select All", accelerator: "CmdOrCtrl+A", selector: "selectAll:" }
-        ]},
-        {
-            label: 'View',
-            submenu: [
-                { role: 'togglefullscreen' },
-                { type: "separator" },
-                { label: "Quad Screen", type: "radio", checked: viewManager.isQuadLayout(), click: () => { viewManager.setQuadLayout(); }},
-                { label: "Dual Screen", type: "radio", checked: viewManager.isDualLayout(), click: () => { viewManager.setDualLayout(); }},
-                { type: "separator" },
-                { label: "Hover mode", type: "checkbox", accelerator: "CmdOrCtrl+H", click: () => { hoverMode = !hoverMode; }},
-                { type: "separator" },
-                { label: "Fullscreen players", accelerator: "CmdorCtrl+F", click: () => { viewManager.maximizeViews(); }}
-            ]
-        },
-        {
-          label: 'Address',
-          submenu: addressSubmenu
-        }
-      ];
-    
-    const menu = Menu.buildFromTemplate(template);
-    Menu.setApplicationMenu(menu);
+    Menu.setApplicationMenu(createMenu());
 
     win.on('enter-full-screen', () => {
         win.setMenuBarVisibility(false);
@@ -215,6 +143,91 @@ function createWindow() {
     });
     
     win.show();
+};
+
+function createMenu() {
+    let addressSubmenu = [];
+    if (viewManager.isSingleLayout()) {
+        addressSubmenu.push({ label: 'Current', click: () => { changeAddress(); } });
+    } else if (viewManager.isDualLayout()) {
+        addressSubmenu.push({ label: 'Top', click: () => { changeAddress(1); } });
+        addressSubmenu.push({ label: 'Bottom', click: () => { changeAddress(2); } });
+        addressSubmenu.push({ label: "All", click: () => { changeAddress(); }});
+    } else if (viewManager.isQuadLayout()) {
+        addressSubmenu.push({ label: 'Top left', click: () => { changeAddress(1); } });
+        addressSubmenu.push({ label: 'Top right', click: () => { changeAddress(2); } });
+        addressSubmenu.push({ label: 'Bottom left', click: () => { changeAddress(3); } });
+        addressSubmenu.push({ label: 'Bottom right', click: () => { changeAddress(4); } });
+        addressSubmenu.push({ label: "All", click: () => { changeAddress(); }});
+    }
+
+    const template = [
+        ...(isMac ? [{
+          label: app.getName(),
+          submenu: [
+            { role: 'about' },
+            { role: 'quit' }
+          ]
+        }] : []),
+        ...(isMac ? [] :[{
+            label: 'File',
+            submenu: [
+                { role: 'quit' }
+            ]
+        }]),
+        {
+        label: "Edit",
+        submenu: [
+            { label: "Undo", accelerator: "CmdOrCtrl+Z", selector: "undo:" },
+            { label: "Redo", accelerator: "Shift+CmdOrCtrl+Z", selector: "redo:" },
+            { type: "separator" },
+            { label: "Cut", accelerator: "CmdOrCtrl+X", selector: "cut:" },
+            { label: "Copy", accelerator: "CmdOrCtrl+C", selector: "copy:" },
+            { label: "Paste", accelerator: "CmdOrCtrl+V", selector: "paste:" },
+            { label: "Select All", accelerator: "CmdOrCtrl+A", selector: "selectAll:" }
+        ]},
+        {
+            label: 'View',
+            submenu: [
+                { role: 'togglefullscreen' },
+                { type: "separator" },
+                { label: "Quad Screen", type: "radio", checked: viewManager.isQuadLayout(), click: () => { viewManager.setQuadLayout(); Menu.setApplicationMenu(createMenu()); }},
+                { label: "Dual Screen", type: "radio", checked: viewManager.isDualLayout(), click: () => { viewManager.setDualLayout(); Menu.setApplicationMenu(createMenu()); }},
+                { type: "separator" },
+                { label: "Hover mode", type: "checkbox", accelerator: "CmdOrCtrl+H", click: () => { hoverMode = !hoverMode; }},
+                { type: "separator" },
+                { label: "Fullscreen players", accelerator: "CmdorCtrl+F", click: () => { viewManager.maximizeViews(); }}
+            ]
+        },
+        {
+          label: 'Address',
+          submenu: addressSubmenu
+        }
+      ];
+    
+    const menu = Menu.buildFromTemplate(template);
+    return menu;
+}
+
+function changeAddress(viewNumber = null) {
+    prompt({
+        title: "Change address",
+        label: 'Address:',
+        height: 150,
+        width: 400,
+        resizable: false,
+        value: 'https://',
+        inputAttrs: {
+            type: 'url'
+        }
+    }, win)
+    .then((result) => {
+        if(result !== null) {
+            let view = viewManager.getViewByNumber(viewNumber);
+            viewManager.loadURL(result, view); // loads all if view is null
+        }
+    })
+    .catch(console.error);
 };
 
 app.on('ready', createWindow);
