@@ -49,31 +49,31 @@ function createWindow() {
     }
 
     function onMouseClick(event) {
-        if (!hoverMode) {
-            let view = viewManager.inView(event.x, event.y);
-            if (view) {
+        let view = viewManager.inView(event.x, event.y);
+        if (view) {
+            if (!hoverMode) {
                 viewManager.setAudible(view);
-
-                let currentClickTime = new Date().getTime();
-                if (currentClickTime - lastClickTime < 500 && lastClickView === view) {
-                    // double click
-                    if (viewManager.isSingleLayout()) {
-                        viewManager.exitSingleLayout();
-                    } else {
-                        viewManager.setSingleLayout(view);
-                    }
-
-                    Menu.setApplicationMenu(createMenu());
-
-                    lastClickTime = null;
-                    lastClickView = null;
-                } else {
-                    lastClickTime = currentClickTime;
-                    lastClickView = view;
-                }
-            } else {
-                lastClickView = null;
             }
+
+            let currentClickTime = new Date().getTime();
+            if (currentClickTime - lastClickTime < 500 && lastClickView === view) {
+                // double click
+                if (viewManager.isSingleLayout()) {
+                    viewManager.exitSingleLayout();
+                } else {
+                    viewManager.setSingleLayout(view);
+                }
+
+                Menu.setApplicationMenu(createMenu());
+
+                lastClickTime = null;
+                lastClickView = null;
+            } else {
+                lastClickTime = currentClickTime;
+                lastClickView = view;
+            }
+        } else {
+            lastClickView = null;
         }
     }
 
@@ -87,7 +87,7 @@ function createWindow() {
             });
         });
 
-        ioHook.on('mouseclick', onMouseClick);
+        ioHook.on('mousedown', onMouseClick);
         ioHook.on('mousemove', onMouseMove);
         ioHook.start();
     }
@@ -137,7 +137,7 @@ function createWindow() {
     win.on('closed', () => {
         viewManager.unload();
         globalShortcut.unregisterAll();
-        ioHook.removeListener('mouseclick', onMouseClick);
+        ioHook.removeListener('mousedown', onMouseClick);
         ioHook.removeListener('mousemove', onMouseMove);
         win = null;
     });
