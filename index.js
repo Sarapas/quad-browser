@@ -1,5 +1,5 @@
 const electron = require('electron')
-const { BrowserWindow, app, Menu, globalShortcut, systemPreferences } = electron;
+const { BrowserWindow, app, Menu, MenuItem, globalShortcut, systemPreferences } = electron;
 const path = require('path');
 const prompt = require('electron-prompt');
 const ioHook = require('iohook');
@@ -48,15 +48,27 @@ function createWindow() {
         }
     }
 
+    let viewMenu;
+
     function onMouseClick(event) {
         let view = viewManager.inView(event.x, event.y);
         if (view) {
+            if (event.button === 2) {
+                // without timeout propagated event closes the context menu; if event had preventDefault - it wouldn't be needed
+                setTimeout(() => {
+                    viewMenu = new Menu();
+                    viewMenu.append(new MenuItem({ label: "Refresh", click: () => { view.webContents.reload(); } }));
+                    viewMenu.popup({ window: win});
+                }, 50);
+                return;
+            }
+
             if (!hoverMode) {
                 viewManager.setAudible(view);
             }
 
             let currentClickTime = new Date().getTime();
-            if (currentClickTime - lastClickTime < 500 && lastClickView === view) {
+            if (currentClickTime - lastClickTime < 300 && lastClickView === view) {
                 // double click
                 if (viewManager.isSingleLayout()) {
                     viewManager.exitSingleLayout();
