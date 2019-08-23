@@ -57,6 +57,7 @@ function createWindow() {
                 // without timeout propagated event closes the context menu; if event had preventDefault - it wouldn't be needed
                 setTimeout(() => {
                     viewMenu = new Menu();
+                    viewMenu.append(new MenuItem({ label: "Back", click: () => { if (view.webContents.canGoBack()) view.webContents.goBack(); } }));
                     viewMenu.append(new MenuItem({ label: "Refresh", click: () => { view.webContents.reload(); } }));
                     viewMenu.popup({ window: win});
                 }, 50);
@@ -68,7 +69,7 @@ function createWindow() {
             }
 
             let currentClickTime = new Date().getTime();
-            if (currentClickTime - lastClickTime < 300 && lastClickView === view) {
+            if (currentClickTime - lastClickTime < 200 && lastClickView === view) {
                 // double click
                 if (viewManager.isSingleLayout()) {
                     viewManager.exitSingleLayout();
