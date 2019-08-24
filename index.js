@@ -6,8 +6,8 @@ const ioHook = require('iohook');
 const isMac = process.platform === 'darwin';
 const contextMenu = require('electron-context-menu');
 const viewManager = require("./view-manager");
-
-const defaultURL = 'https://www.nflgamepass.com';
+const Store = require('electron-store');
+const store = new Store();
 
 let win;
 let hoverMode = false;
@@ -37,7 +37,8 @@ function createWindow() {
     win.setFullScreen(true);
     win.setMenuBarVisibility(false);
 
-    viewManager.loadURL(defaultURL);
+    let defaultURL = store.get('homepage') || "https://youtube.com";
+    viewManager.loadURL(defaultURL)
 
     function onMouseMove(event) {
         if (hoverMode) {
@@ -59,6 +60,7 @@ function createWindow() {
                     viewMenu = new Menu();
                     viewMenu.append(new MenuItem({ label: "Back", click: () => { if (view.webContents.canGoBack()) view.webContents.goBack(); } }));
                     viewMenu.append(new MenuItem({ label: "Refresh", click: () => { view.webContents.reload(); } }));
+                    viewMenu.append(new MenuItem({ label: "Change address", click: () => { changeAddress(view.number); } }));
                     viewMenu.popup({ window: win});
                 }, 50);
                 return;
@@ -173,6 +175,8 @@ function createMenu() {
         addressSubmenu.push({ label: 'Bottom right', click: () => { changeAddress(4); } });
         addressSubmenu.push({ label: "All", click: () => { changeAddress(); }});
     }
+    addressSubmenu.push({ type: "separator" });
+    addressSubmenu.push({ label: 'Change homepage', click: () => { changeHomepage(); } });
 
     const template = [
         ...(isMac ? [{
@@ -238,6 +242,30 @@ function changeAddress(viewNumber = null) {
         if(result !== null) {
             let view = viewManager.getViewByNumber(viewNumber);
             viewManager.loadURL(result, view); // loads all if view is null
+        }
+    })
+    .catch(console.error);
+};
+
+function changeHomepage() {
+    prompt({
+        title: "Change homepage",
+        label: 'Homepage:',
+        height: 150,
+        width: 400,
+        resizable: false,
+        value: 'https://',
+        inputAttrs: {
+            type: 'url'
+        }
+    }, win)
+    .then((result) => {
+        if(result !== null) {
+            store.set('homepage', result);
+            if (!urlLoaded) {
+                viewManager.loadURL(defaultURL);
+                urlLoaded = true;
+            }
         }
     })
     .catch(console.error);
