@@ -262,10 +262,6 @@ function changeHomepage() {
     .then((result) => {
         if(result !== null) {
             store.set('homepage', result);
-            if (!urlLoaded) {
-                viewManager.loadURL(defaultURL);
-                urlLoaded = true;
-            }
         }
     })
     .catch(console.error);
