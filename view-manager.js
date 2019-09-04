@@ -44,6 +44,11 @@ function createBrowserView(number, title) {
     let browserView = new BrowserView();
     browserView.number = number;
     browserView.webContents.setAudioMuted(true);
+    // browserView.webContents.on('new-window', (e, url) => {
+    //     e.preventDefault()
+    //     let win = new BrowserWindow({width: 400, height: 400})
+    //     win.loadURL(url);
+    // });
     return browserView;
 }
 
