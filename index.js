@@ -2,16 +2,7 @@ const electron = require('electron');
 const ElectronCookies = require('@exponent/electron-cookies');
 const url = require('url');
 
-const {
-  BrowserWindow,
-  app,
-  Menu,
-  MenuItem,
-  globalShortcut,
-  systemPreferences,
-  session,
-  ipcMain
-} = electron;
+const { BrowserWindow, app, Menu, MenuItem, globalShortcut, systemPreferences, session, ipcMain } = electron;
 const path = require('path');
 const prompt = require('electron-prompt');
 const ioHook = require('iohook');
@@ -31,9 +22,7 @@ let lastClickView;
 let clickedView = 0;
 
 function createWindow() {
-  isTrustedAccesibility = isMac
-    ? systemPreferences.isTrustedAccessibilityClient(false)
-    : true;
+  isTrustedAccesibility = isMac ? systemPreferences.isTrustedAccessibilityClient(false) : true;
 
   contextMenu({
     showLookUpSelection: false
@@ -154,11 +143,6 @@ function createWindow() {
     }
   });
 
-  // viewManager.loadURL("https://www.youtube.com/watch?v=f9eoD_dR4fA", viewManager.getViewByNumber(1));
-  // viewManager.loadURL("https://www.youtube.com/watch?v=sLaBgT3zE-A", viewManager.getViewByNumber(2));
-  // viewManager.loadURL("https://www.youtube.com/watch?v=_t707pWG7-U", viewManager.getViewByNumber(3));
-  // viewManager.loadURL("https://www.youtube.com/watch?v=3u-4fxKX8as", viewManager.getViewByNumber(4));
-
   win.on('show', () => {
     viewManager.updateLayout();
   });
@@ -202,113 +186,30 @@ function createWindow() {
 function createMenu() {
   let addressSubmenu = [];
   if (viewManager.isSingleLayout()) {
-    addressSubmenu.push({
-      label: 'Current',
-      click: () => {
-        changeAddress();
-      }
-    });
+    addressSubmenu.push({label: 'Current', click: () => { changeAddress(); } });
   } else if (viewManager.isDualLayout()) {
-    addressSubmenu.push({
-      label: 'Top',
-      click: () => {
-        changeAddress(1);
-      }
-    });
-    addressSubmenu.push({
-      label: 'Bottom',
-      click: () => {
-        changeAddress(2);
-      }
-    });
-    addressSubmenu.push({
-      label: 'All',
-      click: () => {
-        changeAddress();
-      }
-    });
+    addressSubmenu.push({ label: 'Top', click: () => { changeAddress(1); } });
+    addressSubmenu.push({ label: 'Bottom', click: () => { changeAddress(2); } });
+    addressSubmenu.push({ label: 'All', click: () => { changeAddress(); } });
   } else if (viewManager.isTriLayout()) {
-    addressSubmenu.push({
-      label: 'Top left',
-      click: () => {
-        changeAddress(1);
-      }
-    });
-    addressSubmenu.push({
-      label: 'Top right',
-      click: () => {
-        changeAddress(2);
-      }
-    });
-    addressSubmenu.push({
-      label: 'Bottom',
-      click: () => {
-        changeAddress(3);
-      }
-    });
-    addressSubmenu.push({
-      label: 'All',
-      click: () => {
-        changeAddress();
-      }
-    });
+    addressSubmenu.push({ label: 'Top left', click: () => { changeAddress(1); } });
+    addressSubmenu.push({ label: 'Top right', click: () => { changeAddress(2); } });
+    addressSubmenu.push({ label: 'Bottom', click: () => { changeAddress(3); } });
+    addressSubmenu.push({ label: 'All', click: () => { changeAddress(); } });
   } else if (viewManager.isQuadLayout()) {
-    addressSubmenu.push({
-      label: 'Top left',
-      click: () => {
-        changeAddress(1);
-      }
-    });
-    addressSubmenu.push({
-      label: 'Top right',
-      click: () => {
-        changeAddress(2);
-      }
-    });
-    addressSubmenu.push({
-      label: 'Bottom left',
-      click: () => {
-        changeAddress(3);
-      }
-    });
-    addressSubmenu.push({
-      label: 'Bottom right',
-      click: () => {
-        changeAddress(4);
-      }
-    });
-    addressSubmenu.push({
-      label: 'All',
-      click: () => {
-        changeAddress();
-      }
-    });
+    addressSubmenu.push({ label: 'Top left', click: () => { changeAddress(1); } });
+    addressSubmenu.push({ label: 'Top right', click: () => { changeAddress(2); } });
+    addressSubmenu.push({ label: 'Bottom left', click: () => { changeAddress(3); } });
+    addressSubmenu.push({ label: 'Bottom right', click: () => { changeAddress(4); } });
+    addressSubmenu.push({ label: 'All', click: () => { changeAddress(); } });
   }
   addressSubmenu.push({ type: 'separator' });
-  addressSubmenu.push({
-    label: 'Change homepage',
-    click: () => {
-      changeHomepage();
-    }
-  });
+  addressSubmenu.push({ label: 'Change homepage', click: () => { changeHomepage(); } });
 
   const template = [
     ...(isMac
-      ? [
-          {
-            label: app.getName(),
-            submenu: [{ role: 'about' }, { role: 'quit' }]
-          }
-        ]
-      : []),
-    ...(isMac
-      ? []
-      : [
-          {
-            label: 'File',
-            submenu: [{ role: 'quit' }]
-          }
-        ]),
+      ? [ { label: app.getName(), submenu: [{ role: 'about' }, { role: 'quit' }] } ] 
+      : [ { label: 'File', submenu: [{ role: 'quit' }] } ]),
     {
       label: 'Edit',
       submenu: [
@@ -384,7 +285,6 @@ function createMenu() {
           label: 'Zoom In',
           accelerator: 'CommandOrControl+m',
           click: () => {
-            console.log(clickedView);
             viewManager.zoomIn(clickedView - 1);
           }
         },
@@ -392,7 +292,6 @@ function createMenu() {
           label: 'Zoom Out',
           accelerator: 'CommandOrControl+n',
           click: () => {
-            console.log(clickedView);
             viewManager.zoomOut(clickedView - 1);
           }
         },
@@ -418,47 +317,6 @@ function createMenu() {
 
 function changeAddress(viewNumber = null) {
   viewManager.createUrlWindow(viewNumber);
-  //   prompt(
-  //     {
-  //       title: 'Change address',
-  //       label: 'Address:',
-  //       height: 50,
-  //       width: 300,
-  //       resizable: false,
-  //       value: 'https://',
-  //       inputAttrs: {
-  //         type: 'url'
-  //       }
-  //     },
-  //     win
-  //   )
-  //     .then(result => {
-  //       if (result !== null) {
-  //         var temp = url.parse(result);
-  //         // console.log(temp);
-  //         if (temp.hostname) {
-  //           //   ElectronCookies.enable({
-  //           //     origin: 'https://google.com'
-  //           //   });
-  //           //   const cookie = {
-  //           //     url: temp.href,
-  //           //     name: temp.hostname,
-  //           //     value: 'dummy'
-  //           //   };
-  //           //   session.defaultSession.cookies.set(cookie).then(
-  //           //     () => {
-  //           //       // success
-  //           //     },
-  //           //     error => {
-  //           //       console.error(error);
-  //           //     }
-  //           //   );
-  //         }
-  //         let view = viewManager.getViewByNumber(viewNumber);
-  //         viewManager.loadURL(result, view); // loads all if view is null
-  //       }
-  //     })
-  //     .catch(console.error);
 }
 
 function changeHomepage() {

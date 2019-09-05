@@ -59,9 +59,6 @@ function swapBrowserView(index1, index2) {
   views[index2] = _temp;
   views[index2].number = index2 + 1;
 
-  // let __temp = global.QUADMENU[index1];
-  // global.QUADMENU[index1] = global.QUADMENU[index2];
-  // global.QUADMENU[index2] = __temp;
   setQuadLayout(true);
 }
 
@@ -72,9 +69,6 @@ function swapBrowserViewFor2(index1, index2) {
   views[index2] = _temp;
   views[index2].number = index2 + 1;
 
-  // let __temp = global.QUADMENU[index1];
-  // global.QUADMENU[index1] = global.QUADMENU[index2];
-  // global.QUADMENU[index2] = __temp;
   setDualLayout(true);
 }
 
@@ -85,9 +79,6 @@ function swapBrowserViewFor3(index1, index2) {
   views[index2] = _temp;
   views[index2].number = index2 + 1;
 
-  // let __temp = global.QUADMENU[index1];
-  // global.QUADMENU[index1] = global.QUADMENU[index2];
-  // global.QUADMENU[index2] = __temp;
   setTriLayout(true);
 }
 
@@ -290,122 +281,7 @@ function menuForQuads(number, ctxMenu) {
 }
 
 function createBrowserView(number, title) {
-  // console.log(number);
   let ctxMenu = new Menu();
-
-  //   if (number == 1) {
-  //     ctxMenu.append(
-  //       new MenuItem({
-  //         label: 'Swap with 2',
-  //         click: function() {
-  //           swapBrowserView(0, 1);
-  //         }
-  //       })
-  //     );
-
-  //     ctxMenu.append(
-  //       new MenuItem({
-  //         label: 'Swap with 3',
-  //         click: function() {
-  //           swapBrowserView(0, 2);
-  //         }
-  //       })
-  //     );
-
-  //     ctxMenu.append(
-  //       new MenuItem({
-  //         label: 'Swap with 4',
-  //         click: function() {
-  //           swapBrowserView(0, 3);
-  //         }
-  //       })
-  //     );
-  //   }
-  //   if (number == 2) {
-  //     ctxMenu.append(
-  //       new MenuItem({
-  //         label: 'Swap with 1',
-  //         click: function() {
-  //           swapBrowserView(1, 0);
-  //         }
-  //       })
-  //     );
-
-  //     ctxMenu.append(
-  //       new MenuItem({
-  //         label: 'Swap with 3',
-  //         click: function() {
-  //           swapBrowserView(1, 2);
-  //         }
-  //       })
-  //     );
-
-  //     ctxMenu.append(
-  //       new MenuItem({
-  //         label: 'Swap with 4',
-  //         click: function() {
-  //           swapBrowserView(1, 3);
-  //         }
-  //       })
-  //     );
-  //   }
-  //   if (number == 3) {
-  //     ctxMenu.append(
-  //       new MenuItem({
-  //         label: 'Swap with 1',
-  //         click: function() {
-  //           swapBrowserView(2, 0);
-  //         }
-  //       })
-  //     );
-
-  //     ctxMenu.append(
-  //       new MenuItem({
-  //         label: 'Swap with 2',
-  //         click: function() {
-  //           swapBrowserView(2, 1);
-  //         }
-  //       })
-  //     );
-
-  //     ctxMenu.append(
-  //       new MenuItem({
-  //         label: 'Swap with 4',
-  //         click: function() {
-  //           swapBrowserView(2, 3);
-  //         }
-  //       })
-  //     );
-  //   }
-  //   if (number == 4) {
-  //     ctxMenu.append(
-  //       new MenuItem({
-  //         label: 'Swap with 1',
-  //         click: function() {
-  //           swapBrowserView(3, 0);
-  //         }
-  //       })
-  //     );
-
-  //     ctxMenu.append(
-  //       new MenuItem({
-  //         label: 'Swap with 2',
-  //         click: function() {
-  //           swapBrowserView(3, 1);
-  //         }
-  //       })
-  //     );
-
-  //     ctxMenu.append(
-  //       new MenuItem({
-  //         label: 'Swap with 3',
-  //         click: function() {
-  //           swapBrowserView(3, 2);
-  //         }
-  //       })
-  //     );
-  //   }
-
   global.QUADMENU.push(ctxMenu);
 
   let browserView = new BrowserView();
