@@ -9,7 +9,8 @@ const {
   MenuItem,
   globalShortcut,
   systemPreferences,
-  session
+  session,
+  ipcMain
 } = electron;
 const path = require('path');
 const prompt = require('electron-prompt');
@@ -34,9 +35,9 @@ function createWindow() {
     ? systemPreferences.isTrustedAccessibilityClient(false)
     : true;
 
-  // contextMenu({
-  //     showLookUpSelection: false
-  // });
+  contextMenu({
+    showLookUpSelection: false
+  });
 
   win = new BrowserWindow({
     title: 'Quad Screens',
@@ -381,17 +382,17 @@ function createMenu() {
         { type: 'separator' },
         {
           label: 'Zoom In',
-          type: 'checkbox',
           accelerator: 'CommandOrControl+m',
           click: () => {
+            console.log(clickedView);
             viewManager.zoomIn(clickedView - 1);
           }
         },
         {
           label: 'Zoom Out',
-          type: 'checkbox',
           accelerator: 'CommandOrControl+n',
           click: () => {
+            console.log(clickedView);
             viewManager.zoomOut(clickedView - 1);
           }
         },
@@ -416,7 +417,7 @@ function createMenu() {
 }
 
 function changeAddress(viewNumber = null) {
-  viewManager.createTextBox(viewNumber);
+  viewManager.createUrlWindow(viewNumber);
   //   prompt(
   //     {
   //       title: 'Change address',

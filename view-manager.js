@@ -5,11 +5,6 @@ const fs = require('fs');
 
 const { ipcMain } = require('electron');
 
-// receive message from index.html
-ipcMain.on('asynchronous-message', (event, arg) => {
-  console.log(arg);
-});
-
 const requestFullscreen = fs.readFileSync(
   path.resolve(__dirname, 'set-video-fullscreen.js'),
   'utf8'
@@ -37,7 +32,6 @@ let frame;
 let textBox;
 let layout;
 let previousLayout;
-let singleView;
 
 global.QUADMENU = [];
 
@@ -555,10 +549,7 @@ function setSingleLayout(number) {
 
 function exitSingleLayout() {
   checkInitialized();
-
-  if (layout != SINGLE || !singleView) return;
-
-  singleView = null;
+  if (layout != SINGLE) return;
 
   if (previousLayout === QUAD) setQuadLayout(1);
 
@@ -890,7 +881,7 @@ function inView(x, y) {
   return found.view;
 }
 
-function createTextBox(number) {
+function createUrlWindow(number) {
   view = views[number - 1];
   textBox = new BrowserWindow({
     frame: false,
@@ -900,7 +891,10 @@ function createTextBox(number) {
     parent: parent,
     closable: true,
     focusable: true,
-    fullscreenable: false
+    fullscreenable: false,
+    webPreferences: {
+      nodeIntegration: true
+    }
   });
 
   textBox.loadFile('textBox.html');
@@ -908,26 +902,82 @@ function createTextBox(number) {
   let vb = viewBounds.find(vb => vb.view === view);
   let initialPos = isMac ? parent.getBounds() : parent.getContentBounds();
 
-  console.log(vb);
-  console.log(initialPos);
-  console.log(initialPos.x + vb.bounds.height - 50);
-
-  // let frameBounds = {
-  //   x: initialPos.x + vb.bounds.x,
-  //   y: initialPos.y + vb.bounds.y,
-  //   width: vb.bounds.width,
-  //   height: vb.bounds.height
-  // };
-
-  let frameBounds = {
-    x: initialPos.x + vb.bounds.width / 2,
-    y: initialPos.y + vb.bounds.height,
-    width: vb.bounds.width / 2,
-    height: 50
-  };
+  let frameBounds;
+  if (!parent.screenTop && !parent.screenY) {
+    if (number == 1) {
+      frameBounds = {
+        x: initialPos.x + vb.bounds.width / 2,
+        y: initialPos.y + vb.bounds.height - 50,
+        width: 300,
+        height: 72
+      };
+    } else if (number == 2) {
+      frameBounds = {
+        x: initialPos.x + vb.bounds.width + vb.bounds.width / 2,
+        y: initialPos.y + vb.bounds.height - 50,
+        width: 272,
+        height: 72
+      };
+    } else if (number == 3) {
+      frameBounds = {
+        x: initialPos.x + vb.bounds.width / 2,
+        y: initialPos.y - 50 + vb.bounds.height * 2,
+        width: 272,
+        height: 72
+      };
+    } else if (number == 4) {
+      frameBounds = {
+        x: initialPos.x + vb.bounds.width + vb.bounds.width / 2,
+        y: initialPos.y - 50 + vb.bounds.height * 2,
+        width: 272,
+        height: 72
+      };
+    }
+  } else {
+    if (number == 1) {
+      frameBounds = {
+        x: initialPos.x + vb.bounds.width / 2,
+        y: initialPos.y + vb.bounds.height - 20,
+        width: 272,
+        height: 72
+      };
+    } else if (number == 2) {
+      frameBounds = {
+        x: initialPos.x + vb.bounds.width + vb.bounds.width / 2,
+        y: initialPos.y + vb.bounds.height - 20,
+        width: 272,
+        height: 72
+      };
+    } else if (number == 3) {
+      frameBounds = {
+        x: initialPos.x + vb.bounds.width / 2,
+        y: initialPos.y - 20 + vb.bounds.height * 2,
+        width: 272,
+        height: 72
+      };
+    } else if (number == 4) {
+      frameBounds = {
+        x: initialPos.x + vb.bounds.width + vb.bounds.width / 2,
+        y: initialPos.y - 20 + vb.bounds.height * 2,
+        width: 272,
+        height: 72
+      };
+    }
+  }
 
   textBox.setBounds(frameBounds);
-  textBox.show();
+  textBox.once('ready-to-show', () => {
+    textBox.show();
+  });
+
+  textBox.on('close', () => {
+    textBox = null;
+  });
+
+  ipcMain.once('load-url', (event, arg) => {
+    var _number = number;
+    activeViews[number - 1].webContents.loadURL(arg);
+  });
 }
 
 function createFrame() {
@@ -1029,5 +1079,5 @@ var exports = (module.exports = {
   menuOnClick: menuForQuads,
   zoomIn: zoomIn,
   zoomOut: zoomOut,
-  createTextBox: createTextBox
+  createUrlWindow: createUrlWindow
 });
