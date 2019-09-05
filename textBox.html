@@ -1,0 +1,40 @@
+<html>
+  <head>
+    <style type="text/css">
+      body,
+      html {
+        height: 100%;
+        width: 100%;
+        box-sizing: border-box;
+        -moz-box-sizing: border-box;
+        -webkit-box-sizing: border-box;
+      }
+
+      body {
+        margin: 0px;
+        border: 3px solid gold; /* you can choose here whatever size and whichever color you like*/
+      }
+    </style>
+  </head>
+  <body>
+    <input type="url" id="webUrl" name="webUrl" value="asdasd" />
+
+    <button type="button" id="btn" onclick="myFunction()">enter</button>
+  </body>
+  <script src="node_modules/jquery/dist/jquery.min.js"></script>
+  <script type="text/javascript">
+    function myFunction() {
+      let username = document.getElementById('webUrl').value;
+
+      const { ipcRenderer } = require('electron');
+
+      // send username to main.js
+      ipcRenderer.send('asynchronous-message', username);
+
+      // receive message from main.js
+      ipcRenderer.on('asynchronous-reply', (event, arg) => {
+        console.log(arg);
+      });
+    }
+  </script>
+</html>

@@ -1,11 +1,22 @@
-const electron = require('electron')
-const { BrowserWindow, app, Menu, MenuItem, globalShortcut, systemPreferences } = electron;
+const electron = require('electron');
+const ElectronCookies = require('@exponent/electron-cookies');
+const url = require('url');
+
+const {
+  BrowserWindow,
+  app,
+  Menu,
+  MenuItem,
+  globalShortcut,
+  systemPreferences,
+  session
+} = electron;
 const path = require('path');
 const prompt = require('electron-prompt');
 const ioHook = require('iohook');
 const isMac = process.platform === 'darwin';
 const contextMenu = require('electron-context-menu');
-const viewManager = require("./view-manager");
+const viewManager = require('./view-manager');
 const Store = require('electron-store');
 const store = new Store();
 
@@ -16,277 +27,482 @@ let isTrustedAccesibility;
 let lastClickTime;
 let lastClickView;
 
+let clickedView = 0;
+
 function createWindow() {
-    isTrustedAccesibility = isMac ? systemPreferences.isTrustedAccessibilityClient(false) : true;
+  isTrustedAccesibility = isMac
+    ? systemPreferences.isTrustedAccessibilityClient(false)
+    : true;
 
-    contextMenu({
-        showLookUpSelection: false
-    });
+  // contextMenu({
+  //     showLookUpSelection: false
+  // });
 
-    win = new BrowserWindow({
-        title: "Quad Screens",
-        fullscreenable: true,
-        resizable: true,
-        show: false,
-        icon: path.join(__dirname, 'assets/icons/png/64x64.png'),
-        backgroundColor: "#000"
-    });
+  win = new BrowserWindow({
+    title: 'Quad Screens',
+    fullscreenable: true,
+    resizable: true,
+    show: false,
+    icon: path.join(__dirname, 'assets/icons/png/64x64.png'),
+    backgroundColor: '#000'
+  });
 
-    viewManager.init(win);
+  viewManager.init(win);
 
-    win.setFullScreen(true);
-    win.setMenuBarVisibility(false);
+  win.setFullScreen(true);
+  win.setMenuBarVisibility(false);
 
-    let defaultURL = store.get('homepage') || "https://youtube.com";
-    viewManager.loadURL(defaultURL)
+  let defaultURL = store.get('homepage') || 'https://google.com';
+  viewManager.loadURL(defaultURL);
 
-    function onMouseMove(event) {
-        if (hoverMode) {
-            let view = viewManager.inView(event.x, event.y);
-            if (view) {
-                viewManager.setAudible(view);
-            }
-        }
+  function onMouseMove(event) {
+    if (hoverMode) {
+      let view = viewManager.inView(event.x, event.y);
+      if (view) {
+        viewManager.setAudible(view);
+      }
     }
+  }
 
-    let viewMenu;
+  let viewMenu;
 
-    function onMouseClick(event) {
-        let view = viewManager.inView(event.x, event.y);
-        if (view) {
-            if (event.button === 2) {
-                // without timeout propagated event closes the context menu; if event had preventDefault - it wouldn't be needed
-                setTimeout(() => {
-                    viewMenu = new Menu();
-                    viewMenu.append(new MenuItem({ label: "Back", click: () => { if (view.webContents.canGoBack()) view.webContents.goBack(); } }));
-                    viewMenu.append(new MenuItem({ label: "Refresh", click: () => { view.webContents.reload(); } }));
-                    viewMenu.append(new MenuItem({ label: "Change address", click: () => { changeAddress(view.number); } }));
-                    viewMenu.popup({ window: win});
-                }, 50);
-                return;
-            }
+  function onMouseClick(event) {
+    let view = viewManager.inView(event.x, event.y);
 
-            if (!hoverMode) {
-                viewManager.setAudible(view);
-            }
+    if (view) {
+      clickedView = view.number;
+      if (event.button === 2) {
+        // without timeout propagated event closes the context menu; if event had preventDefault - it wouldn't be needed
+        setTimeout(() => {
+          viewMenu = new Menu();
 
-            let currentClickTime = new Date().getTime();
-            if (currentClickTime - lastClickTime < 200 && lastClickView === view) {
-                // double click
-                if (viewManager.isSingleLayout()) {
-                    viewManager.exitSingleLayout();
-                } else {
-                    viewManager.setSingleLayout(view);
-                }
+          viewMenu.append(
+            new MenuItem({
+              label: 'Back',
+              click: () => {
+                if (view.webContents.canGoBack()) view.webContents.goBack();
+              }
+            })
+          );
+          viewMenu.append(
+            new MenuItem({
+              label: 'Refresh',
+              click: () => {
+                view.webContents.reload();
+              }
+            })
+          );
+          viewMenu.append(
+            new MenuItem({
+              label: 'Change address',
+              click: () => {
+                changeAddress(view.number);
+              }
+            })
+          );
+          viewManager.menuOnClick(view.number, viewMenu);
+          viewMenu.popup({ window: win });
+        }, 50);
+        return;
+      }
 
-                Menu.setApplicationMenu(createMenu());
+      if (!hoverMode) {
+        viewManager.setAudible(view);
+      }
 
-                lastClickTime = null;
-                lastClickView = null;
-            } else {
-                lastClickTime = currentClickTime;
-                lastClickView = view;
-            }
+      let currentClickTime = new Date().getTime();
+      if (currentClickTime - lastClickTime < 200 && lastClickView === view) {
+        // double click
+        if (viewManager.isSingleLayout()) {
+          viewManager.exitSingleLayout();
         } else {
-            lastClickView = null;
+          viewManager.setSingleLayout(view.number - 1);
         }
+
+        Menu.setApplicationMenu(createMenu());
+
+        lastClickTime = null;
+        lastClickView = null;
+      } else {
+        lastClickTime = currentClickTime;
+        lastClickView = view;
+      }
+    } else {
+      lastClickView = null;
     }
+  }
 
-    if (isTrustedAccesibility) {
-        let viewNumbers = [ 1, 2, 3, 4 ];
-        viewNumbers.forEach((number) => {
-            globalShortcut.register(`CommandOrControl+${number}`, () => {
-                let view = viewManager.getViewByNumber(number);
-                if (view)
-                    viewManager.setAudible(view);
-            });
-        });
+  if (isTrustedAccesibility) {
+    let viewNumbers = [1, 2, 3, 4];
+    viewNumbers.forEach(number => {
+      globalShortcut.register(`CommandOrControl+${number}`, () => {
+        let view = viewManager.getViewByNumber(number);
+        if (view) viewManager.setAudible(view);
+      });
+    });
 
-        ioHook.on('mousedown', onMouseClick);
-        ioHook.on('mousemove', onMouseMove);
-        ioHook.start();
+    ioHook.on('mousedown', onMouseClick);
+    ioHook.on('mousemove', onMouseMove);
+    ioHook.start();
+  }
+
+  globalShortcut.register('Esc', () => {
+    if (win != null) {
+      win.setFullScreen(false);
+      viewManager.minimizeViews();
     }
+  });
 
-    globalShortcut.register('Esc', () => {
-        if (win != null) {
-            win.setFullScreen(false);
-            viewManager.minimizeViews();
-        }
-    });
+  // viewManager.loadURL("https://www.youtube.com/watch?v=f9eoD_dR4fA", viewManager.getViewByNumber(1));
+  // viewManager.loadURL("https://www.youtube.com/watch?v=sLaBgT3zE-A", viewManager.getViewByNumber(2));
+  // viewManager.loadURL("https://www.youtube.com/watch?v=_t707pWG7-U", viewManager.getViewByNumber(3));
+  // viewManager.loadURL("https://www.youtube.com/watch?v=3u-4fxKX8as", viewManager.getViewByNumber(4));
 
-    // viewManager.loadURL("https://www.youtube.com/watch?v=f9eoD_dR4fA", viewManager.getViewByNumber(1));
-    // viewManager.loadURL("https://www.youtube.com/watch?v=sLaBgT3zE-A", viewManager.getViewByNumber(2));
-    // viewManager.loadURL("https://www.youtube.com/watch?v=_t707pWG7-U", viewManager.getViewByNumber(3));
-    // viewManager.loadURL("https://www.youtube.com/watch?v=3u-4fxKX8as", viewManager.getViewByNumber(4));
+  win.on('show', () => {
+    viewManager.updateLayout();
+  });
 
-    win.on('show', () => {
-        viewManager.updateLayout();
-    });
+  Menu.setApplicationMenu(createMenu());
 
-    Menu.setApplicationMenu(createMenu());
+  win.on('enter-full-screen', () => {
+    win.setMenuBarVisibility(false);
+    // updating frame location
+    let audible = viewManager.getAudible();
+    if (audible) viewManager.setAudible(audible);
+  });
 
-    win.on('enter-full-screen', () => {
-        win.setMenuBarVisibility(false);
-        // updating frame location
-        let audible = viewManager.getAudible();
-        if (audible)
-            viewManager.setAudible(audible);
-    });
+  win.on('leave-full-screen', () => {
+    win.setMenuBarVisibility(true);
+  });
 
-    win.on('leave-full-screen', () => {
-        win.setMenuBarVisibility(true);
-    });
+  win.on('resize', () => {
+    viewManager.updateLayout();
+  });
 
-    win.on('resize', () => {
-        viewManager.updateLayout();
-    });
+  win.on('minimize', () => {
+    viewManager.suspendAudible();
+  });
 
-    win.on('minimize', () => {
-        viewManager.suspendAudible();
-    })
+  win.on('restore', () => {
+    viewManager.resumeAudible();
+  });
 
-    win.on('restore', () => {
-        viewManager.resumeAudible();
-    })
+  win.on('closed', () => {
+    viewManager.unload();
+    globalShortcut.unregisterAll();
+    ioHook.removeListener('mousedown', onMouseClick);
+    ioHook.removeListener('mousemove', onMouseMove);
+    win = null;
+  });
 
-    win.on('closed', () => {
-        viewManager.unload();
-        globalShortcut.unregisterAll();
-        ioHook.removeListener('mousedown', onMouseClick);
-        ioHook.removeListener('mousemove', onMouseMove);
-        win = null;
-    });
-    
-    win.show();
-};
+  win.show();
+}
 
 function createMenu() {
-    let addressSubmenu = [];
-    if (viewManager.isSingleLayout()) {
-        addressSubmenu.push({ label: 'Current', click: () => { changeAddress(); } });
-    } else if (viewManager.isDualLayout()) {
-        addressSubmenu.push({ label: 'Top', click: () => { changeAddress(1); } });
-        addressSubmenu.push({ label: 'Bottom', click: () => { changeAddress(2); } });
-        addressSubmenu.push({ label: "All", click: () => { changeAddress(); }});
-    } else if (viewManager.isQuadLayout()) {
-        addressSubmenu.push({ label: 'Top left', click: () => { changeAddress(1); } });
-        addressSubmenu.push({ label: 'Top right', click: () => { changeAddress(2); } });
-        addressSubmenu.push({ label: 'Bottom left', click: () => { changeAddress(3); } });
-        addressSubmenu.push({ label: 'Bottom right', click: () => { changeAddress(4); } });
-        addressSubmenu.push({ label: "All", click: () => { changeAddress(); }});
+  let addressSubmenu = [];
+  if (viewManager.isSingleLayout()) {
+    addressSubmenu.push({
+      label: 'Current',
+      click: () => {
+        changeAddress();
+      }
+    });
+  } else if (viewManager.isDualLayout()) {
+    addressSubmenu.push({
+      label: 'Top',
+      click: () => {
+        changeAddress(1);
+      }
+    });
+    addressSubmenu.push({
+      label: 'Bottom',
+      click: () => {
+        changeAddress(2);
+      }
+    });
+    addressSubmenu.push({
+      label: 'All',
+      click: () => {
+        changeAddress();
+      }
+    });
+  } else if (viewManager.isTriLayout()) {
+    addressSubmenu.push({
+      label: 'Top left',
+      click: () => {
+        changeAddress(1);
+      }
+    });
+    addressSubmenu.push({
+      label: 'Top right',
+      click: () => {
+        changeAddress(2);
+      }
+    });
+    addressSubmenu.push({
+      label: 'Bottom',
+      click: () => {
+        changeAddress(3);
+      }
+    });
+    addressSubmenu.push({
+      label: 'All',
+      click: () => {
+        changeAddress();
+      }
+    });
+  } else if (viewManager.isQuadLayout()) {
+    addressSubmenu.push({
+      label: 'Top left',
+      click: () => {
+        changeAddress(1);
+      }
+    });
+    addressSubmenu.push({
+      label: 'Top right',
+      click: () => {
+        changeAddress(2);
+      }
+    });
+    addressSubmenu.push({
+      label: 'Bottom left',
+      click: () => {
+        changeAddress(3);
+      }
+    });
+    addressSubmenu.push({
+      label: 'Bottom right',
+      click: () => {
+        changeAddress(4);
+      }
+    });
+    addressSubmenu.push({
+      label: 'All',
+      click: () => {
+        changeAddress();
+      }
+    });
+  }
+  addressSubmenu.push({ type: 'separator' });
+  addressSubmenu.push({
+    label: 'Change homepage',
+    click: () => {
+      changeHomepage();
     }
-    addressSubmenu.push({ type: "separator" });
-    addressSubmenu.push({ label: 'Change homepage', click: () => { changeHomepage(); } });
+  });
 
-    const template = [
-        ...(isMac ? [{
-          label: app.getName(),
-          submenu: [
-            { role: 'about' },
-            { role: 'quit' }
-          ]
-        }] : []),
-        ...(isMac ? [] :[{
+  const template = [
+    ...(isMac
+      ? [
+          {
+            label: app.getName(),
+            submenu: [{ role: 'about' }, { role: 'quit' }]
+          }
+        ]
+      : []),
+    ...(isMac
+      ? []
+      : [
+          {
             label: 'File',
-            submenu: [
-                { role: 'quit' }
-            ]
-        }]),
+            submenu: [{ role: 'quit' }]
+          }
+        ]),
+    {
+      label: 'Edit',
+      submenu: [
+        { label: 'Undo', accelerator: 'CmdOrCtrl+Z', selector: 'undo:' },
+        { label: 'Redo', accelerator: 'Shift+CmdOrCtrl+Z', selector: 'redo:' },
+        { type: 'separator' },
+        { label: 'Cut', accelerator: 'CmdOrCtrl+X', selector: 'cut:' },
+        { label: 'Copy', accelerator: 'CmdOrCtrl+C', selector: 'copy:' },
+        { label: 'Paste', accelerator: 'CmdOrCtrl+V', selector: 'paste:' },
         {
-        label: "Edit",
-        submenu: [
-            { label: "Undo", accelerator: "CmdOrCtrl+Z", selector: "undo:" },
-            { label: "Redo", accelerator: "Shift+CmdOrCtrl+Z", selector: "redo:" },
-            { type: "separator" },
-            { label: "Cut", accelerator: "CmdOrCtrl+X", selector: "cut:" },
-            { label: "Copy", accelerator: "CmdOrCtrl+C", selector: "copy:" },
-            { label: "Paste", accelerator: "CmdOrCtrl+V", selector: "paste:" },
-            { label: "Select All", accelerator: "CmdOrCtrl+A", selector: "selectAll:" }
-        ]},
+          label: 'Select All',
+          accelerator: 'CmdOrCtrl+A',
+          selector: 'selectAll:'
+        }
+      ]
+    },
+    {
+      label: 'View',
+      submenu: [
+        { role: 'togglefullscreen' },
+        { type: 'separator' },
         {
-            label: 'View',
-            submenu: [
-                { role: 'togglefullscreen' },
-                { type: "separator" },
-                { label: "Quad Screen", type: "radio", checked: viewManager.isQuadLayout(), click: () => { viewManager.setQuadLayout(); Menu.setApplicationMenu(createMenu()); }},
-                { label: "Dual Screen", type: "radio", checked: viewManager.isDualLayout(), click: () => { viewManager.setDualLayout(); Menu.setApplicationMenu(createMenu()); }},
-                { type: "separator" },
-                { label: "Hover mode", type: "checkbox", accelerator: "CmdOrCtrl+H", click: () => { hoverMode = !hoverMode; }},
-                { type: "separator" },
-                { label: "Fullscreen players", accelerator: "CmdorCtrl+F", click: () => { viewManager.maximizeViews(); }}
-            ]
+          label: 'Single Screen',
+          accelerator: 'CmdOrCtrl+f1',
+          type: 'radio',
+          checked: viewManager.isSingleLayout(),
+          click: () => {
+            viewManager.setSingleLayout(0);
+            Menu.setApplicationMenu(createMenu());
+          }
         },
         {
-          label: 'Address',
-          submenu: addressSubmenu
+          label: 'Dual Screen',
+          accelerator: 'CmdOrCtrl+f2',
+          type: 'radio',
+          checked: viewManager.isDualLayout(),
+          click: () => {
+            viewManager.setDualLayout();
+            Menu.setApplicationMenu(createMenu());
+          }
+        },
+        {
+          label: 'Tri Screen',
+          accelerator: 'CmdOrCtrl+f3',
+          type: 'radio',
+          checked: viewManager.isTriLayout(),
+          click: () => {
+            viewManager.setTriLayout();
+            Menu.setApplicationMenu(createMenu());
+          }
+        },
+        {
+          label: 'Quad Screen',
+          accelerator: 'CmdOrCtrl+f4',
+          type: 'radio',
+          checked: viewManager.isQuadLayout(),
+          click: () => {
+            viewManager.setQuadLayout();
+            Menu.setApplicationMenu(createMenu());
+          }
+        },
+        { type: 'separator' },
+        {
+          label: 'Hover mode',
+          type: 'checkbox',
+          accelerator: 'CmdOrCtrl+H',
+          click: () => {
+            hoverMode = !hoverMode;
+          }
+        },
+        { type: 'separator' },
+        {
+          label: 'Zoom In',
+          type: 'checkbox',
+          accelerator: 'CommandOrControl+m',
+          click: () => {
+            viewManager.zoomIn(clickedView - 1);
+          }
+        },
+        {
+          label: 'Zoom Out',
+          type: 'checkbox',
+          accelerator: 'CommandOrControl+n',
+          click: () => {
+            viewManager.zoomOut(clickedView - 1);
+          }
+        },
+        { type: 'separator' },
+        {
+          label: 'Fullscreen players',
+          accelerator: 'CmdorCtrl+F',
+          click: () => {
+            viewManager.maximizeViews();
+          }
         }
-      ];
-    
-    const menu = Menu.buildFromTemplate(template);
-    return menu;
+      ]
+    },
+    {
+      label: 'Address',
+      submenu: addressSubmenu
+    }
+  ];
+
+  const menu = Menu.buildFromTemplate(template);
+  return menu;
 }
 
 function changeAddress(viewNumber = null) {
-    prompt({
-        title: "Change address",
-        label: 'Address:',
-        height: 150,
-        width: 400,
-        resizable: false,
-        value: 'https://',
-        inputAttrs: {
-            type: 'url'
-        }
-    }, win)
-    .then((result) => {
-        if(result !== null) {
-            let view = viewManager.getViewByNumber(viewNumber);
-            viewManager.loadURL(result, view); // loads all if view is null
-        }
-    })
-    .catch(console.error);
-};
+  viewManager.createTextBox(viewNumber);
+  //   prompt(
+  //     {
+  //       title: 'Change address',
+  //       label: 'Address:',
+  //       height: 50,
+  //       width: 300,
+  //       resizable: false,
+  //       value: 'https://',
+  //       inputAttrs: {
+  //         type: 'url'
+  //       }
+  //     },
+  //     win
+  //   )
+  //     .then(result => {
+  //       if (result !== null) {
+  //         var temp = url.parse(result);
+  //         // console.log(temp);
+  //         if (temp.hostname) {
+  //           //   ElectronCookies.enable({
+  //           //     origin: 'https://google.com'
+  //           //   });
+  //           //   const cookie = {
+  //           //     url: temp.href,
+  //           //     name: temp.hostname,
+  //           //     value: 'dummy'
+  //           //   };
+  //           //   session.defaultSession.cookies.set(cookie).then(
+  //           //     () => {
+  //           //       // success
+  //           //     },
+  //           //     error => {
+  //           //       console.error(error);
+  //           //     }
+  //           //   );
+  //         }
+  //         let view = viewManager.getViewByNumber(viewNumber);
+  //         viewManager.loadURL(result, view); // loads all if view is null
+  //       }
+  //     })
+  //     .catch(console.error);
+}
 
 function changeHomepage() {
-    prompt({
-        title: "Change homepage",
-        label: 'Homepage:',
-        height: 150,
-        width: 400,
-        resizable: false,
-        value: 'https://',
-        inputAttrs: {
-            type: 'url'
-        }
-    }, win)
-    .then((result) => {
-        if(result !== null) {
-            store.set('homepage', result);
-        }
+  prompt(
+    {
+      title: 'Change homepage',
+      label: 'Homepage:',
+      height: 150,
+      width: 400,
+      resizable: false,
+      value: 'https://',
+      inputAttrs: {
+        type: 'url'
+      }
+    },
+    win
+  )
+    .then(result => {
+      if (result !== null) {
+        store.set('homepage', result);
+      }
     })
     .catch(console.error);
-};
+}
 
 app.on('ready', createWindow);
 
-app.on('activate', function () {
-    // On macOS it's common to re-create a window in the app when the
-    // dock icon is clicked and there are no other windows open.
-    if (win === null) createWindow()
-  })
+app.on('activate', function() {
+  // On macOS it's common to re-create a window in the app when the
+  // dock icon is clicked and there are no other windows open.
+  if (win === null) createWindow();
+});
 
-app.commandLine.appendSwitch('--enable-features', 'OverlayScrollbar')
+app.commandLine.appendSwitch('--enable-features', 'OverlayScrollbar');
 
 let suspendClose = false;
-app.on('window-all-closed', function () {
-    // On macOS it is common for applications and their menu bar
-    // to stay active until the user quits explicitly with Cmd + Q
-    //if (!isMac && !suspendClose) app.quit()
-    if (!suspendClose) app.quit();
+app.on('window-all-closed', function() {
+  // On macOS it is common for applications and their menu bar
+  // to stay active until the user quits explicitly with Cmd + Q
+  //if (!isMac && !suspendClose) app.quit()
+  if (!suspendClose) app.quit();
 });
 
 app.on('before-quit', () => {
-    if (isTrustedAccesibility) {
-        ioHook.unload(); // since iohook prevents app from quitting on mac
-    }
-})
+  if (isTrustedAccesibility) {
+    ioHook.unload(); // since iohook prevents app from quitting on mac
+  }
+});
