@@ -1,18 +1,10 @@
 const electron = require('electron');
-const { BrowserWindow, BrowserView, Menu, MenuItem } = electron;
+const { BrowserWindow, BrowserView, Menu, MenuItem, ipcMain } = electron;
 const path = require('path');
 const fs = require('fs');
 
-const { ipcMain } = require('electron');
-
-const requestFullscreen = fs.readFileSync(
-  path.resolve(__dirname, 'set-video-fullscreen.js'),
-  'utf8'
-);
-const exitFullscreen = fs.readFileSync(
-  path.resolve(__dirname, 'exit-video-fullscreen.js'),
-  'utf8'
-);
+const requestFullscreen = fs.readFileSync(path.resolve(__dirname, 'set-video-fullscreen.js'), 'utf8');
+const exitFullscreen = fs.readFileSync(path.resolve(__dirname, 'exit-video-fullscreen.js'), 'utf8');
 
 const isMac = process.platform === 'darwin';
 let aspect_ratio = 16 / 9;
@@ -44,7 +36,9 @@ function init(parentWindow) {
     createBrowserView(1),
     createBrowserView(2),
     createBrowserView(3),
-    createBrowserView(4)
+    createBrowserView(4),
+    // createBrowserView(5),
+    // createBrowserView(6),
   ];
 
   isInitialized = true;
@@ -58,28 +52,6 @@ function swapBrowserView(index1, index2) {
   views[index1].number = index1 + 1;
   views[index2] = _temp;
   views[index2].number = index2 + 1;
-
-  setQuadLayout(true);
-}
-
-function swapBrowserViewFor2(index1, index2) {
-  let _temp = views[index1];
-  views[index1] = views[index2];
-  views[index1].number = index1 + 1;
-  views[index2] = _temp;
-  views[index2].number = index2 + 1;
-
-  setDualLayout(true);
-}
-
-function swapBrowserViewFor3(index1, index2) {
-  let _temp = views[index1];
-  views[index1] = views[index2];
-  views[index1].number = index1 + 1;
-  views[index2] = _temp;
-  views[index2].number = index2 + 1;
-
-  setTriLayout(true);
 }
 
 function menuForQuads(number, ctxMenu) {
@@ -90,7 +62,8 @@ function menuForQuads(number, ctxMenu) {
           new MenuItem({
             label: 'Swap with 2',
             click: function() {
-              swapBrowserViewFor2(0, 1);
+              swapBrowserView(0, 1);
+              setDualLayout(true);
             }
           })
         );
@@ -100,7 +73,8 @@ function menuForQuads(number, ctxMenu) {
           new MenuItem({
             label: 'Swap with 1',
             click: function() {
-              swapBrowserViewFor2(1, 0);
+              swapBrowserView(1, 0);
+              setDualLayout(true);
             }
           })
         );
@@ -111,7 +85,8 @@ function menuForQuads(number, ctxMenu) {
           new MenuItem({
             label: 'Swap with 2',
             click: function() {
-              swapBrowserViewFor3(0, 1);
+              swapBrowserView(0, 1);
+              setTriLayout(true);
             }
           })
         );
@@ -120,7 +95,8 @@ function menuForQuads(number, ctxMenu) {
           new MenuItem({
             label: 'Swap with 3',
             click: function() {
-              swapBrowserViewFor3(0, 2);
+              swapBrowserView(0, 2);
+              setTriLayout(true);
             }
           })
         );
@@ -130,7 +106,8 @@ function menuForQuads(number, ctxMenu) {
           new MenuItem({
             label: 'Swap with 1',
             click: function() {
-              swapBrowserViewFor3(1, 0);
+              swapBrowserView(1, 0);
+              setTriLayout(true);
             }
           })
         );
@@ -139,7 +116,8 @@ function menuForQuads(number, ctxMenu) {
           new MenuItem({
             label: 'Swap with 3',
             click: function() {
-              swapBrowserViewFor3(1, 2);
+              swapBrowserView(1, 2);
+              setTriLayout(true);
             }
           })
         );
@@ -149,7 +127,8 @@ function menuForQuads(number, ctxMenu) {
           new MenuItem({
             label: 'Swap with 1',
             click: function() {
-              swapBrowserViewFor3(2, 0);
+              swapBrowserView(2, 0);
+              setTriLayout(true);
             }
           })
         );
@@ -158,7 +137,8 @@ function menuForQuads(number, ctxMenu) {
           new MenuItem({
             label: 'Swap with 2',
             click: function() {
-              swapBrowserViewFor3(2, 1);
+              swapBrowserView(2, 1);
+              setTriLayout(true);
             }
           })
         );
@@ -170,6 +150,7 @@ function menuForQuads(number, ctxMenu) {
             label: 'Swap with 2',
             click: function() {
               swapBrowserView(0, 1);
+              setQuadLayout(true);
             }
           })
         );
@@ -179,6 +160,7 @@ function menuForQuads(number, ctxMenu) {
             label: 'Swap with 3',
             click: function() {
               swapBrowserView(0, 2);
+              setQuadLayout(true);
             }
           })
         );
@@ -188,6 +170,7 @@ function menuForQuads(number, ctxMenu) {
             label: 'Swap with 4',
             click: function() {
               swapBrowserView(0, 3);
+              setQuadLayout(true);
             }
           })
         );
@@ -198,6 +181,7 @@ function menuForQuads(number, ctxMenu) {
             label: 'Swap with 1',
             click: function() {
               swapBrowserView(1, 0);
+              setQuadLayout(true);
             }
           })
         );
@@ -207,6 +191,7 @@ function menuForQuads(number, ctxMenu) {
             label: 'Swap with 3',
             click: function() {
               swapBrowserView(1, 2);
+              setQuadLayout(true);
             }
           })
         );
@@ -216,6 +201,7 @@ function menuForQuads(number, ctxMenu) {
             label: 'Swap with 4',
             click: function() {
               swapBrowserView(1, 3);
+              setQuadLayout(true);
             }
           })
         );
@@ -226,6 +212,7 @@ function menuForQuads(number, ctxMenu) {
             label: 'Swap with 1',
             click: function() {
               swapBrowserView(2, 0);
+              setQuadLayout(true);
             }
           })
         );
@@ -235,6 +222,7 @@ function menuForQuads(number, ctxMenu) {
             label: 'Swap with 2',
             click: function() {
               swapBrowserView(2, 1);
+              setQuadLayout(true);
             }
           })
         );
@@ -244,6 +232,7 @@ function menuForQuads(number, ctxMenu) {
             label: 'Swap with 4',
             click: function() {
               swapBrowserView(2, 3);
+              setQuadLayout(true);
             }
           })
         );
@@ -254,6 +243,7 @@ function menuForQuads(number, ctxMenu) {
             label: 'Swap with 1',
             click: function() {
               swapBrowserView(3, 0);
+              setQuadLayout(true);
             }
           })
         );
@@ -263,6 +253,7 @@ function menuForQuads(number, ctxMenu) {
             label: 'Swap with 2',
             click: function() {
               swapBrowserView(3, 1);
+              setQuadLayout(true);
             }
           })
         );
@@ -272,6 +263,7 @@ function menuForQuads(number, ctxMenu) {
             label: 'Swap with 3',
             click: function() {
               swapBrowserView(3, 2);
+              setQuadLayout(true);
             }
           })
         );
@@ -328,10 +320,10 @@ function resumeAudible() {
   setSelected(audibleView);
 }
 
-function setQuadLayout(forceSetQuad) {
+function setQuadLayout(force) {
   checkInitialized();
 
-  if (layout != QUAD || forceSetQuad) {
+  if (layout != QUAD || force) {
     previousLayout = layout;
     layout = QUAD;
     activeViews = views;
@@ -348,10 +340,10 @@ function setQuadLayout(forceSetQuad) {
   }
 }
 
-function setTriLayout(forceSetTri) {
+function setTriLayout(force) {
   checkInitialized();
 
-  if (layout != TRI || forceSetTri) {
+  if (layout != TRI || force) {
     previousLayout = layout;
     layout = TRI;
     activeViews = [views[0], views[1], views[2]];
@@ -373,10 +365,10 @@ function setTriLayout(forceSetTri) {
   }
 }
 
-function setDualLayout(forceSetDual) {
+function setDualLayout(force) {
   checkInitialized();
 
-  if (layout != DUAL || forceSetDual) {
+  if (layout != DUAL || force) {
     previousLayout = layout;
     layout = DUAL;
     activeViews = [views[0], views[1]];
@@ -427,11 +419,9 @@ function exitSingleLayout() {
   checkInitialized();
   if (layout != SINGLE) return;
 
-  if (previousLayout === QUAD) setQuadLayout(1);
-
-  if (previousLayout === DUAL) setDualLayout(1);
-
-  if (previousLayout === TRI) setTriLayout(1);
+  if (previousLayout === QUAD) setQuadLayout(true);
+  if (previousLayout === DUAL) setDualLayout(true);
+  if (previousLayout === TRI) setTriLayout(true);
 }
 
 function isSingleLayout() {
