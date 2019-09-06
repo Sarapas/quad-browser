@@ -114,119 +114,58 @@ function resumeAudible() {
 }
 
 function setSixHorizontalLayout(force) {
-  checkInitialized();
-
-  if (layout != SIXH || force) {
-    previousLayout = layout;
-    layout = SIXH;
-    activeViews = views.slice(0, 6);
-    parent.setBrowserView(null); // clearing browserviews
-    activeViews.forEach(view => {
-      parent.addBrowserView(view);
-    });
-
-    updateSixHorizontalLayout();
-
-    if (audibleView) {
-      setAudible(audibleView);
-    }
-  }
+  let layoutViews = views.slice(0, 6);
+  setLayout(SIXH, layoutViews, force, updateSixHorizontalLayout);
 }
 
 function setSixVerticalLayout(force) {
-  checkInitialized();
-
-  if (layout != SIXV || force) {
-    previousLayout = layout;
-    layout = SIXV;
-    activeViews = views.slice(0, 6);
-    parent.setBrowserView(null); // clearing browserviews
-    activeViews.forEach(view => {
-      parent.addBrowserView(view);
-    });
-
-    updateSixVerticalLayout();
-
-    if (audibleView) {
-      setAudible(audibleView);
-    }
-  }
+  let layoutViews = views.slice(0, 6);
+  setLayout(SIXV, layoutViews, force, updateSixVerticalLayout);
 }
 
 function setFiveHorizontalLayout(force) {
-  checkInitialized();
-
-  if (layout != FIVEH || force) {
-    previousLayout = layout;
-    layout = FIVEH;
-    activeViews = views.slice(0, 5);
-    parent.setBrowserView(null); // clearing browserviews
-    activeViews.forEach(view => {
-      parent.addBrowserView(view);
-    });
-
-    updateFiveHorizontalLayout();
-
-    if (audibleView) {
-      setAudible(audibleView);
-    }
-  }
+  let layoutViews = views.slice(0, 5);
+  setLayout(FIVEH, layoutViews, force, updateFiveHorizontalLayout);
 }
 
 function setQuadLayout(force) {
-  checkInitialized();
-
-  if (layout != QUAD || force) {
-    previousLayout = layout;
-    layout = QUAD;
-    activeViews = views.slice(0, 4);
-    parent.setBrowserView(null); // clearing browserviews
-    activeViews.forEach(view => {
-      parent.addBrowserView(view);
-    });
-
-    updateQuadLayout();
-
-    if (audibleView) {
-      setAudible(audibleView);
-    }
-  }
+  let layoutViews = views.slice(0, 4);
+  setLayout(QUAD, layoutViews, force, updateQuadLayout);
 }
 
 function setQuadHorizontalLayout(force) {
+  let layoutViews = views.slice(0, 4);
+  setLayout(QUADH, layoutViews, force, updateQuadHorizontalLayout);
+}
+
+function setTriLayout(force) {
+  let layoutViews = views.slice(0, 3);
+  setLayout(TRI, layoutViews, force, updateTriLayout);
+}
+
+function setDualLayout(force) {
+  let layoutViews = views.slice(0, 2);
+  setLayout(DUAL, layoutViews, force, updateDualLayout);
+}
+
+function setSingleLayout(number) {
+  let layoutViews = [ views[number] ];
+  setLayout(SINGLE, layoutViews, true, updateSingleLayout);
+}
+
+function setLayout(newLayout, layoutViews, force, updateFunc) {
   checkInitialized();
 
-  if (layout != QUADH || force) {
+  if (layout != newLayout || force) {
     previousLayout = layout;
-    layout = QUADH;
-    activeViews = views.slice(0, 4);
+    layout = newLayout;
+    activeViews = layoutViews;
     parent.setBrowserView(null); // clearing browserviews
     activeViews.forEach(view => {
       parent.addBrowserView(view);
     });
 
-    updateQuadHorizontalLayout();
-
-    if (audibleView) {
-      setAudible(audibleView);
-    }
-  }
-}
-
-function setTriLayout(force) {
-  checkInitialized();
-
-  if (layout != TRI || force) {
-    previousLayout = layout;
-    layout = TRI;
-    activeViews = views.slice(0, 3);
-
-    parent.setBrowserView(null); // clear browser views
-    activeViews.forEach(view => {
-      parent.addBrowserView(view);
-    });
-
-    updateTriLayout();
+    updateFunc();
 
     if (audibleView) {
       if (!activeViews.includes(audibleView)) {
@@ -236,68 +175,6 @@ function setTriLayout(force) {
       }
     }
   }
-}
-
-function setDualLayout(force) {
-  checkInitialized();
-
-  if (layout != DUAL || force) {
-    previousLayout = layout;
-    layout = DUAL;
-    activeViews = views.slice(0, 2);
-
-    parent.setBrowserView(null); // clear browser views
-    activeViews.forEach(view => {
-      parent.addBrowserView(view);
-    });
-
-    updateDualLayout();
-
-    if (audibleView) {
-      if (!activeViews.includes(audibleView)) {
-        setAudible(activeViews[0]);
-      } else {
-        setAudible(audibleView);
-      }
-    }
-  }
-}
-
-function setSingleLayout(number) {
-  checkInitialized();
-
-  if (layout != SINGLE) {
-    previousLayout = layout;
-    layout = SINGLE;
-    activeViews = [ views[number] ];
-
-    parent.setBrowserView(null); // clear browser views
-    activeViews.forEach(view => {
-      parent.addBrowserView(view);
-    });
-
-    updateSingleLayout(number);
-
-    if (audibleView) {
-      if (!activeViews.includes(audibleView)) {
-        setAudible(activeViews[0]);
-      } else {
-        setAudible(audibleView);
-      }
-    }
-  }
-}
-
-function exitSingleLayout() {
-  checkInitialized();
-  if (layout != SINGLE) return;
-  if (previousLayout === SIXH) setSixHorizontalLayout(true);
-  if (previousLayout === SIXV) setSixVerticalLayout(true);
-  if (previousLayout === FIVEH) setFiveHorizontalLayout(true);
-  if (previousLayout === QUAD) setQuadLayout(true);
-  if (previousLayout === QUADH) setQuadHorizontalLayout(true);
-  if (previousLayout === TRI) setTriLayout(true);
-  if (previousLayout === DUAL) setDualLayout(true);
 }
 
 function isSingleLayout() {
@@ -340,42 +217,42 @@ function isSixVerticalLayout() {
   return layout === SIXV;
 }
 
+function exitSingleLayout() {
+  checkInitialized();
+  if (layout != SINGLE) return;
+  if (previousLayout === SIXH) setSixHorizontalLayout(true);
+  if (previousLayout === SIXV) setSixVerticalLayout(true);
+  if (previousLayout === FIVEH) setFiveHorizontalLayout(true);
+  if (previousLayout === QUAD) setQuadLayout(true);
+  if (previousLayout === QUADH) setQuadHorizontalLayout(true);
+  if (previousLayout === TRI) setTriLayout(true);
+  if (previousLayout === DUAL) setDualLayout(true);
+}
+
 function updateLayout() {
-  if (layout === SINGLE) {
-    updateSingleLayout();
-  } else if (layout === DUAL) {
-    updateDualLayout();
-  } else if (layout === TRI) {
-    updateTriLayout();
-  } else if (layout === QUAD) {
-    updateQuadLayout();
-  } else if (layout === QUADH) {
-    updateQuadHorizontalLayout();
-  } else if (layout === FIVEH) {
-    updateFiveHorizontalLayout();
-  } else if (layout === SIXH) {
-    updateSixHorizontalLayout();
-  } else if (layout === SIXV) {
-    updateSixVerticalLayout();
-  } else {
-    throw new Error('Unknown layout');
-  }
+  if (layout === SINGLE) updateSingleLayout();
+  if (layout === DUAL) updateDualLayout();
+  if (layout === TRI) updateTriLayout();
+  if (layout === QUAD) updateQuadLayout();
+  if (layout === QUADH) updateQuadHorizontalLayout();
+  if (layout === FIVEH) updateFiveHorizontalLayout();
+  if (layout === SIXH) updateSixHorizontalLayout();
+  if (layout === SIXV) updateSixVerticalLayout();
 
   if (audibleView) {
     setSelected(audibleView); // updating size and location of the frame
   }
 }
 
-function updateSingleLayout(number) {
+function updateSingleLayout() {
   let bounds = parent.getBounds();
   let contentBounds = parent.getContentBounds();
   let offsetY = isMac ? bounds.height - contentBounds.height : 0; // to avoid hiding webviews under the windowmenu
 
   let vBounds = { x: 0, y: offsetY, width: contentBounds.width, height: contentBounds.height };
-
-  views[number].setBounds(vBounds);
-
-  viewBounds = [{ view: views[number], bounds: vBounds }];
+  let view = activeViews[0];
+  viewBounds = [{ view: view, bounds: vBounds }];
+  view.setBounds(vBounds);
 }
 
 function updateDualLayout() {
