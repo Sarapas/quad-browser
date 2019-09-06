@@ -25,8 +25,6 @@ let textBox;
 let layout;
 let previousLayout;
 
-global.QUADMENU = [];
-
 function init(parentWindow) {
   if (isInitialized) throw new Error('Already initialized');
   parent = parentWindow;
@@ -64,7 +62,7 @@ function appendSwapMenu(number, ctxMenu) {
         label: 'Swap with ' + n,
         click: function() {
           swapBrowserView(number - 1, n - 1);
-          setLayout(layout);
+          updateLayout();
         }
       })
     );
@@ -72,21 +70,9 @@ function appendSwapMenu(number, ctxMenu) {
 }
 
 function createBrowserView(number, title) {
-  let ctxMenu = new Menu();
-  global.QUADMENU.push(ctxMenu);
-
   let browserView = new BrowserView();
   browserView.number = number;
   browserView.webContents.setAudioMuted(true);
-  browserView.webContents.on('context-menu', function(e, params) {
-    if (layout === QUAD) {
-      global.QUADMENU[browserView.number - 1].popup(
-        browserView,
-        params.x,
-        params.y
-      );
-    }
-  });
   return browserView;
 }
 
@@ -217,13 +203,9 @@ function setSingleLayout(number) {
 function exitSingleLayout() {
   checkInitialized();
   if (layout != SINGLE) return;
-  setLayout(previousLayout);
-}
-
-function setLayout(layout) {
-  if (layout === QUAD) setQuadLayout(true);
-  if (layout === DUAL) setDualLayout(true);
-  if (layout === TRI) setTriLayout(true);
+  if (previousLayout === QUAD) setQuadLayout(true);
+  if (previousLayout === DUAL) setDualLayout(true);
+  if (previousLayout === TRI) setTriLayout(true);
 }
 
 function isSingleLayout() {
@@ -273,12 +255,7 @@ function updateSingleLayout(number) {
   let contentBounds = parent.getContentBounds();
   let offsetY = isMac ? bounds.height - contentBounds.height : 0; // to avoid hiding webviews under the windowmenu
 
-  let vBounds = {
-    x: 0,
-    y: offsetY,
-    width: contentBounds.width,
-    height: contentBounds.height
-  };
+  let vBounds = { x: 0, y: offsetY, width: contentBounds.width, height: contentBounds.height };
 
   views[number].setBounds(vBounds);
 
@@ -296,18 +273,8 @@ function updateDualLayout() {
   let offsetY = isMac ? bounds.height - contentBounds.height : 0; // to avoid hiding webviews under the windowmenu
   let offsetX = 0;
 
-  let bounds1 = {
-    x: offsetX,
-    y: offsetY,
-    width: viewWidth,
-    height: viewHeight
-  };
-  let bounds2 = {
-    x: offsetX,
-    y: offsetY + viewHeight,
-    width: viewWidth,
-    height: viewHeight
-  };
+  let bounds1 = { x: offsetX, y: offsetY, width: viewWidth, height: viewHeight };
+  let bounds2 = { x: offsetX, y: offsetY + viewHeight, width: viewWidth, height: viewHeight };
 
   views[0].setBounds(bounds1);
   views[1].setBounds(bounds2);
@@ -343,24 +310,9 @@ function updateTriLayout() {
     viewHeight = Math.floor(contentBounds.height / 2);
   }
 
-  let bounds1 = {
-    x: offsetX,
-    y: offsetY,
-    width: viewWidth,
-    height: viewHeight
-  };
-  let bounds2 = {
-    x: offsetX + viewWidth,
-    y: offsetY,
-    width: viewWidth,
-    height: viewHeight
-  };
-  let bounds3 = {
-    x: offsetX,
-    y: offsetY + viewHeight,
-    width: Math.floor(contentBounds.width),
-    height: Math.floor(contentBounds.height / 2)
-  };
+  let bounds1 = { x: offsetX, y: offsetY, width: viewWidth, height: viewHeight };
+  let bounds2 = { x: offsetX + viewWidth, y: offsetY, width: viewWidth, height: viewHeight };
+  let bounds3 = { x: offsetX, y: offsetY + viewHeight, width: Math.floor(contentBounds.width), height: Math.floor(contentBounds.height / 2) };
 
   views[0].setBounds(bounds1);
   views[1].setBounds(bounds2);
@@ -398,30 +350,10 @@ function updateQuadLayout() {
     viewHeight = Math.floor(contentBounds.height / 2);
   }
 
-  let bounds1 = {
-    x: offsetX,
-    y: offsetY,
-    width: viewWidth,
-    height: viewHeight
-  };
-  let bounds2 = {
-    x: offsetX + viewWidth,
-    y: offsetY,
-    width: viewWidth,
-    height: viewHeight
-  };
-  let bounds3 = {
-    x: offsetX,
-    y: offsetY + viewHeight,
-    width: viewWidth,
-    height: viewHeight
-  };
-  let bounds4 = {
-    x: offsetX + viewWidth,
-    y: offsetY + viewHeight,
-    width: viewWidth,
-    height: viewHeight
-  };
+  let bounds1 = { x: offsetX, y: offsetY, width: viewWidth, height: viewHeight };
+  let bounds2 = { x: offsetX + viewWidth, y: offsetY, width: viewWidth, height: viewHeight };
+  let bounds3 = { x: offsetX, y: offsetY + viewHeight, width: viewWidth, height: viewHeight };
+  let bounds4 = { x: offsetX + viewWidth, y: offsetY + viewHeight, width: viewWidth, height: viewHeight };
 
   views[0].setBounds(bounds1);
   views[1].setBounds(bounds2);
