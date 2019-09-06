@@ -75,6 +75,10 @@ function createBrowserView(number, title) {
   let browserView = new BrowserView();
   browserView.number = number;
   browserView.webContents.setAudioMuted(true);
+  browserView.webContents.on('new-window', (e, url) => {
+    e.preventDefault()
+    browserView.webContents.loadURL(url);
+  });
   return browserView;
 }
 
