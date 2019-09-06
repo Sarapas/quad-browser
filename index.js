@@ -202,13 +202,19 @@ function createMenu() {
     addressSubmenu.push({ label: 'Bottom left', click: () => { changeAddress(3); } });
     addressSubmenu.push({ label: 'Bottom right', click: () => { changeAddress(4); } });
     addressSubmenu.push({ label: 'All', click: () => { changeAddress(); } });
+  } else if (viewManager.isQuadHorizontalLayout()) {
+    addressSubmenu.push({ label: 'Top left', click: () => { changeAddress(1); } });
+    addressSubmenu.push({ label: 'Top center', click: () => { changeAddress(2); } });
+    addressSubmenu.push({ label: 'Top right', click: () => { changeAddress(3); } });
+    addressSubmenu.push({ label: 'Bottom', click: () => { changeAddress(4); } });
+    addressSubmenu.push({ label: 'All', click: () => { changeAddress(); } });
   } else if (viewManager.isSixHorizontalLayout()) {
     addressSubmenu.push({ label: 'Top left', click: () => { changeAddress(1); } });
     addressSubmenu.push({ label: 'Top center', click: () => { changeAddress(2); } });
     addressSubmenu.push({ label: 'Top right', click: () => { changeAddress(3); } });
-    addressSubmenu.push({ label: 'Bottom left', click: () => { changeAddress(3); } });
-    addressSubmenu.push({ label: 'Bottom center', click: () => { changeAddress(4); } });
-    addressSubmenu.push({ label: 'Bottom right', click: () => { changeAddress(5); } });
+    addressSubmenu.push({ label: 'Bottom left', click: () => { changeAddress(4); } });
+    addressSubmenu.push({ label: 'Bottom center', click: () => { changeAddress(5); } });
+    addressSubmenu.push({ label: 'Bottom right', click: () => { changeAddress(6); } });
     addressSubmenu.push({ label: 'All', click: () => { changeAddress(); } });
   } else if (viewManager.isSixVerticalLayout()) {
     addressSubmenu.push({ label: 'Top left', click: () => { changeAddress(1); } });
@@ -288,8 +294,18 @@ function createMenu() {
           }
         },
         {
-          label: 'Six Horizontal Screen',
+          label: 'Quad 3+1 Screen',
           accelerator: 'CmdOrCtrl+f5',
+          type: 'radio',
+          checked: viewManager.isQuadHorizontalLayout(),
+          click: () => {
+            viewManager.setQuadHorizontalLayout();
+            Menu.setApplicationMenu(createMenu());
+          }
+        },
+        {
+          label: 'Six Horizontal Screen',
+          accelerator: 'CmdOrCtrl+f9',
           type: 'radio',
           checked: viewManager.isSixHorizontalLayout(),
           click: () => {
@@ -299,7 +315,7 @@ function createMenu() {
         },
         {
           label: 'Six Vertical Screen',
-          accelerator: 'CmdOrCtrl+f6',
+          accelerator: 'CmdOrCtrl+f10',
           type: 'radio',
           checked: viewManager.isSixVerticalLayout(),
           click: () => {
