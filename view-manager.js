@@ -12,6 +12,7 @@ let aspect_ratio = 16 / 9;
 let SINGLE = 'Single';
 let QUAD = 'Quad';
 let QUADH = 'QuadH';
+let QUADV = 'QuadV';
 let FIVEH = 'FiveH'
 let DUAL = 'Dual';
 let TRI = 'Tri';
@@ -138,6 +139,11 @@ function setQuadHorizontalLayout(force) {
   setLayout(QUADH, layoutViews, force, updateQuadHorizontalLayout);
 }
 
+function setQuadVerticalLayout(force) {
+  let layoutViews = views.slice(0, 4);
+  setLayout(QUADV, layoutViews, force, updateQuadVerticalLayout);
+}
+
 function setTriLayout(force) {
   let layoutViews = views.slice(0, 3);
   setLayout(TRI, layoutViews, force, updateTriLayout);
@@ -202,6 +208,11 @@ function isQuadHorizontalLayout() {
   return layout === QUADH;
 }
 
+function isQuadVerticalLayout() {
+  checkInitialized();
+  return layout === QUADV;
+}
+
 function isFiveHorizontalLayout() {
   checkInitialized();
   return layout === FIVEH;
@@ -225,6 +236,7 @@ function exitSingleLayout() {
   if (previousLayout === FIVEH) setFiveHorizontalLayout(true);
   if (previousLayout === QUAD) setQuadLayout(true);
   if (previousLayout === QUADH) setQuadHorizontalLayout(true);
+  if (previousLayout === QUADV) setQuadVerticalLayout(true);
   if (previousLayout === TRI) setTriLayout(true);
   if (previousLayout === DUAL) setDualLayout(true);
 }
@@ -235,6 +247,7 @@ function updateLayout() {
   if (layout === TRI) updateTriLayout();
   if (layout === QUAD) updateQuadLayout();
   if (layout === QUADH) updateQuadHorizontalLayout();
+  if (layout === QUADV) updateQuadVerticalLayout();
   if (layout === FIVEH) updateFiveHorizontalLayout();
   if (layout === SIXH) updateSixHorizontalLayout();
   if (layout === SIXV) updateSixVerticalLayout();
@@ -348,6 +361,37 @@ function updateQuadHorizontalLayout() {
   let bounds2 = { x: topViewWidth, y: offsetY, width: topViewWidth, height: topViewHeight };
   let bounds3 = { x: topViewWidth * 2, y: offsetY, width: topViewWidth, height: topViewHeight };
   let bounds4 = { x: offsetX, y: offsetY + topViewHeight, width: bottomViewWidth, height: bottomViewHeight };
+
+  viewBounds = [
+    { view: views[0], bounds: bounds1 },
+    { view: views[1], bounds: bounds2 },
+    { view: views[2], bounds: bounds3 },
+    { view: views[3], bounds: bounds4 }
+  ];
+
+  viewBounds.forEach(vb => {
+    vb.view.setBounds(vb.bounds);
+  });
+}
+
+function updateQuadVerticalLayout() {
+  checkInitialized();
+
+  let bounds = parent.getBounds();
+  let contentBounds = parent.getContentBounds();
+  let offsetY = isMac ? bounds.height - contentBounds.height : 0; // to avoid hiding webviews under the windowmenu
+  let offsetX = 0;
+
+  let rightViewHeight = Math.floor(contentBounds.height / 3);
+  let rightViewWidth = Math.floor(rightViewHeight * aspect_ratio);
+
+  let leftViewWidth = contentBounds.width - rightViewWidth;
+  let leftViewHeight = contentBounds.height;
+
+  let bounds1 = { x: offsetX, y: offsetY, width: leftViewWidth, height: leftViewHeight };
+  let bounds2 = { x: offsetX + leftViewWidth, y: offsetY, width: rightViewWidth, height: rightViewHeight };
+  let bounds3 = { x: offsetX + leftViewWidth, y: offsetY + rightViewHeight, width: rightViewWidth, height: rightViewHeight };
+  let bounds4 = { x: offsetX + leftViewWidth, y: offsetY + rightViewHeight * 2, width: rightViewWidth, height: rightViewHeight };
 
   viewBounds = [
     { view: views[0], bounds: bounds1 },
@@ -719,6 +763,7 @@ var exports = (module.exports = {
   setFiveHorizontalLayout: setFiveHorizontalLayout,
   setQuadLayout: setQuadLayout,
   setQuadHorizontalLayout: setQuadHorizontalLayout,
+  setQuadVerticalLayout: setQuadVerticalLayout,
   setTriLayout: setTriLayout,
   setDualLayout: setDualLayout,
   setSingleLayout: setSingleLayout,
@@ -728,6 +773,7 @@ var exports = (module.exports = {
   isTriLayout: isTriLayout,
   isQuadLayout: isQuadLayout,
   isQuadHorizontalLayout: isQuadHorizontalLayout,
+  isQuadVerticalLayout: isQuadVerticalLayout,
   isFiveHorizontalLayout: isFiveHorizontalLayout,
   isSixHorizontalLayout: isSixHorizontalLayout,
   isSixVerticalLayout: isSixVerticalLayout,
