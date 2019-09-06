@@ -13,6 +13,8 @@ let SINGLE = 'Single';
 let QUAD = 'Quad';
 let DUAL = 'Dual';
 let TRI = 'Tri';
+let SIXH = 'SIXH'
+let SIXV = 'SIXV'
 
 let views;
 let activeViews;
@@ -35,8 +37,8 @@ function init(parentWindow) {
     createBrowserView(2),
     createBrowserView(3),
     createBrowserView(4),
-    // createBrowserView(5),
-    // createBrowserView(6),
+    createBrowserView(5),
+    createBrowserView(6),
   ];
 
   isInitialized = true;
@@ -82,7 +84,7 @@ function loadURL(url, view) {
   if (view) {
     view.webContents.loadURL(url);
   } else {
-    activeViews.forEach(view => {
+    views.forEach(view => {
       view.webContents.loadURL(url);
     });
   }
@@ -105,13 +107,53 @@ function resumeAudible() {
   setSelected(audibleView);
 }
 
+function setSixHorizontalLayout(force) {
+  checkInitialized();
+
+  if (layout != SIXH || force) {
+    previousLayout = layout;
+    layout = SIXH;
+    activeViews = views.slice(0, 6);
+    parent.setBrowserView(null); // clearing browserviews
+    activeViews.forEach(view => {
+      parent.addBrowserView(view);
+    });
+
+    updateSixHorizontalLayout();
+
+    if (audibleView) {
+      setAudible(audibleView);
+    }
+  }
+}
+
+function setSixVerticalLayout(force) {
+  checkInitialized();
+
+  if (layout != SIXV || force) {
+    previousLayout = layout;
+    layout = SIXV;
+    activeViews = views.slice(0, 6);
+    parent.setBrowserView(null); // clearing browserviews
+    activeViews.forEach(view => {
+      parent.addBrowserView(view);
+    });
+
+    updateSixVerticalLayout();
+
+    if (audibleView) {
+      setAudible(audibleView);
+    }
+  }
+}
+
 function setQuadLayout(force) {
   checkInitialized();
 
   if (layout != QUAD || force) {
     previousLayout = layout;
     layout = QUAD;
-    activeViews = views;
+    activeViews = views.slice(0, 4);
     parent.setBrowserView(null); // clearing browserviews
     activeViews.forEach(view => {
       parent.addBrowserView(view);
@@ -131,7 +173,7 @@ function setTriLayout(force) {
   if (layout != TRI || force) {
     previousLayout = layout;
     layout = TRI;
-    activeViews = [views[0], views[1], views[2]];
+    activeViews = views.slice(0, 3);
 
     parent.setBrowserView(null); // clear browser views
     activeViews.forEach(view => {
@@ -156,7 +198,7 @@ function setDualLayout(force) {
   if (layout != DUAL || force) {
     previousLayout = layout;
     layout = DUAL;
-    activeViews = [views[0], views[1]];
+    activeViews = views.slice(0, 2);
 
     parent.setBrowserView(null); // clear browser views
     activeViews.forEach(view => {
@@ -181,7 +223,7 @@ function setSingleLayout(number) {
   if (layout != SINGLE) {
     previousLayout = layout;
     layout = SINGLE;
-    activeViews = [views[number]];
+    activeViews = [ views[number] ];
 
     parent.setBrowserView(null); // clear browser views
     activeViews.forEach(view => {
@@ -210,37 +252,47 @@ function exitSingleLayout() {
 
 function isSingleLayout() {
   checkInitialized();
-
   return layout === SINGLE;
 }
 
 function isDualLayout() {
   checkInitialized();
-
   return layout === DUAL;
 }
 
 function isTriLayout() {
   checkInitialized();
-
   return layout === TRI;
 }
 
 function isQuadLayout() {
   checkInitialized();
-
   return layout === QUAD;
+}
+
+function isSixHorizontalLayout() {
+  checkInitialized();
+  return layout === SIXH;
+}
+
+function isSixVerticalLayout() {
+  checkInitialized();
+  return layout === SIXV;
 }
 
 function updateLayout() {
   if (layout === SINGLE) {
     updateSingleLayout();
-  } else if (layout === QUAD) {
-    updateQuadLayout();
   } else if (layout === DUAL) {
     updateDualLayout();
   } else if (layout === TRI) {
     updateTriLayout();
+  } else if (layout === QUAD) {
+    updateQuadLayout();
+  } else if (layout === SIXH) {
+    updateSixHorizontalLayout();
+  } else if (layout === SIXV) {
+    updateSixVerticalLayout();
   } else {
     throw new Error('Unknown layout');
   }
@@ -323,6 +375,110 @@ function updateTriLayout() {
     { view: views[0], bounds: bounds1 },
     { view: views[1], bounds: bounds2 },
     { view: views[2], bounds: bounds3 }
+  ];
+}
+
+function updateSixHorizontalLayout() {
+  checkInitialized();
+
+  let cols = 3;
+  let rows = 2;
+  let ratio = aspect_ratio * cols / rows;
+  let viewWidth = 0;
+  let viewHeight = 0;
+  let bounds = parent.getBounds();
+  let contentBounds = parent.getContentBounds();
+  let offsetY = isMac ? bounds.height - contentBounds.height : 0; // to avoid hiding webviews under the windowmenu
+  let offsetX = 0;
+
+  if (contentBounds.width / contentBounds.height < ratio) {
+    let newHeight = contentBounds.width / ratio;
+    const barHeight = Math.floor((contentBounds.height - newHeight) / 2);
+    offsetY += barHeight;
+    viewWidth = Math.floor(contentBounds.width / cols);
+    viewHeight = Math.floor(newHeight / rows);
+  } else {
+    let newWidth = contentBounds.height * ratio;
+    const barWidth = Math.floor((contentBounds.width - newWidth) / 2);
+    offsetX += barWidth;
+    viewWidth = Math.floor(newWidth / cols);
+    viewHeight = Math.floor(contentBounds.height / rows);
+  }
+
+  let bounds1 = { x: offsetX, y: offsetY, width: viewWidth, height: viewHeight };
+  let bounds2 = { x: offsetX + viewWidth, y: offsetY, width: viewWidth, height: viewHeight };
+  let bounds3 = { x: offsetX + viewWidth * 2, y: offsetY, width: viewWidth, height: viewHeight };
+  let bounds4 = { x: offsetX, y: offsetY + viewHeight, width: viewWidth, height: viewHeight };
+  let bounds5 = { x: offsetX + viewWidth, y: offsetY + viewHeight, width: viewWidth, height: viewHeight };
+  let bounds6 = { x: offsetX + viewWidth * 2, y: offsetY + viewHeight, width: viewWidth, height: viewHeight };
+
+  views[0].setBounds(bounds1);
+  views[1].setBounds(bounds2);
+  views[2].setBounds(bounds3);
+  views[3].setBounds(bounds4);
+  views[4].setBounds(bounds5);
+  views[5].setBounds(bounds6);
+
+  // preserving view bounds for later reference
+  viewBounds = [
+    { view: views[0], bounds: bounds1 },
+    { view: views[1], bounds: bounds2 },
+    { view: views[2], bounds: bounds3 },
+    { view: views[3], bounds: bounds4 },
+    { view: views[4], bounds: bounds5 },
+    { view: views[5], bounds: bounds6 }
+  ];
+}
+
+function updateSixVerticalLayout() {
+  checkInitialized();
+
+  let cols = 2;
+  let rows = 3;
+  let ratio = aspect_ratio * cols / rows;
+  let viewWidth = 0;
+  let viewHeight = 0;
+  let bounds = parent.getBounds();
+  let contentBounds = parent.getContentBounds();
+  let offsetY = isMac ? bounds.height - contentBounds.height : 0; // to avoid hiding webviews under the windowmenu
+  let offsetX = 0;
+
+  if (contentBounds.width / contentBounds.height < ratio) {
+    let newHeight = contentBounds.width / ratio;
+    const barHeight = Math.floor((contentBounds.height - newHeight) / 2);
+    offsetY += barHeight;
+    viewWidth = Math.floor(contentBounds.width / cols);
+    viewHeight = Math.floor(newHeight / rows);
+  } else {
+    let newWidth = contentBounds.height * ratio;
+    const barWidth = Math.floor((contentBounds.width - newWidth) / 2);
+    offsetX += barWidth;
+    viewWidth = Math.floor(newWidth / cols);
+    viewHeight = Math.floor(contentBounds.height / rows);
+  }
+
+  let bounds1 = { x: offsetX, y: offsetY, width: viewWidth, height: viewHeight };
+  let bounds2 = { x: offsetX + viewWidth, y: offsetY, width: viewWidth, height: viewHeight };
+  let bounds3 = { x: offsetX, y: offsetY + viewHeight, width: viewWidth, height: viewHeight };
+  let bounds4 = { x: offsetX + viewWidth, y: offsetY + viewHeight, width: viewWidth, height: viewHeight };
+  let bounds5 = { x: offsetX, y: offsetY + viewHeight * 2, width: viewWidth, height: viewHeight };
+  let bounds6 = { x: offsetX + viewWidth, y: offsetY + viewHeight * 2, width: viewWidth, height: viewHeight };
+
+  views[0].setBounds(bounds1);
+  views[1].setBounds(bounds2);
+  views[2].setBounds(bounds3);
+  views[3].setBounds(bounds4);
+  views[4].setBounds(bounds5);
+  views[5].setBounds(bounds6);
+
+  // preserving view bounds for later reference
+  viewBounds = [
+    { view: views[0], bounds: bounds1 },
+    { view: views[1], bounds: bounds2 },
+    { view: views[2], bounds: bounds3 },
+    { view: views[3], bounds: bounds4 },
+    { view: views[4], bounds: bounds5 },
+    { view: views[5], bounds: bounds6 }
   ];
 }
 
@@ -575,7 +731,6 @@ function createUrlWindow(number) {
   });
 
   ipcMain.once('load-url', (event, arg) => {
-    var _number = number;
     activeViews[number - 1].webContents.loadURL(arg);
   });
 }
@@ -662,6 +817,8 @@ var exports = (module.exports = {
   resumeAudible: resumeAudible,
   inView: inView,
   getViewByNumber: getViewByNumber,
+  setSixHorizontalLayout: setSixHorizontalLayout,
+  setSixVerticalLayout: setSixVerticalLayout,
   setQuadLayout: setQuadLayout,
   setTriLayout: setTriLayout,
   setDualLayout: setDualLayout,
@@ -671,6 +828,8 @@ var exports = (module.exports = {
   isDualLayout: isDualLayout,
   isTriLayout: isTriLayout,
   isQuadLayout: isQuadLayout,
+  isSixHorizontalLayout: isSixHorizontalLayout,
+  isSixVerticalLayout: isSixVerticalLayout,
   loadURL: loadURL,
   updateLayout: updateLayout,
   maximizeViews: maximizeViews,

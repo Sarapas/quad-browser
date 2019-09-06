@@ -271,6 +271,26 @@ function createMenu() {
             Menu.setApplicationMenu(createMenu());
           }
         },
+        {
+          label: 'Six Horizontal Screen',
+          accelerator: 'CmdOrCtrl+f5',
+          type: 'radio',
+          checked: viewManager.isSixHorizontalLayout(),
+          click: () => {
+            viewManager.setSixHorizontalLayout();
+            Menu.setApplicationMenu(createMenu());
+          }
+        },
+        {
+          label: 'Six Vertical Screen',
+          accelerator: 'CmdOrCtrl+f6',
+          type: 'radio',
+          checked: viewManager.isSixVerticalLayout(),
+          click: () => {
+            viewManager.setSixVerticalLayout();
+            Menu.setApplicationMenu(createMenu());
+          }
+        },
         { type: 'separator' },
         {
           label: 'Hover mode',
