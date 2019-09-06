@@ -7,6 +7,7 @@
       id="webUrl"
       name="webUrl"
       value="https://"
+      onkeyup="keyUp()"
     />
 
     <button
@@ -30,6 +31,13 @@
 
   <script src="node_modules/jquery/dist/jquery.min.js"></script>
   <script type="text/javascript">
+    function keyUp() {
+      if (event.keyCode === 13) {
+        event.preventDefault();
+        document.getElementById("btn").click();
+      }
+    }
+
     function myFunction() {
       try {
         const { ipcRenderer, remote } = require('electron');

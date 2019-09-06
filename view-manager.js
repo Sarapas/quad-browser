@@ -593,7 +593,6 @@ function inView(x, y) {
 }
 
 function createUrlWindow(number) {
-  view = views[number - 1];
   textBox = new BrowserWindow({
     frame: false,
     transparent: true,
@@ -610,72 +609,20 @@ function createUrlWindow(number) {
 
   textBox.loadFile('textBox.html');
 
+  let view = getViewByNumber(number);
   let vb = viewBounds.find(vb => vb.view === view);
+
   let initialPos = isMac ? parent.getBounds() : parent.getContentBounds();
 
-  let frameBounds;
+  let width = 272;
+  let height = 72;
 
-  if (!parent.screenTop && !parent.screenY) {
-    if (number == 1) {
-      frameBounds = {
-        x: initialPos.x + vb.bounds.width / 2,
-        y: initialPos.y + vb.bounds.height - 50,
-        width: 300,
-        height: 72
-      };
-    } else if (number == 2) {
-      frameBounds = {
-        x: initialPos.x + vb.bounds.width + vb.bounds.width / 2,
-        y: initialPos.y + vb.bounds.height - 50,
-        width: 272,
-        height: 72
-      };
-    } else if (number == 3) {
-      frameBounds = {
-        x: initialPos.x + vb.bounds.width / 2,
-        y: initialPos.y - 50 + vb.bounds.height * 2,
-        width: 272,
-        height: 72
-      };
-    } else if (number == 4) {
-      frameBounds = {
-        x: initialPos.x + vb.bounds.width + vb.bounds.width / 2,
-        y: initialPos.y - 50 + vb.bounds.height * 2,
-        width: 272,
-        height: 72
-      };
-    }
-  } else {
-    if (number == 1) {
-      frameBounds = {
-        x: initialPos.x + vb.bounds.width / 2,
-        y: initialPos.y + vb.bounds.height - 20,
-        width: 272,
-        height: 72
-      };
-    } else if (number == 2) {
-      frameBounds = {
-        x: initialPos.x + vb.bounds.width + vb.bounds.width / 2,
-        y: initialPos.y + vb.bounds.height - 20,
-        width: 272,
-        height: 72
-      };
-    } else if (number == 3) {
-      frameBounds = {
-        x: initialPos.x + vb.bounds.width / 2,
-        y: initialPos.y - 20 + vb.bounds.height * 2,
-        width: 272,
-        height: 72
-      };
-    } else if (number == 4) {
-      frameBounds = {
-        x: initialPos.x + vb.bounds.width + vb.bounds.width / 2,
-        y: initialPos.y - 20 + vb.bounds.height * 2,
-        width: 272,
-        height: 72
-      };
-    }
-  }
+  let frameBounds = {
+    x: initialPos.x + vb.bounds.x + Math.floor((vb.bounds.width - width) / 2),
+    y: initialPos.y + vb.bounds.y + Math.floor((vb.bounds.height - height) / 2),
+    width: width,
+    height: height
+  };
 
   textBox.setBounds(frameBounds);
   textBox.once('ready-to-show', () => {
