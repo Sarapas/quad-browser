@@ -249,11 +249,11 @@ function setSingleLayout(number) {
 function exitSingleLayout() {
   checkInitialized();
   if (layout != SINGLE) return;
+  if (previousLayout === SIXH) setSixHorizontalLayout(true);
+  if (previousLayout === SIXV) setSixVerticalLayout(true);
   if (previousLayout === QUAD) setQuadLayout(true);
-  if (previousLayout === SIXH) setQuadLayout(true);
-  if (previousLayout === SIXV) setQuadLayout(true);
-  if (previousLayout === DUAL) setDualLayout(true);
   if (previousLayout === TRI) setTriLayout(true);
+  if (previousLayout === DUAL) setDualLayout(true);
 }
 
 function isSingleLayout() {
@@ -347,41 +347,30 @@ function updateDualLayout() {
 function updateTriLayout() {
   checkInitialized();
 
-  let viewWidth = 0;
-  let viewHeight = 0;
   let bounds = parent.getBounds();
   let contentBounds = parent.getContentBounds();
   let offsetY = isMac ? bounds.height - contentBounds.height : 0; // to avoid hiding webviews under the windowmenu
   let offsetX = 0;
 
-  if (contentBounds.width / contentBounds.height < aspect_ratio) {
-    let newHeight = contentBounds.width / aspect_ratio;
-    const barHeight = Math.floor((contentBounds.height - newHeight) / 2);
-    offsetY += barHeight;
-    viewWidth = Math.floor(contentBounds.width / 2);
-    viewHeight = Math.floor(newHeight / 2);
-  } else {
-    let newWidth = contentBounds.height * aspect_ratio;
-    const barWidth = Math.floor((contentBounds.width - newWidth) / 2);
-    offsetX += barWidth;
-    viewWidth = Math.floor(newWidth / 2);
-    viewHeight = Math.floor(contentBounds.height / 2);
-  }
+  let topViewWidth = Math.floor(contentBounds.width / 2);
+  let topViewHeight = Math.floor(topViewWidth / aspect_ratio);
 
-  let bounds1 = { x: offsetX, y: offsetY, width: viewWidth, height: viewHeight };
-  let bounds2 = { x: offsetX + viewWidth, y: offsetY, width: viewWidth, height: viewHeight };
-  let bounds3 = { x: offsetX, y: offsetY + viewHeight, width: Math.floor(contentBounds.width), height: Math.floor(contentBounds.height / 2) };
+  let bottomViewWidth = contentBounds.width;
+  let bottomViewHeight = contentBounds.height - topViewHeight;
 
-  views[0].setBounds(bounds1);
-  views[1].setBounds(bounds2);
-  views[2].setBounds(bounds3);
+  let bounds1 = { x: offsetX, y: offsetY, width: topViewWidth, height: topViewHeight };
+  let bounds2 = { x: topViewWidth, y: offsetY, width: topViewWidth, height: topViewHeight };
+  let bounds3 = { x: offsetX, y: offsetY + topViewHeight, width: bottomViewWidth, height: bottomViewHeight };
 
-  // preserving view bounds for later reference
   viewBounds = [
     { view: views[0], bounds: bounds1 },
     { view: views[1], bounds: bounds2 },
     { view: views[2], bounds: bounds3 }
   ];
+
+  viewBounds.forEach(vb => {
+    vb.view.setBounds(vb.bounds);
+  });
 }
 
 function updateSixHorizontalLayout() {
