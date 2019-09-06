@@ -56,7 +56,7 @@ function swapBrowserView(index1, index2) {
 
 function appendSwapMenu(number, ctxMenu) {
   let viewNumbers = activeViews.map(v => v.number);
-  let swapTo = viewNumbers.filter(n => n !== number);
+  let swapTo = viewNumbers.filter(n => n !== number).sort();
 
   swapTo.forEach(n => {
     ctxMenu.append(
@@ -246,6 +246,8 @@ function exitSingleLayout() {
   checkInitialized();
   if (layout != SINGLE) return;
   if (previousLayout === QUAD) setQuadLayout(true);
+  if (previousLayout === SIXH) setQuadLayout(true);
+  if (previousLayout === SIXV) setQuadLayout(true);
   if (previousLayout === DUAL) setDualLayout(true);
   if (previousLayout === TRI) setTriLayout(true);
 }
@@ -381,45 +383,15 @@ function updateTriLayout() {
 function updateSixHorizontalLayout() {
   checkInitialized();
 
-  let cols = 3;
-  let rows = 2;
-  let ratio = aspect_ratio * cols / rows;
-  let viewWidth = 0;
-  let viewHeight = 0;
-  let bounds = parent.getBounds();
-  let contentBounds = parent.getContentBounds();
-  let offsetY = isMac ? bounds.height - contentBounds.height : 0; // to avoid hiding webviews under the windowmenu
-  let offsetX = 0;
+  let size = calculateViewSize(2, 3);
 
-  if (contentBounds.width / contentBounds.height < ratio) {
-    let newHeight = contentBounds.width / ratio;
-    const barHeight = Math.floor((contentBounds.height - newHeight) / 2);
-    offsetY += barHeight;
-    viewWidth = Math.floor(contentBounds.width / cols);
-    viewHeight = Math.floor(newHeight / rows);
-  } else {
-    let newWidth = contentBounds.height * ratio;
-    const barWidth = Math.floor((contentBounds.width - newWidth) / 2);
-    offsetX += barWidth;
-    viewWidth = Math.floor(newWidth / cols);
-    viewHeight = Math.floor(contentBounds.height / rows);
-  }
+  let bounds1 = { x: size.x, y: size.y, width: size.width, height: size.height };
+  let bounds2 = { x: size.x + size.width, y: size.y, width: size.width, height: size.height };
+  let bounds3 = { x: size.x + size.width * 2, y: size.y, width: size.width, height: size.height };
+  let bounds4 = { x: size.x, y: size.y + size.height, width: size.width, height: size.height };
+  let bounds5 = { x: size.x + size.width, y: size.y + size.height, width: size.width, height: size.height };
+  let bounds6 = { x: size.x + size.width * 2, y: size.y + size.height, width: size.width, height: size.height };
 
-  let bounds1 = { x: offsetX, y: offsetY, width: viewWidth, height: viewHeight };
-  let bounds2 = { x: offsetX + viewWidth, y: offsetY, width: viewWidth, height: viewHeight };
-  let bounds3 = { x: offsetX + viewWidth * 2, y: offsetY, width: viewWidth, height: viewHeight };
-  let bounds4 = { x: offsetX, y: offsetY + viewHeight, width: viewWidth, height: viewHeight };
-  let bounds5 = { x: offsetX + viewWidth, y: offsetY + viewHeight, width: viewWidth, height: viewHeight };
-  let bounds6 = { x: offsetX + viewWidth * 2, y: offsetY + viewHeight, width: viewWidth, height: viewHeight };
-
-  views[0].setBounds(bounds1);
-  views[1].setBounds(bounds2);
-  views[2].setBounds(bounds3);
-  views[3].setBounds(bounds4);
-  views[4].setBounds(bounds5);
-  views[5].setBounds(bounds6);
-
-  // preserving view bounds for later reference
   viewBounds = [
     { view: views[0], bounds: bounds1 },
     { view: views[1], bounds: bounds2 },
@@ -428,50 +400,24 @@ function updateSixHorizontalLayout() {
     { view: views[4], bounds: bounds5 },
     { view: views[5], bounds: bounds6 }
   ];
+
+  viewBounds.forEach(vb => {
+    vb.view.setBounds(vb.bounds);
+  });
 }
 
 function updateSixVerticalLayout() {
   checkInitialized();
 
-  let cols = 2;
-  let rows = 3;
-  let ratio = aspect_ratio * cols / rows;
-  let viewWidth = 0;
-  let viewHeight = 0;
-  let bounds = parent.getBounds();
-  let contentBounds = parent.getContentBounds();
-  let offsetY = isMac ? bounds.height - contentBounds.height : 0; // to avoid hiding webviews under the windowmenu
-  let offsetX = 0;
+  let size = calculateViewSize(3, 2);
 
-  if (contentBounds.width / contentBounds.height < ratio) {
-    let newHeight = contentBounds.width / ratio;
-    const barHeight = Math.floor((contentBounds.height - newHeight) / 2);
-    offsetY += barHeight;
-    viewWidth = Math.floor(contentBounds.width / cols);
-    viewHeight = Math.floor(newHeight / rows);
-  } else {
-    let newWidth = contentBounds.height * ratio;
-    const barWidth = Math.floor((contentBounds.width - newWidth) / 2);
-    offsetX += barWidth;
-    viewWidth = Math.floor(newWidth / cols);
-    viewHeight = Math.floor(contentBounds.height / rows);
-  }
+  let bounds1 = { x: size.x, y: size.y, width: size.width, height: size.height };
+  let bounds2 = { x: size.x + size.width, y: size.y, width: size.width, height: size.height };
+  let bounds3 = { x: size.x, y: size.y + size.height, width: size.width, height: size.height };
+  let bounds4 = { x: size.x + size.width, y: size.y + size.height, width: size.width, height: size.height };
+  let bounds5 = { x: size.x, y: size.y + size.height * 2, width: size.width, height: size.height };
+  let bounds6 = { x: size.x + size.width, y: size.y + size.height * 2, width: size.width, height: size.height };
 
-  let bounds1 = { x: offsetX, y: offsetY, width: viewWidth, height: viewHeight };
-  let bounds2 = { x: offsetX + viewWidth, y: offsetY, width: viewWidth, height: viewHeight };
-  let bounds3 = { x: offsetX, y: offsetY + viewHeight, width: viewWidth, height: viewHeight };
-  let bounds4 = { x: offsetX + viewWidth, y: offsetY + viewHeight, width: viewWidth, height: viewHeight };
-  let bounds5 = { x: offsetX, y: offsetY + viewHeight * 2, width: viewWidth, height: viewHeight };
-  let bounds6 = { x: offsetX + viewWidth, y: offsetY + viewHeight * 2, width: viewWidth, height: viewHeight };
-
-  views[0].setBounds(bounds1);
-  views[1].setBounds(bounds2);
-  views[2].setBounds(bounds3);
-  views[3].setBounds(bounds4);
-  views[4].setBounds(bounds5);
-  views[5].setBounds(bounds6);
-
-  // preserving view bounds for later reference
   viewBounds = [
     { view: views[0], bounds: bounds1 },
     { view: views[1], bounds: bounds2 },
@@ -480,49 +426,58 @@ function updateSixVerticalLayout() {
     { view: views[4], bounds: bounds5 },
     { view: views[5], bounds: bounds6 }
   ];
+
+  viewBounds.forEach(vb => {
+    vb.view.setBounds(vb.bounds);
+  });
 }
 
 function updateQuadLayout() {
   checkInitialized();
 
-  let viewWidth = 0;
-  let viewHeight = 0;
-  let bounds = parent.getBounds();
-  let contentBounds = parent.getContentBounds();
-  let offsetY = isMac ? bounds.height - contentBounds.height : 0; // to avoid hiding webviews under the windowmenu
-  let offsetX = 0;
+  let size = calculateViewSize(2, 2);
 
-  if (contentBounds.width / contentBounds.height < aspect_ratio) {
-    let newHeight = contentBounds.width / aspect_ratio;
-    const barHeight = Math.floor((contentBounds.height - newHeight) / 2);
-    offsetY += barHeight;
-    viewWidth = Math.floor(contentBounds.width / 2);
-    viewHeight = Math.floor(newHeight / 2);
-  } else {
-    let newWidth = contentBounds.height * aspect_ratio;
-    const barWidth = Math.floor((contentBounds.width - newWidth) / 2);
-    offsetX += barWidth;
-    viewWidth = Math.floor(newWidth / 2);
-    viewHeight = Math.floor(contentBounds.height / 2);
-  }
+  let bounds1 = { x: size.x, y: size.y, width: size.width, height: size.height };
+  let bounds2 = { x: size.x + size.width, y: size.y, width: size.width, height: size.height };
+  let bounds3 = { x: size.x, y: size.y + size.height, width: size.width, height: size.height };
+  let bounds4 = { x: size.x + size.width, y: size.y + size.height, width: size.width, height: size.height };
 
-  let bounds1 = { x: offsetX, y: offsetY, width: viewWidth, height: viewHeight };
-  let bounds2 = { x: offsetX + viewWidth, y: offsetY, width: viewWidth, height: viewHeight };
-  let bounds3 = { x: offsetX, y: offsetY + viewHeight, width: viewWidth, height: viewHeight };
-  let bounds4 = { x: offsetX + viewWidth, y: offsetY + viewHeight, width: viewWidth, height: viewHeight };
-
-  views[0].setBounds(bounds1);
-  views[1].setBounds(bounds2);
-  views[2].setBounds(bounds3);
-  views[3].setBounds(bounds4);
-
-  // preserving view bounds for later reference
   viewBounds = [
     { view: views[0], bounds: bounds1 },
     { view: views[1], bounds: bounds2 },
     { view: views[2], bounds: bounds3 },
     { view: views[3], bounds: bounds4 }
   ];
+
+  viewBounds.forEach(vb => {
+    vb.view.setBounds(vb.bounds);
+  });
+}
+
+function calculateViewSize(rows, cols) {
+  let ratio = aspect_ratio * cols / rows;
+  let viewWidth = 0;
+  let viewHeight = 0;
+  let bounds = parent.getBounds();
+  let contentBounds = parent.getContentBounds();
+  let offsetY = isMac ? bounds.height - contentBounds.height : 0; // to avoid hiding webviews under the windowmenu
+  let offsetX = 0;
+
+  if (contentBounds.width / contentBounds.height < ratio) {
+    let newHeight = contentBounds.width / ratio;
+    const barHeight = Math.floor((contentBounds.height - newHeight) / 2);
+    offsetY += barHeight;
+    viewWidth = Math.floor(contentBounds.width / cols);
+    viewHeight = Math.floor(newHeight / rows);
+  } else {
+    let newWidth = contentBounds.height * ratio;
+    const barWidth = Math.floor((contentBounds.width - newWidth) / 2);
+    offsetX += barWidth;
+    viewWidth = Math.floor(newWidth / cols);
+    viewHeight = Math.floor(contentBounds.height / rows);
+  }
+
+  return { x: offsetX, y: offsetY, width: viewWidth, height: viewHeight };
 }
 
 function checkInitialized() {
@@ -659,6 +614,7 @@ function createUrlWindow(number) {
   let initialPos = isMac ? parent.getBounds() : parent.getContentBounds();
 
   let frameBounds;
+
   if (!parent.screenTop && !parent.screenY) {
     if (number == 1) {
       frameBounds = {

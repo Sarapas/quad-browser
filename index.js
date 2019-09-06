@@ -202,6 +202,22 @@ function createMenu() {
     addressSubmenu.push({ label: 'Bottom left', click: () => { changeAddress(3); } });
     addressSubmenu.push({ label: 'Bottom right', click: () => { changeAddress(4); } });
     addressSubmenu.push({ label: 'All', click: () => { changeAddress(); } });
+  } else if (viewManager.isSixHorizontalLayout()) {
+    addressSubmenu.push({ label: 'Top left', click: () => { changeAddress(1); } });
+    addressSubmenu.push({ label: 'Top center', click: () => { changeAddress(2); } });
+    addressSubmenu.push({ label: 'Top right', click: () => { changeAddress(3); } });
+    addressSubmenu.push({ label: 'Bottom left', click: () => { changeAddress(3); } });
+    addressSubmenu.push({ label: 'Bottom center', click: () => { changeAddress(4); } });
+    addressSubmenu.push({ label: 'Bottom right', click: () => { changeAddress(5); } });
+    addressSubmenu.push({ label: 'All', click: () => { changeAddress(); } });
+  } else if (viewManager.isSixVerticalLayout()) {
+    addressSubmenu.push({ label: 'Top left', click: () => { changeAddress(1); } });
+    addressSubmenu.push({ label: 'Top right', click: () => { changeAddress(2); } });
+    addressSubmenu.push({ label: 'Middle left', click: () => { changeAddress(3); } });
+    addressSubmenu.push({ label: 'Middle right', click: () => { changeAddress(4); } });
+    addressSubmenu.push({ label: 'Bottom left', click: () => { changeAddress(5); } });
+    addressSubmenu.push({ label: 'Bottom right', click: () => { changeAddress(6); } });
+    addressSubmenu.push({ label: 'All', click: () => { changeAddress(); } });
   }
   addressSubmenu.push({ type: 'separator' });
   addressSubmenu.push({ label: 'Change homepage', click: () => { changeHomepage(); } });
