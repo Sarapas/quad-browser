@@ -54,222 +54,21 @@ function swapBrowserView(index1, index2) {
   views[index2].number = index2 + 1;
 }
 
-function menuForQuads(number, ctxMenu) {
-  if (activeViews.length > 1) {
-    if (activeViews.length == 2) {
-      if (number == 1) {
-        ctxMenu.append(
-          new MenuItem({
-            label: 'Swap with 2',
-            click: function() {
-              swapBrowserView(0, 1);
-              setDualLayout(true);
-            }
-          })
-        );
-      }
-      if (number == 2) {
-        ctxMenu.append(
-          new MenuItem({
-            label: 'Swap with 1',
-            click: function() {
-              swapBrowserView(1, 0);
-              setDualLayout(true);
-            }
-          })
-        );
-      }
-    } else if (activeViews.length == 3) {
-      if (number == 1) {
-        ctxMenu.append(
-          new MenuItem({
-            label: 'Swap with 2',
-            click: function() {
-              swapBrowserView(0, 1);
-              setTriLayout(true);
-            }
-          })
-        );
+function appendSwapMenu(number, ctxMenu) {
+  let viewNumbers = activeViews.map(v => v.number);
+  let swapTo = viewNumbers.filter(n => n !== number);
 
-        ctxMenu.append(
-          new MenuItem({
-            label: 'Swap with 3',
-            click: function() {
-              swapBrowserView(0, 2);
-              setTriLayout(true);
-            }
-          })
-        );
-      }
-      if (number == 2) {
-        ctxMenu.append(
-          new MenuItem({
-            label: 'Swap with 1',
-            click: function() {
-              swapBrowserView(1, 0);
-              setTriLayout(true);
-            }
-          })
-        );
-
-        ctxMenu.append(
-          new MenuItem({
-            label: 'Swap with 3',
-            click: function() {
-              swapBrowserView(1, 2);
-              setTriLayout(true);
-            }
-          })
-        );
-      }
-      if (number == 3) {
-        ctxMenu.append(
-          new MenuItem({
-            label: 'Swap with 1',
-            click: function() {
-              swapBrowserView(2, 0);
-              setTriLayout(true);
-            }
-          })
-        );
-
-        ctxMenu.append(
-          new MenuItem({
-            label: 'Swap with 2',
-            click: function() {
-              swapBrowserView(2, 1);
-              setTriLayout(true);
-            }
-          })
-        );
-      }
-    } else {
-      if (number == 1) {
-        ctxMenu.append(
-          new MenuItem({
-            label: 'Swap with 2',
-            click: function() {
-              swapBrowserView(0, 1);
-              setQuadLayout(true);
-            }
-          })
-        );
-
-        ctxMenu.append(
-          new MenuItem({
-            label: 'Swap with 3',
-            click: function() {
-              swapBrowserView(0, 2);
-              setQuadLayout(true);
-            }
-          })
-        );
-
-        ctxMenu.append(
-          new MenuItem({
-            label: 'Swap with 4',
-            click: function() {
-              swapBrowserView(0, 3);
-              setQuadLayout(true);
-            }
-          })
-        );
-      }
-      if (number == 2) {
-        ctxMenu.append(
-          new MenuItem({
-            label: 'Swap with 1',
-            click: function() {
-              swapBrowserView(1, 0);
-              setQuadLayout(true);
-            }
-          })
-        );
-
-        ctxMenu.append(
-          new MenuItem({
-            label: 'Swap with 3',
-            click: function() {
-              swapBrowserView(1, 2);
-              setQuadLayout(true);
-            }
-          })
-        );
-
-        ctxMenu.append(
-          new MenuItem({
-            label: 'Swap with 4',
-            click: function() {
-              swapBrowserView(1, 3);
-              setQuadLayout(true);
-            }
-          })
-        );
-      }
-      if (number == 3) {
-        ctxMenu.append(
-          new MenuItem({
-            label: 'Swap with 1',
-            click: function() {
-              swapBrowserView(2, 0);
-              setQuadLayout(true);
-            }
-          })
-        );
-
-        ctxMenu.append(
-          new MenuItem({
-            label: 'Swap with 2',
-            click: function() {
-              swapBrowserView(2, 1);
-              setQuadLayout(true);
-            }
-          })
-        );
-
-        ctxMenu.append(
-          new MenuItem({
-            label: 'Swap with 4',
-            click: function() {
-              swapBrowserView(2, 3);
-              setQuadLayout(true);
-            }
-          })
-        );
-      }
-      if (number == 4) {
-        ctxMenu.append(
-          new MenuItem({
-            label: 'Swap with 1',
-            click: function() {
-              swapBrowserView(3, 0);
-              setQuadLayout(true);
-            }
-          })
-        );
-
-        ctxMenu.append(
-          new MenuItem({
-            label: 'Swap with 2',
-            click: function() {
-              swapBrowserView(3, 1);
-              setQuadLayout(true);
-            }
-          })
-        );
-
-        ctxMenu.append(
-          new MenuItem({
-            label: 'Swap with 3',
-            click: function() {
-              swapBrowserView(3, 2);
-              setQuadLayout(true);
-            }
-          })
-        );
-      }
-    }
-  }
+  swapTo.forEach(n => {
+    ctxMenu.append(
+      new MenuItem({
+        label: 'Swap with ' + n,
+        click: function() {
+          swapBrowserView(number - 1, n - 1);
+          setLayout(layout);
+        }
+      })
+    );
+  });
 }
 
 function createBrowserView(number, title) {
@@ -418,10 +217,13 @@ function setSingleLayout(number) {
 function exitSingleLayout() {
   checkInitialized();
   if (layout != SINGLE) return;
+  setLayout(previousLayout);
+}
 
-  if (previousLayout === QUAD) setQuadLayout(true);
-  if (previousLayout === DUAL) setDualLayout(true);
-  if (previousLayout === TRI) setTriLayout(true);
+function setLayout(layout) {
+  if (layout === QUAD) setQuadLayout(true);
+  if (layout === DUAL) setDualLayout(true);
+  if (layout === TRI) setTriLayout(true);
 }
 
 function isSingleLayout() {
@@ -942,7 +744,7 @@ var exports = (module.exports = {
   maximizeViews: maximizeViews,
   minimizeViews: minimizeViews,
   unload: unload,
-  menuOnClick: menuForQuads,
+  menuOnClick: appendSwapMenu,
   zoomIn: zoomIn,
   zoomOut: zoomOut,
   createUrlWindow: createUrlWindow
