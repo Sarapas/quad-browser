@@ -221,6 +221,13 @@ function createMenu() {
     addressSubmenu.push({ label: 'Bottom left', click: () => { changeAddress(4); } });
     addressSubmenu.push({ label: 'Bottom right', click: () => { changeAddress(5); } });
     addressSubmenu.push({ label: 'All', click: () => { changeAddress(); } });
+  } else if (viewManager.isFiveVerticalLayout()) {
+    addressSubmenu.push({ label: 'Top left', click: () => { changeAddress(1); } });
+    addressSubmenu.push({ label: 'Bottom left', click: () => { changeAddress(2); } });
+    addressSubmenu.push({ label: 'Top right', click: () => { changeAddress(3); } });
+    addressSubmenu.push({ label: 'Middle right', click: () => { changeAddress(4); } });
+    addressSubmenu.push({ label: 'Bottom right', click: () => { changeAddress(5); } });
+    addressSubmenu.push({ label: 'All', click: () => { changeAddress(); } });
   } else if (viewManager.isSixHorizontalLayout()) {
     addressSubmenu.push({ label: 'Top left', click: () => { changeAddress(1); } });
     addressSubmenu.push({ label: 'Top center', click: () => { changeAddress(2); } });
@@ -333,6 +340,16 @@ function createMenu() {
           checked: viewManager.isFiveHorizontalLayout(),
           click: () => {
             viewManager.setFiveHorizontalLayout();
+            Menu.setApplicationMenu(createMenu());
+          }
+        },
+        {
+          label: 'Five Vertical Screen',
+          accelerator: 'CmdOrCtrl+f8',
+          type: 'radio',
+          checked: viewManager.isFiveVerticalLayout(),
+          click: () => {
+            viewManager.setFiveVerticalLayout();
             Menu.setApplicationMenu(createMenu());
           }
         },
