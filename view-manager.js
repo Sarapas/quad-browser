@@ -12,6 +12,7 @@ let aspect_ratio = 16 / 9;
 let SINGLE = 'Single';
 let QUAD = 'Quad';
 let QUADH = 'QuadH';
+let FIVEH = 'FiveH'
 let DUAL = 'Dual';
 let TRI = 'Tri';
 let SIXH = 'SIXH'
@@ -152,6 +153,26 @@ function setSixVerticalLayout(force) {
   }
 }
 
+function setFiveHorizontalLayout(force) {
+  checkInitialized();
+
+  if (layout != FIVEH || force) {
+    previousLayout = layout;
+    layout = FIVEH;
+    activeViews = views.slice(0, 5);
+    parent.setBrowserView(null); // clearing browserviews
+    activeViews.forEach(view => {
+      parent.addBrowserView(view);
+    });
+
+    updateFiveHorizontalLayout();
+
+    if (audibleView) {
+      setAudible(audibleView);
+    }
+  }
+}
+
 function setQuadLayout(force) {
   checkInitialized();
 
@@ -272,6 +293,7 @@ function exitSingleLayout() {
   if (layout != SINGLE) return;
   if (previousLayout === SIXH) setSixHorizontalLayout(true);
   if (previousLayout === SIXV) setSixVerticalLayout(true);
+  if (previousLayout === FIVEH) setFiveHorizontalLayout(true);
   if (previousLayout === QUAD) setQuadLayout(true);
   if (previousLayout === QUADH) setQuadHorizontalLayout(true);
   if (previousLayout === TRI) setTriLayout(true);
@@ -303,6 +325,11 @@ function isQuadHorizontalLayout() {
   return layout === QUADH;
 }
 
+function isFiveHorizontalLayout() {
+  checkInitialized();
+  return layout === FIVEH;
+}
+
 function isSixHorizontalLayout() {
   checkInitialized();
   return layout === SIXH;
@@ -324,6 +351,8 @@ function updateLayout() {
     updateQuadLayout();
   } else if (layout === QUADH) {
     updateQuadHorizontalLayout();
+  } else if (layout === FIVEH) {
+    updateFiveHorizontalLayout();
   } else if (layout === SIXH) {
     updateSixHorizontalLayout();
   } else if (layout === SIXV) {
@@ -448,6 +477,41 @@ function updateQuadHorizontalLayout() {
     { view: views[1], bounds: bounds2 },
     { view: views[2], bounds: bounds3 },
     { view: views[3], bounds: bounds4 }
+  ];
+
+  viewBounds.forEach(vb => {
+    vb.view.setBounds(vb.bounds);
+  });
+}
+
+function updateFiveHorizontalLayout() {
+  checkInitialized();
+
+  let bounds = parent.getBounds();
+  let contentBounds = parent.getContentBounds();
+  let offsetY = isMac ? bounds.height - contentBounds.height : 0; // to avoid hiding webviews under the windowmenu
+  let offsetX = 0;
+
+  let topViewWidth = Math.floor(contentBounds.width / 3);
+  let topViewHeight = Math.floor(topViewWidth / aspect_ratio);
+
+  let bottomViewWidth = Math.floor(contentBounds.width / 2);
+  let bottomViewHeight = Math.floor(bottomViewWidth / aspect_ratio);
+
+  offsetY = offsetY + Math.floor((contentBounds.height - topViewHeight - bottomViewHeight) / 2);
+
+  let bounds1 = { x: offsetX, y: offsetY, width: topViewWidth, height: topViewHeight };
+  let bounds2 = { x: topViewWidth, y: offsetY, width: topViewWidth, height: topViewHeight };
+  let bounds3 = { x: topViewWidth * 2, y: offsetY, width: topViewWidth, height: topViewHeight };
+  let bounds4 = { x: offsetX, y: offsetY + topViewHeight, width: bottomViewWidth, height: bottomViewHeight };
+  let bounds5 = { x: offsetX + bottomViewWidth, y: offsetY + topViewHeight, width: bottomViewWidth, height: bottomViewHeight };
+
+  viewBounds = [
+    { view: views[0], bounds: bounds1 },
+    { view: views[1], bounds: bounds2 },
+    { view: views[2], bounds: bounds3 },
+    { view: views[3], bounds: bounds4 },
+    { view: views[4], bounds: bounds5 }
   ];
 
   viewBounds.forEach(vb => {
@@ -775,6 +839,7 @@ var exports = (module.exports = {
   getViewByNumber: getViewByNumber,
   setSixHorizontalLayout: setSixHorizontalLayout,
   setSixVerticalLayout: setSixVerticalLayout,
+  setFiveHorizontalLayout: setFiveHorizontalLayout,
   setQuadLayout: setQuadLayout,
   setQuadHorizontalLayout: setQuadHorizontalLayout,
   setTriLayout: setTriLayout,
@@ -786,6 +851,7 @@ var exports = (module.exports = {
   isTriLayout: isTriLayout,
   isQuadLayout: isQuadLayout,
   isQuadHorizontalLayout: isQuadHorizontalLayout,
+  isFiveHorizontalLayout: isFiveHorizontalLayout,
   isSixHorizontalLayout: isSixHorizontalLayout,
   isSixVerticalLayout: isSixVerticalLayout,
   loadURL: loadURL,
