@@ -714,6 +714,7 @@ function changeLayout(callback) {
 
   layoutPickerWnd.once('ready-to-show', () => {
     layoutPickerWnd.show();
+    layoutPickerWnd.webContents.send('set-current', layout);
   });
 
   layoutPickerWnd.on('close', () => {
