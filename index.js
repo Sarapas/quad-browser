@@ -1,8 +1,5 @@
 const electron = require('electron');
-const ElectronCookies = require('@exponent/electron-cookies');
-const url = require('url');
-
-const { BrowserWindow, app, Menu, MenuItem, globalShortcut, systemPreferences, session, ipcMain } = electron;
+const { BrowserWindow, app, Menu, MenuItem, globalShortcut, systemPreferences } = electron;
 const path = require('path');
 const prompt = require('electron-prompt');
 const ioHook = require('iohook');
@@ -11,6 +8,7 @@ const contextMenu = require('electron-context-menu');
 const viewManager = require('./view-manager');
 const Store = require('electron-store');
 const store = new Store();
+require('electron-reload')(__dirname);
 
 let win;
 let hoverMode = false;
@@ -136,12 +134,7 @@ function createWindow() {
     ioHook.start();
   }
 
-  globalShortcut.register('Esc', () => {
-    if (win != null) {
-      win.setFullScreen(false);
-      viewManager.minimizeViews();
-    }
-  });
+  globalShortcut.register('Esc', unmaximize);
 
   win.on('show', () => {
     viewManager.updateLayout();
@@ -273,6 +266,17 @@ function createMenu() {
       submenu: [
         { role: 'togglefullscreen' },
         { type: 'separator' },
+        {
+          label: 'Change layout',
+          accelerator: 'CmdOrCtrl+L',
+          click: () => {
+            globalShortcut.unregister('Esc'); // to allow modal to use esc
+            viewManager.changeLayout(() => {
+              globalShortcut.register('Esc', unmaximize);
+              Menu.setApplicationMenu(createMenu());
+            });
+          }
+        },
         {
           label: 'Single Screen',
           accelerator: 'CmdOrCtrl+f1',
@@ -419,6 +423,13 @@ function createMenu() {
 
 function changeAddress(viewNumber = null) {
   viewManager.createUrlWindow(viewNumber);
+}
+
+function unmaximize() {
+  if (win != null) {
+    win.setFullScreen(false);
+    viewManager.minimizeViews();
+  }
 }
 
 function changeHomepage() {

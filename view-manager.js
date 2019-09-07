@@ -17,8 +17,8 @@ let FIVEH = 'FiveH';
 let FIVEV = 'FiveV';
 let DUAL = 'Dual';
 let TRI = 'Tri';
-let SIXH = 'SIXH';
-let SIXV = 'SIXV';
+let SIXH = 'SixH';
+let SIXV = 'SixV';
 
 let views;
 let activeViews;
@@ -27,7 +27,8 @@ let parent;
 let isInitialized;
 let audibleView;
 let frame;
-let textBox;
+let addressChangeWnd;
+let layoutPickerWnd;
 let layout;
 let previousLayout;
 
@@ -115,57 +116,69 @@ function resumeAudible() {
   setSelected(audibleView);
 }
 
+function setLayout(layout, force) {
+  if (layout === SIXH) setSixHorizontalLayout(force);
+  if (layout === SIXV) setSixVerticalLayout(force);
+  if (layout === FIVEH) setFiveHorizontalLayout(force);
+  if (layout === FIVEV) setFiveVerticalLayout(force);
+  if (layout === QUAD) setQuadLayout(force);
+  if (layout === QUADH) setQuadHorizontalLayout(force);
+  if (layout === QUADV) setQuadVerticalLayout(force);
+  if (layout === TRI) setTriLayout(force);
+  if (layout === DUAL) setDualLayout(force);
+}
+
 function setSixHorizontalLayout(force) {
   let layoutViews = views.slice(0, 6);
-  setLayout(SIXH, layoutViews, force, updateSixHorizontalLayout);
+  setLayoutInternal(SIXH, layoutViews, force, updateSixHorizontalLayout);
 }
 
 function setSixVerticalLayout(force) {
   let layoutViews = views.slice(0, 6);
-  setLayout(SIXV, layoutViews, force, updateSixVerticalLayout);
+  setLayoutInternal(SIXV, layoutViews, force, updateSixVerticalLayout);
 }
 
 function setFiveHorizontalLayout(force) {
   let layoutViews = views.slice(0, 5);
-  setLayout(FIVEH, layoutViews, force, updateFiveHorizontalLayout);
+  setLayoutInternal(FIVEH, layoutViews, force, updateFiveHorizontalLayout);
 }
 
 function setFiveVerticalLayout(force) {
   let layoutViews = views.slice(0, 5);
-  setLayout(FIVEV, layoutViews, force, updateFiveVerticalLayout);
+  setLayoutInternal(FIVEV, layoutViews, force, updateFiveVerticalLayout);
 }
 
 function setQuadLayout(force) {
   let layoutViews = views.slice(0, 4);
-  setLayout(QUAD, layoutViews, force, updateQuadLayout);
+  setLayoutInternal(QUAD, layoutViews, force, updateQuadLayout);
 }
 
 function setQuadHorizontalLayout(force) {
   let layoutViews = views.slice(0, 4);
-  setLayout(QUADH, layoutViews, force, updateQuadHorizontalLayout);
+  setLayoutInternal(QUADH, layoutViews, force, updateQuadHorizontalLayout);
 }
 
 function setQuadVerticalLayout(force) {
   let layoutViews = views.slice(0, 4);
-  setLayout(QUADV, layoutViews, force, updateQuadVerticalLayout);
+  setLayoutInternal(QUADV, layoutViews, force, updateQuadVerticalLayout);
 }
 
 function setTriLayout(force) {
   let layoutViews = views.slice(0, 3);
-  setLayout(TRI, layoutViews, force, updateTriLayout);
+  setLayoutInternal(TRI, layoutViews, force, updateTriLayout);
 }
 
 function setDualLayout(force) {
   let layoutViews = views.slice(0, 2);
-  setLayout(DUAL, layoutViews, force, updateDualLayout);
+  setLayoutInternal(DUAL, layoutViews, force, updateDualLayout);
 }
 
 function setSingleLayout(number) {
   let layoutViews = [ views[number] ];
-  setLayout(SINGLE, layoutViews, true, updateSingleLayout);
+  setLayoutInternal(SINGLE, layoutViews, true, updateSingleLayout);
 }
 
-function setLayout(newLayout, layoutViews, force, updateFunc) {
+function setLayoutInternal(newLayout, layoutViews, force, updateFunc) {
   checkInitialized();
 
   if (layout != newLayout || force) {
@@ -242,15 +255,7 @@ function isSixVerticalLayout() {
 function exitSingleLayout() {
   checkInitialized();
   if (layout != SINGLE) return;
-  if (previousLayout === SIXH) setSixHorizontalLayout(true);
-  if (previousLayout === SIXV) setSixVerticalLayout(true);
-  if (previousLayout === FIVEH) setFiveHorizontalLayout(true);
-  if (previousLayout === FIVEV) setFiveVerticalLayout(true);
-  if (previousLayout === QUAD) setQuadLayout(true);
-  if (previousLayout === QUADH) setQuadHorizontalLayout(true);
-  if (previousLayout === QUADV) setQuadVerticalLayout(true);
-  if (previousLayout === TRI) setTriLayout(true);
-  if (previousLayout === DUAL) setDualLayout(true);
+  setLayout(previousLayout, true);
 }
 
 function updateLayout() {
@@ -687,8 +692,44 @@ function inView(x, y) {
   return found.view;
 }
 
+function changeLayout(callback) {
+  layoutPickerWnd = new BrowserWindow({
+    frame: false,
+    transparent: false,
+    show: false,
+    skipTaskbar: true,
+    parent: parent,
+    closable: true,
+    modal: true,
+    focusable: true,
+    fullscreenable: false,
+    height: 310,
+    width: 800,
+    webPreferences: {
+      nodeIntegration: true
+    }
+  });
+
+  layoutPickerWnd.loadFile(`renderer/layout-picker.html`);
+
+  layoutPickerWnd.once('ready-to-show', () => {
+    layoutPickerWnd.show();
+  });
+
+  layoutPickerWnd.on('close', () => {
+    layoutPickerWnd = null;
+  });
+
+  ipcMain.once('change-layout', (event, newLayout) => {
+    if (newLayout) {
+      setLayout(newLayout, false);
+      callback();
+    }
+  });
+}
+
 function createUrlWindow(number) {
-  textBox = new BrowserWindow({
+  addressChangeWnd = new BrowserWindow({
     frame: false,
     transparent: true,
     show: false,
@@ -702,7 +743,7 @@ function createUrlWindow(number) {
     }
   });
 
-  textBox.loadFile('textBox.html');
+  addressChangeWnd.loadFile('renderer/address-change.html');
 
   let view = getViewByNumber(number);
   let vb = viewBounds.find(vb => vb.view === view);
@@ -719,13 +760,13 @@ function createUrlWindow(number) {
     height: height
   };
 
-  textBox.setBounds(frameBounds);
-  textBox.once('ready-to-show', () => {
-    textBox.show();
+  addressChangeWnd.setBounds(frameBounds);
+  addressChangeWnd.once('ready-to-show', () => {
+    addressChangeWnd.show();
   });
 
-  textBox.on('close', () => {
-    textBox = null;
+  addressChangeWnd.on('close', () => {
+    addressChangeWnd = null;
   });
 
   ipcMain.once('load-url', (event, arg) => {
@@ -745,7 +786,7 @@ function createFrame() {
     fullscreenable: false
   });
 
-  frame.loadFile('frame.html');
+  frame.loadFile('renderer/frame.html');
   frame.setIgnoreMouseEvents(true);
 }
 
@@ -836,6 +877,7 @@ var exports = (module.exports = {
   isFiveVerticalLayout: isFiveVerticalLayout,
   isSixHorizontalLayout: isSixHorizontalLayout,
   isSixVerticalLayout: isSixVerticalLayout,
+  changeLayout: changeLayout,
   loadURL: loadURL,
   updateLayout: updateLayout,
   maximizeViews: maximizeViews,
