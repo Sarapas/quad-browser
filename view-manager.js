@@ -303,7 +303,7 @@ function getViewNames() {
       { name: "All", number: null }
     ];
 
-  if (layout === SixH)
+  if (layout === SIXH)
     return [ 
       { name: "Top left", number: 1 },
       { name: "Top center", number: 2 },
@@ -314,7 +314,7 @@ function getViewNames() {
       { name: "All", number: null }
     ];
 
-  if (layout === SixH)
+  if (layout === SIXV)
     return [ 
       { name: "Top left", number: 1 },
       { name: "Top right", number: 2 },
