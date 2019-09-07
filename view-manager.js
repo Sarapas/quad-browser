@@ -116,18 +116,6 @@ function resumeAudible() {
   setSelected(audibleView);
 }
 
-function setLayout(layout, force) {
-  if (layout === SIXH) setSixHorizontalLayout(force);
-  if (layout === SIXV) setSixVerticalLayout(force);
-  if (layout === FIVEH) setFiveHorizontalLayout(force);
-  if (layout === FIVEV) setFiveVerticalLayout(force);
-  if (layout === QUAD) setQuadLayout(force);
-  if (layout === QUADH) setQuadHorizontalLayout(force);
-  if (layout === QUADV) setQuadVerticalLayout(force);
-  if (layout === TRI) setTriLayout(force);
-  if (layout === DUAL) setDualLayout(force);
-}
-
 function setSixHorizontalLayout(force) {
   let layoutViews = views.slice(0, 6);
   setLayoutInternal(SIXH, layoutViews, force, updateSixHorizontalLayout);
@@ -174,7 +162,7 @@ function setDualLayout(force) {
 }
 
 function setSingleLayout(number) {
-  let layoutViews = [ views[number] ];
+  let layoutViews = [ getViewByNumber(number) ];
   setLayoutInternal(SINGLE, layoutViews, true, updateSingleLayout);
 }
 
@@ -207,51 +195,6 @@ function isSingleLayout() {
   return layout === SINGLE;
 }
 
-function isDualLayout() {
-  checkInitialized();
-  return layout === DUAL;
-}
-
-function isTriLayout() {
-  checkInitialized();
-  return layout === TRI;
-}
-
-function isQuadLayout() {
-  checkInitialized();
-  return layout === QUAD;
-}
-
-function isQuadHorizontalLayout() {
-  checkInitialized();
-  return layout === QUADH;
-}
-
-function isQuadVerticalLayout() {
-  checkInitialized();
-  return layout === QUADV;
-}
-
-function isFiveHorizontalLayout() {
-  checkInitialized();
-  return layout === FIVEH;
-}
-
-function isFiveVerticalLayout() {
-  checkInitialized();
-  return layout === FIVEV;
-}
-
-function isSixHorizontalLayout() {
-  checkInitialized();
-  return layout === SIXH;
-}
-
-function isSixVerticalLayout() {
-  checkInitialized();
-  return layout === SIXV;
-}
-
 function exitSingleLayout() {
   checkInitialized();
   if (layout != SINGLE) return;
@@ -273,6 +216,114 @@ function updateLayout() {
   if (audibleView) {
     setSelected(audibleView); // updating size and location of the frame
   }
+}
+
+function setLayout(layout, force) {
+  if (layout === SIXH) setSixHorizontalLayout(force);
+  if (layout === SIXV) setSixVerticalLayout(force);
+  if (layout === FIVEH) setFiveHorizontalLayout(force);
+  if (layout === FIVEV) setFiveVerticalLayout(force);
+  if (layout === QUAD) setQuadLayout(force);
+  if (layout === QUADH) setQuadHorizontalLayout(force);
+  if (layout === QUADV) setQuadVerticalLayout(force);
+  if (layout === TRI) setTriLayout(force);
+  if (layout === DUAL) setDualLayout(force);
+  if (layout === SINGLE) {
+    if (audibleView) {
+      setSingleLayout(audibleView.number);
+    } else {
+      setSingleLayout(activeViews[0].number);
+    }
+  }
+}
+
+function getViewNames() {
+  if (layout === SINGLE)
+    return [ { name: "Current", number: null } ];
+    
+  if (layout === DUAL)
+    return [ 
+      { name: "Top", number: 1 },
+      { name: "Bottom", number: 2 },
+      { name: "All", number: null }
+    ];
+
+  if (layout === TRI)
+    return [ 
+      { name: "Top left", number: 1 },
+      { name: "Top right", number: 2 },
+      { name: "Bottom", number: 3 },
+      { name: "All", number: null }
+    ];
+
+  if (layout === QUAD)
+    return [ 
+      { name: "Top left", number: 1 },
+      { name: "Top right", number: 2 },
+      { name: "Bottom left", number: 3 },
+      { name: "Bottom right", number: 4 },
+      { name: "All", number: null }
+    ];
+
+  if (layout === QUADH)
+    return [ 
+      { name: "Top left", number: 1 },
+      { name: "Top center", number: 2 },
+      { name: "Top right", number: 3 },
+      { name: "Bottom", number: 4 },
+      { name: "All", number: null }
+    ];
+
+  if (layout === QUADV)
+    return [ 
+      { name: "Left", number: 1 },
+      { name: "Top right", number: 2 },
+      { name: "Middle right", number: 3 },
+      { name: "Bottom right", number: 4 },
+      { name: "All", number: null }
+    ];
+
+  if (layout === FIVEH)
+    return [ 
+      { name: "Top left", number: 1 },
+      { name: "Top center", number: 2 },
+      { name: "Top right", number: 3 },
+      { name: "Bottom left", number: 4 },
+      { name: "Bottom right", number: 5 },
+      { name: "All", number: null }
+    ];
+
+  if (layout === FIVEV)
+    return [ 
+      { name: "Top left", number: 1 },
+      { name: "Bottom left", number: 2 },
+      { name: "Top right", number: 3 },
+      { name: "Middle right", number: 4 },
+      { name: "Bottom right", number: 5 },
+      { name: "All", number: null }
+    ];
+
+  if (layout === SixH)
+    return [ 
+      { name: "Top left", number: 1 },
+      { name: "Top center", number: 2 },
+      { name: "Top right", number: 3 },
+      { name: "Bottom left", number: 4 },
+      { name: "Bottom center", number: 5 },
+      { name: "Bottom right", number: 6 },
+      { name: "All", number: null }
+    ];
+
+  if (layout === SixH)
+    return [ 
+      { name: "Top left", number: 1 },
+      { name: "Top right", number: 2 },
+      { name: "Middle left", number: 3 },
+      { name: "Middle right", number: 4 },
+      { name: "Bottom left", number: 5 },
+      { name: "Bottom right", number: 6 },
+      { name: "All", number: null }
+    ];
 }
 
 function updateSingleLayout() {
@@ -746,22 +797,23 @@ function createUrlWindow(number) {
 
   addressChangeWnd.loadFile('renderer/address-change.html');
 
-  let view = getViewByNumber(number);
-  let vb = viewBounds.find(vb => vb.view === view);
-
   let initialPos = isMac ? parent.getBounds() : parent.getContentBounds();
-
   let width = 272;
   let height = 72;
+  let x;
+  let y;
 
-  let frameBounds = {
-    x: initialPos.x + vb.bounds.x + Math.floor((vb.bounds.width - width) / 2),
-    y: initialPos.y + vb.bounds.y + Math.floor((vb.bounds.height - height) / 2),
-    width: width,
-    height: height
-  };
+  if (number) {
+    let view = getViewByNumber(number);
+    let vb = viewBounds.find(vb => vb.view === view);
+    x = initialPos.x + vb.bounds.x + Math.floor((vb.bounds.width - width) / 2);
+    y = initialPos.y + vb.bounds.y + Math.floor((vb.bounds.height - height) / 2);
+  } else {
+    x = initialPos.x + Math.floor((parent.getContentBounds().width - width) / 2);
+    y = initialPos.y + Math.floor((parent.getContentBounds().height - height) / 2);
+  }
 
-  addressChangeWnd.setBounds(frameBounds);
+  addressChangeWnd.setBounds({x: x, y: y, width: width, height: height });
   addressChangeWnd.once('ready-to-show', () => {
     addressChangeWnd.show();
   });
@@ -869,15 +921,7 @@ var exports = (module.exports = {
   setSingleLayout: setSingleLayout,
   exitSingleLayout: exitSingleLayout,
   isSingleLayout: isSingleLayout,
-  isDualLayout: isDualLayout,
-  isTriLayout: isTriLayout,
-  isQuadLayout: isQuadLayout,
-  isQuadHorizontalLayout: isQuadHorizontalLayout,
-  isQuadVerticalLayout: isQuadVerticalLayout,
-  isFiveHorizontalLayout: isFiveHorizontalLayout,
-  isFiveVerticalLayout: isFiveVerticalLayout,
-  isSixHorizontalLayout: isSixHorizontalLayout,
-  isSixVerticalLayout: isSixVerticalLayout,
+  getViewNames: getViewNames,
   changeLayout: changeLayout,
   loadURL: loadURL,
   updateLayout: updateLayout,

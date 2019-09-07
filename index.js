@@ -8,7 +8,7 @@ const contextMenu = require('electron-context-menu');
 const viewManager = require('./view-manager');
 const Store = require('electron-store');
 const store = new Store();
-require('electron-reload')(__dirname);
+//require('electron-reload')(__dirname);
 
 let win;
 let hoverMode = false;
@@ -104,7 +104,7 @@ function createWindow() {
         if (viewManager.isSingleLayout()) {
           viewManager.exitSingleLayout();
         } else {
-          viewManager.setSingleLayout(view.number - 1);
+          viewManager.setSingleLayout(view.number);
         }
 
         Menu.setApplicationMenu(createMenu());
@@ -128,6 +128,22 @@ function createWindow() {
         if (view) viewManager.setAudible(view);
       });
     });
+
+    globalShortcut.register(`CommandOrControl+f1`, () => { 
+      let audibleView = viewManager.getAudible();
+      if (audibleView) {
+        viewManager.setSingleLayout(audibleView.number); 
+      }
+    });
+    globalShortcut.register(`CommandOrControl+f2`, () => { viewManager.setDualLayout(false); });
+    globalShortcut.register(`CommandOrControl+f3`, () => { viewManager.setTriLayout(false); });
+    globalShortcut.register(`CommandOrControl+f4`, () => { viewManager.setQuadLayout(false); });
+    globalShortcut.register(`CommandOrControl+f5`, () => { viewManager.setQuadHorizontalLayout(false); });
+    globalShortcut.register(`CommandOrControl+f6`, () => { viewManager.setQuadVerticalLayout(false); });
+    globalShortcut.register(`CommandOrControl+f7`, () => { viewManager.setFiveHorizontalLayout(false); });
+    globalShortcut.register(`CommandOrControl+f8`, () => { viewManager.setFiveVerticalLayout(false); });
+    globalShortcut.register(`CommandOrControl+f9`, () => { viewManager.setSixHorizontalLayout(false); });
+    globalShortcut.register(`CommandOrControl+f10`, () => { viewManager.setSixVerticalLayout(false); });
 
     ioHook.on('mousedown', onMouseClick);
     ioHook.on('mousemove', onMouseMove);
@@ -178,66 +194,12 @@ function createWindow() {
 
 function createMenu() {
   let addressSubmenu = [];
-  if (viewManager.isSingleLayout()) {
-    addressSubmenu.push({label: 'Current', click: () => { changeAddress(); } });
-  } else if (viewManager.isDualLayout()) {
-    addressSubmenu.push({ label: 'Top', click: () => { changeAddress(1); } });
-    addressSubmenu.push({ label: 'Bottom', click: () => { changeAddress(2); } });
-    addressSubmenu.push({ label: 'All', click: () => { changeAddress(); } });
-  } else if (viewManager.isTriLayout()) {
-    addressSubmenu.push({ label: 'Top left', click: () => { changeAddress(1); } });
-    addressSubmenu.push({ label: 'Top right', click: () => { changeAddress(2); } });
-    addressSubmenu.push({ label: 'Bottom', click: () => { changeAddress(3); } });
-    addressSubmenu.push({ label: 'All', click: () => { changeAddress(); } });
-  } else if (viewManager.isQuadLayout()) {
-    addressSubmenu.push({ label: 'Top left', click: () => { changeAddress(1); } });
-    addressSubmenu.push({ label: 'Top right', click: () => { changeAddress(2); } });
-    addressSubmenu.push({ label: 'Bottom left', click: () => { changeAddress(3); } });
-    addressSubmenu.push({ label: 'Bottom right', click: () => { changeAddress(4); } });
-    addressSubmenu.push({ label: 'All', click: () => { changeAddress(); } });
-  } else if (viewManager.isQuadHorizontalLayout()) {
-    addressSubmenu.push({ label: 'Top left', click: () => { changeAddress(1); } });
-    addressSubmenu.push({ label: 'Top center', click: () => { changeAddress(2); } });
-    addressSubmenu.push({ label: 'Top right', click: () => { changeAddress(3); } });
-    addressSubmenu.push({ label: 'Bottom', click: () => { changeAddress(4); } });
-    addressSubmenu.push({ label: 'All', click: () => { changeAddress(); } });
-  } else if (viewManager.isQuadVerticalLayout()) {
-    addressSubmenu.push({ label: 'Left', click: () => { changeAddress(1); } });
-    addressSubmenu.push({ label: 'Top right', click: () => { changeAddress(2); } });
-    addressSubmenu.push({ label: 'Middle right', click: () => { changeAddress(3); } });
-    addressSubmenu.push({ label: 'Bottom right', click: () => { changeAddress(4); } });
-    addressSubmenu.push({ label: 'All', click: () => { changeAddress(); } });
-  } else if (viewManager.isFiveHorizontalLayout()) {
-    addressSubmenu.push({ label: 'Top left', click: () => { changeAddress(1); } });
-    addressSubmenu.push({ label: 'Top center', click: () => { changeAddress(2); } });
-    addressSubmenu.push({ label: 'Top right', click: () => { changeAddress(3); } });
-    addressSubmenu.push({ label: 'Bottom left', click: () => { changeAddress(4); } });
-    addressSubmenu.push({ label: 'Bottom right', click: () => { changeAddress(5); } });
-    addressSubmenu.push({ label: 'All', click: () => { changeAddress(); } });
-  } else if (viewManager.isFiveVerticalLayout()) {
-    addressSubmenu.push({ label: 'Top left', click: () => { changeAddress(1); } });
-    addressSubmenu.push({ label: 'Bottom left', click: () => { changeAddress(2); } });
-    addressSubmenu.push({ label: 'Top right', click: () => { changeAddress(3); } });
-    addressSubmenu.push({ label: 'Middle right', click: () => { changeAddress(4); } });
-    addressSubmenu.push({ label: 'Bottom right', click: () => { changeAddress(5); } });
-    addressSubmenu.push({ label: 'All', click: () => { changeAddress(); } });
-  } else if (viewManager.isSixHorizontalLayout()) {
-    addressSubmenu.push({ label: 'Top left', click: () => { changeAddress(1); } });
-    addressSubmenu.push({ label: 'Top center', click: () => { changeAddress(2); } });
-    addressSubmenu.push({ label: 'Top right', click: () => { changeAddress(3); } });
-    addressSubmenu.push({ label: 'Bottom left', click: () => { changeAddress(4); } });
-    addressSubmenu.push({ label: 'Bottom center', click: () => { changeAddress(5); } });
-    addressSubmenu.push({ label: 'Bottom right', click: () => { changeAddress(6); } });
-    addressSubmenu.push({ label: 'All', click: () => { changeAddress(); } });
-  } else if (viewManager.isSixVerticalLayout()) {
-    addressSubmenu.push({ label: 'Top left', click: () => { changeAddress(1); } });
-    addressSubmenu.push({ label: 'Top right', click: () => { changeAddress(2); } });
-    addressSubmenu.push({ label: 'Middle left', click: () => { changeAddress(3); } });
-    addressSubmenu.push({ label: 'Middle right', click: () => { changeAddress(4); } });
-    addressSubmenu.push({ label: 'Bottom left', click: () => { changeAddress(5); } });
-    addressSubmenu.push({ label: 'Bottom right', click: () => { changeAddress(6); } });
-    addressSubmenu.push({ label: 'All', click: () => { changeAddress(); } });
-  }
+
+  let viewNames = viewManager.getViewNames();
+  viewNames.forEach((vn) => {
+    addressSubmenu.push({label: vn.name, click: () => { changeAddress(vn.number); } });
+  });
+
   addressSubmenu.push({ type: 'separator' });
   addressSubmenu.push({ label: 'Change homepage', click: () => { changeHomepage(); } });
 
@@ -265,7 +227,6 @@ function createMenu() {
       label: 'View',
       submenu: [
         { role: 'togglefullscreen' },
-        { type: 'separator' },
         {
           label: 'Change layout',
           accelerator: 'CmdOrCtrl+L',
@@ -277,107 +238,6 @@ function createMenu() {
             });
           }
         },
-        {
-          label: 'Single Screen',
-          accelerator: 'CmdOrCtrl+f1',
-          type: 'radio',
-          checked: viewManager.isSingleLayout(),
-          click: () => {
-            viewManager.setSingleLayout(0);
-            Menu.setApplicationMenu(createMenu());
-          }
-        },
-        {
-          label: 'Dual Screen',
-          accelerator: 'CmdOrCtrl+f2',
-          type: 'radio',
-          checked: viewManager.isDualLayout(),
-          click: () => {
-            viewManager.setDualLayout();
-            Menu.setApplicationMenu(createMenu());
-          }
-        },
-        {
-          label: 'Tri Screen',
-          accelerator: 'CmdOrCtrl+f3',
-          type: 'radio',
-          checked: viewManager.isTriLayout(),
-          click: () => {
-            viewManager.setTriLayout();
-            Menu.setApplicationMenu(createMenu());
-          }
-        },
-        {
-          label: 'Quad Screen',
-          accelerator: 'CmdOrCtrl+f4',
-          type: 'radio',
-          checked: viewManager.isQuadLayout(),
-          click: () => {
-            viewManager.setQuadLayout();
-            Menu.setApplicationMenu(createMenu());
-          }
-        },
-        {
-          label: 'Quad 3+1 Screen',
-          accelerator: 'CmdOrCtrl+f5',
-          type: 'radio',
-          checked: viewManager.isQuadHorizontalLayout(),
-          click: () => {
-            viewManager.setQuadHorizontalLayout();
-            Menu.setApplicationMenu(createMenu());
-          }
-        },
-        {
-          label: 'Quad 1+3 Screen',
-          accelerator: 'CmdOrCtrl+f6',
-          type: 'radio',
-          checked: viewManager.isQuadVerticalLayout(),
-          click: () => {
-            viewManager.setQuadVerticalLayout();
-            Menu.setApplicationMenu(createMenu());
-          }
-        },
-        {
-          label: 'Five Horizontal Screen',
-          accelerator: 'CmdOrCtrl+f7',
-          type: 'radio',
-          checked: viewManager.isFiveHorizontalLayout(),
-          click: () => {
-            viewManager.setFiveHorizontalLayout();
-            Menu.setApplicationMenu(createMenu());
-          }
-        },
-        {
-          label: 'Five Vertical Screen',
-          accelerator: 'CmdOrCtrl+f8',
-          type: 'radio',
-          checked: viewManager.isFiveVerticalLayout(),
-          click: () => {
-            viewManager.setFiveVerticalLayout();
-            Menu.setApplicationMenu(createMenu());
-          }
-        },
-        {
-          label: 'Six Horizontal Screen',
-          accelerator: 'CmdOrCtrl+f9',
-          type: 'radio',
-          checked: viewManager.isSixHorizontalLayout(),
-          click: () => {
-            viewManager.setSixHorizontalLayout();
-            Menu.setApplicationMenu(createMenu());
-          }
-        },
-        {
-          label: 'Six Vertical Screen',
-          accelerator: 'CmdOrCtrl+f10',
-          type: 'radio',
-          checked: viewManager.isSixVerticalLayout(),
-          click: () => {
-            viewManager.setSixVerticalLayout();
-            Menu.setApplicationMenu(createMenu());
-          }
-        },
-        { type: 'separator' },
         {
           label: 'Hover mode',
           type: 'checkbox',
