@@ -12,7 +12,7 @@ function icoToPng (source, size) {
   return buffer;
 }
 
-function downloadFile(file_url , targetDir, targetFile){
+function downloadFile(file_url , targetDir, targetFile, downloadedCallback){
     // Save variable to know progress
     var received_bytes = 0;
     var total_bytes = 0;
@@ -42,6 +42,9 @@ function downloadFile(file_url , targetDir, targetFile){
     });
 
     req.on('end', function() {
+        if (downloadedCallback) {
+            downloadedCallback();
+        }
     });
 }
 

@@ -1,19 +1,15 @@
 const electron = require('electron');
-const { BrowserWindow, app, Menu, MenuItem, globalShortcut, systemPreferences, nativeImage } = electron;
+const { BrowserWindow, app, Menu, globalShortcut, systemPreferences } = electron;
 const path = require('path');
 const prompt = require('electron-prompt');
 const ioHook = require('iohook');
 const isMac = process.platform === 'darwin';
 const contextMenu = require('electron-context-menu');
 const viewManager = require('./view-manager');
-const utilities = require('./utilities');
+const bookmarks = require('./bookmarks');
 const Store = require('electron-store');
-const storage = require('electron-json-storage');
-const fs = require('fs');
 const store = new Store();
 //require('electron-reload')(__dirname);
-
-let bookmarks = [];
 
 let win;
 let hoverMode = false;
@@ -30,8 +26,6 @@ function createWindow() {
   contextMenu({
     showLookUpSelection: false
   });
-
-  storage.setDataPath(app.getAppPath());
 
   win = new BrowserWindow({
     title: 'Quad Screens',
@@ -74,8 +68,8 @@ function createWindow() {
             { label: 'Refresh', click: () => { view.webContents.reload(); } },
             { label: 'Change address', click: () => { changeAddress(view.number); } },
             { type: 'separator' },
-            { label: 'Save bookmark', click: () => { saveBookmark(view.webContents); } },
-            { label: 'Load bookmark', submenu: getBookmarksMenu(view) }
+            { label: 'Save bookmark', click: () => { bookmarks.add(view.webContents); } },
+            { label: 'Load bookmark', submenu: bookmarks.getMenu(view) }
           ]
           viewMenu = Menu.buildFromTemplate(viewMenuTemplate);
 
@@ -147,14 +141,11 @@ function createWindow() {
     viewManager.updateLayout();
   });
 
-  Menu.setApplicationMenu(createMenu());
-
-  storage.get('bookmarks', function(error, data) {
-    if (error) throw error;
-
-    bookmarks = data.bookmarks || [];
+  bookmarks.onChange(() => {
     Menu.setApplicationMenu(createMenu());
   });
+
+  bookmarks.init();
 
   win.on('enter-full-screen', () => {
     win.setMenuBarVisibility(false);
@@ -223,7 +214,7 @@ function createMenu() {
     },
     {
       label: 'Bookmarks',
-      submenu: getBookmarksMenu(null)
+      submenu: bookmarks.getMenu(null)
     },
     {
       label: 'View',
@@ -292,74 +283,6 @@ function unmaximize() {
     win.setFullScreen(false);
     viewManager.minimizeViews();
   }
-}
-
-function saveBookmark(contents) {
-  storage.get('bookmarks', function(error, data) {
-    if (error) throw error;
-  
-    data.bookmarks = data.bookmarks || [];
-    let icon;
-
-    if (contents.favicons && contents.favicons.length) {
-
-      let png = contents.favicons.find(f => f.endsWith("png"));
-      let jpg = contents.favicons.find(f => f.endsWith("jpg"));
-      let ico = contents.favicons.find(f => f.endsWith("ico"));
-
-      let ext;
-      if (png) {
-        src = png;
-        ext = ".png";
-      } else if (jpg) {
-        src = jpg;
-        ext = ".jpg";
-      } else if (ico) {
-        src = ico;
-        ext = ".ico";
-      }
-
-      icon = `${utilities.newGuid()}${ext}`;
-      let destDir = `${app.getAppPath()}/icons`;
-      utilities.downloadFile(src, destDir, icon);
-    }
-
-    data.bookmarks.push({ title: contents.getTitle(), url: contents.getURL(), icon: icon });
-
-    storage.set('bookmarks', data, function(error) {
-      if (error) throw error;
-
-      bookmarks = data.bookmarks;
-      Menu.setApplicationMenu(createMenu());
-    });
-  });
-}
-
-function getBookmarksMenu(view) {
-  let bookmarksMenu = [];
-  bookmarks.forEach((b) => {
-    let icon = null;
-    const size = 16;
-    if (b.icon) {
-      let file = `${app.getAppPath()}/icons/${b.icon}`;
-      if (b.icon.endsWith(".ico")) {
-        const source = fs.readFileSync(file);
-        let png = utilities.icoToPng(source, size);
-        icon = nativeImage.createFromBuffer(png);
-      } else {
-        icon = nativeImage.createFromPath(file);
-        icon = icon.resize({ width: size, height: size });
-      }
-    }
-    bookmarksMenu.push(new MenuItem({
-      label: b.title,
-      click: () => {
-        viewManager.loadURL(b.url, view);
-      },
-      icon: icon
-    }));
-  });
-  return bookmarksMenu;
 }
 
 function changeHomepage() {
