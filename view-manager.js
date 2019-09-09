@@ -90,6 +90,15 @@ function createBrowserView(number, title) {
     e.preventDefault()
     browserView.webContents.loadURL(url);
   });
+  browserView.webContents.on('page-title-updated', (e, favicons) => {
+    // clearing old favicon
+    browserView.webContents.favicons = null;
+  });
+  browserView.webContents.on('page-favicon-updated', (e, favicons) => {
+    browserView.webContents.favicons = favicons;
+    console.log(favicons);
+  });
+
   return browserView;
 }
 

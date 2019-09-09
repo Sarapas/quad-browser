@@ -1,13 +1,17 @@
 const electron = require('electron');
-const { BrowserWindow, app, Menu, MenuItem, globalShortcut, systemPreferences } = electron;
+const { BrowserWindow, app, Menu, MenuItem, globalShortcut, systemPreferences, nativeImage } = electron;
 const path = require('path');
 const prompt = require('electron-prompt');
 const ioHook = require('iohook');
 const isMac = process.platform === 'darwin';
 const contextMenu = require('electron-context-menu');
 const viewManager = require('./view-manager');
+const downloader = require('./downloader');
+const icoToPng = require('./ico-to-png');
+const uuid = require('./uuid');
 const Store = require('electron-store');
 const storage = require('electron-json-storage');
+const fs = require('fs');
 const store = new Store();
 //require('electron-reload')(__dirname);
 
@@ -72,7 +76,7 @@ function createWindow() {
             { label: 'Refresh', click: () => { view.webContents.reload(); } },
             { label: 'Change address', click: () => { changeAddress(view.number); } },
             { type: 'separator' },
-            { label: 'Save bookmark', click: () => { bookmarkPage(view.webContents); } },
+            { label: 'Save bookmark', click: () => { saveBookmark(view.webContents); } },
             { label: 'Load bookmark', submenu: getBookmarksMenu(view) }
           ]
           viewMenu = Menu.buildFromTemplate(viewMenuTemplate);
@@ -292,13 +296,37 @@ function unmaximize() {
   }
 }
 
-function bookmarkPage(contents) {
+function saveBookmark(contents) {
   storage.get('bookmarks', function(error, data) {
     if (error) throw error;
   
     data.bookmarks = data.bookmarks || [];
+    let icon;
 
-    data.bookmarks.push({ title: contents.getTitle(), url: contents.getURL() });
+    if (contents.favicons && contents.favicons.length) {
+
+      let png = contents.favicons.find(f => f.endsWith("png"));
+      let jpg = contents.favicons.find(f => f.endsWith("jpg"));
+      let ico = contents.favicons.find(f => f.endsWith("ico"));
+
+      let ext;
+      if (png) {
+        src = png;
+        ext = ".png";
+      } else if (jpg) {
+        src = jpg;
+        ext = ".jpg";
+      } else if (ico) {
+        src = ico;
+        ext = ".ico";
+      }
+
+      icon = `${uuid.new()}${ext}`;
+      let destDir = `${app.getAppPath()}/icons`;
+      downloader.downloadFile(src, destDir, icon);
+    }
+
+    data.bookmarks.push({ title: contents.getTitle(), url: contents.getURL(), icon: icon });
 
     storage.set('bookmarks', data, function(error) {
       if (error) throw error;
@@ -312,11 +340,25 @@ function bookmarkPage(contents) {
 function getBookmarksMenu(view) {
   let bookmarksMenu = [];
   bookmarks.forEach((b) => {
+    let icon = null;
+    const size = 16;
+    if (b.icon) {
+      let file = `${app.getAppPath()}/icons/${b.icon}`;
+      if (b.icon.endsWith(".ico")) {
+        const source = fs.readFileSync(file);
+        let png = icoToPng(source, size);
+        icon = nativeImage.createFromBuffer(png);
+      } else {
+        icon = nativeImage.createFromPath(file);
+        icon = icon.resize({ width: size, height: size });
+      }
+    }
     bookmarksMenu.push(new MenuItem({
       label: b.title,
       click: () => {
         viewManager.loadURL(b.url, view);
-      }
+      },
+      icon: icon
     }));
   });
   return bookmarksMenu;
