@@ -78,6 +78,7 @@ function appendSwapMenu(number, ctxMenu) {
     }));
   });
   
+  ctxMenu.append(new MenuItem({ type: 'separator' }));
   ctxMenu.append(swapMenu);
 }
 

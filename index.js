@@ -7,8 +7,11 @@ const isMac = process.platform === 'darwin';
 const contextMenu = require('electron-context-menu');
 const viewManager = require('./view-manager');
 const Store = require('electron-store');
+const storage = require('electron-json-storage');
 const store = new Store();
 //require('electron-reload')(__dirname);
+
+let bookmarks = [];
 
 let win;
 let hoverMode = false;
@@ -25,6 +28,8 @@ function createWindow() {
   contextMenu({
     showLookUpSelection: false
   });
+
+  storage.setDataPath(app.getAppPath());
 
   win = new BrowserWindow({
     title: 'Quad Screens',
@@ -62,32 +67,16 @@ function createWindow() {
       if (event.button === 2) {
         // without timeout propagated event closes the context menu; if event had preventDefault - it wouldn't be needed
         setTimeout(() => {
-          viewMenu = new Menu();
+          let viewMenuTemplate = [
+            { label: 'Back', click: () => { if (view.webContents.canGoBack()) view.webContents.goBack(); } },
+            { label: 'Refresh', click: () => { view.webContents.reload(); } },
+            { label: 'Change address', click: () => { changeAddress(view.number); } },
+            { type: 'separator' },
+            { label: 'Save bookmark', click: () => { bookmarkPage(view.webContents); } },
+            { label: 'Load bookmark', submenu: getBookmarksMenu(view) }
+          ]
+          viewMenu = Menu.buildFromTemplate(viewMenuTemplate);
 
-          viewMenu.append(
-            new MenuItem({
-              label: 'Back',
-              click: () => {
-                if (view.webContents.canGoBack()) view.webContents.goBack();
-              }
-            })
-          );
-          viewMenu.append(
-            new MenuItem({
-              label: 'Refresh',
-              click: () => {
-                view.webContents.reload();
-              }
-            })
-          );
-          viewMenu.append(
-            new MenuItem({
-              label: 'Change address',
-              click: () => {
-                changeAddress(view.number);
-              }
-            })
-          );
           viewManager.menuOnClick(view.number, viewMenu);
           viewMenu.popup({ window: win });
         }, 50);
@@ -158,6 +147,13 @@ function createWindow() {
 
   Menu.setApplicationMenu(createMenu());
 
+  storage.get('bookmarks', function(error, data) {
+    if (error) throw error;
+
+    bookmarks = data.bookmarks || [];
+    Menu.setApplicationMenu(createMenu());
+  });
+
   win.on('enter-full-screen', () => {
     win.setMenuBarVisibility(false);
     // updating frame location
@@ -222,6 +218,10 @@ function createMenu() {
           selector: 'selectAll:'
         }
       ]
+    },
+    {
+      label: 'Bookmarks',
+      submenu: getBookmarksMenu(null)
     },
     {
       label: 'View',
@@ -290,6 +290,36 @@ function unmaximize() {
     win.setFullScreen(false);
     viewManager.minimizeViews();
   }
+}
+
+function bookmarkPage(contents) {
+  storage.get('bookmarks', function(error, data) {
+    if (error) throw error;
+  
+    data.bookmarks = data.bookmarks || [];
+
+    data.bookmarks.push({ title: contents.getTitle(), url: contents.getURL() });
+
+    storage.set('bookmarks', data, function(error) {
+      if (error) throw error;
+
+      bookmarks = data.bookmarks;
+      Menu.setApplicationMenu(createMenu());
+    });
+  });
+}
+
+function getBookmarksMenu(view) {
+  let bookmarksMenu = [];
+  bookmarks.forEach((b) => {
+    bookmarksMenu.push(new MenuItem({
+      label: b.title,
+      click: () => {
+        viewManager.loadURL(b.url, view);
+      }
+    }));
+  });
+  return bookmarksMenu;
 }
 
 function changeHomepage() {
