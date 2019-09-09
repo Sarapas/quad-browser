@@ -63,17 +63,22 @@ function appendSwapMenu(number, ctxMenu) {
   let viewNumbers = activeViews.map(v => v.number);
   let swapTo = viewNumbers.filter(n => n !== number).sort();
 
-  swapTo.forEach(n => {
-    ctxMenu.append(
-      new MenuItem({
-        label: 'Swap with ' + n,
-        click: function() {
-          swapBrowserView(number - 1, n - 1);
-          updateLayout();
-        }
-      })
-    );
+  let swapMenu = new MenuItem({
+    label: 'Swap with',
+    submenu: []
   });
+
+  swapTo.forEach(n => {
+    swapMenu.submenu.append(new MenuItem({
+      label: `${n}`,
+      click: function() {
+        swapBrowserView(number - 1, n - 1);
+        updateLayout();
+      }
+    }));
+  });
+  
+  ctxMenu.append(swapMenu);
 }
 
 function createBrowserView(number, title) {
