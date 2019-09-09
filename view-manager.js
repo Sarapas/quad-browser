@@ -96,7 +96,6 @@ function createBrowserView(number, title) {
   });
   browserView.webContents.on('page-favicon-updated', (e, favicons) => {
     browserView.webContents.favicons = favicons;
-    console.log(favicons);
   });
 
   return browserView;
