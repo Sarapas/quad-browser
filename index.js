@@ -6,9 +6,7 @@ const ioHook = require('iohook');
 const isMac = process.platform === 'darwin';
 const contextMenu = require('electron-context-menu');
 const viewManager = require('./view-manager');
-const downloader = require('./downloader');
-const icoToPng = require('./ico-to-png');
-const uuid = require('./uuid');
+const utilities = require('./utilities');
 const Store = require('electron-store');
 const storage = require('electron-json-storage');
 const fs = require('fs');
@@ -321,9 +319,9 @@ function saveBookmark(contents) {
         ext = ".ico";
       }
 
-      icon = `${uuid.new()}${ext}`;
+      icon = `${utilities.newGuid()}${ext}`;
       let destDir = `${app.getAppPath()}/icons`;
-      downloader.downloadFile(src, destDir, icon);
+      utilities.downloadFile(src, destDir, icon);
     }
 
     data.bookmarks.push({ title: contents.getTitle(), url: contents.getURL(), icon: icon });
@@ -346,7 +344,7 @@ function getBookmarksMenu(view) {
       let file = `${app.getAppPath()}/icons/${b.icon}`;
       if (b.icon.endsWith(".ico")) {
         const source = fs.readFileSync(file);
-        let png = icoToPng(source, size);
+        let png = utilities.icoToPng(source, size);
         icon = nativeImage.createFromBuffer(png);
       } else {
         icon = nativeImage.createFromPath(file);
