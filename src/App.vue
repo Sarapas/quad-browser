@@ -1,17 +1,23 @@
 <template>
   <div id="app">
-    <img alt="Vue logo" src="./assets/logo.png">
-    <HelloWorld msg="Welcome to Your Vue.js App"/>
+    <Bookmark v-for="b in bookmarks" v-bind:key="b.title" v-bind:bookmark="b" />
   </div>
 </template>
 
 <script>
-import HelloWorld from './components/HelloWorld.vue'
+import HelloWorld from './components/Bookmark.vue'
 
 export default {
   name: 'app',
   components: {
     HelloWorld
+  },
+  data: {
+    bookmarks: [
+      { title: 'Google', url: "https://google.com" },
+      { title: 'YouTube', url: "https://youtube.com" },
+      { title: 'GitHub', url: "https://github.com" }
+    ]
   }
 }
 </script>

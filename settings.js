@@ -21,10 +21,11 @@ function open(parent) {
         }
       });
 
-      settingsWin.loadFile(`renderer/dist/settings.html`);
+      settingsWin.loadFile(`dist/index.html`);
     
       settingsWin.once('ready-to-show', () => {
         settingsWin.show();
+        //settingsWin.webContents.openDevTools();
       });
     
       settingsWin.on('close', () => {
