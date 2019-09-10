@@ -22,7 +22,7 @@ function open(parent, onClose) {
         }
       });
 
-      settingsWin.loadFile(`dist/index.html`);
+      settingsWin.loadFile(`dist/settings.html`);
     
       settingsWin.once('ready-to-show', () => {
         settingsWin.show();

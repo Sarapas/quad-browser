@@ -11,7 +11,7 @@
 import Bookmark from './components/Bookmark.vue'
 
 export default {
-  name: 'app',
+  name: 'settings',
   components: {
     Bookmark
   },
