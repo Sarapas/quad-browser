@@ -2,7 +2,7 @@
   <div>
     <div class="container">
       <span>{{ bookmark.title }}</span>
-      <img src="../assets/delete.png" class="delete-icon"/>
+      <img src="../assets/delete.png" class="delete-icon" v-on:click="deleteBookmark"/>
     </div>
     <hr>
   </div>
@@ -13,7 +13,13 @@ import Bookmark from './Bookmark'
 
 export default {
   name: 'Bookmark',
-  props: [ 'bookmark' ]
+  props: [ 'bookmark' ],
+  methods: {
+    deleteBookmark: function() {
+      const { ipcRenderer } = window.require('electron');
+      this.$emit("delete", this.bookmark);
+    }
+  }
 }
 </script>
 
@@ -26,6 +32,7 @@ a {
   width: 16px;
   height: 16px;
   margin: 2px;
+  cursor: pointer;
 }
 .container {
   display: flex;

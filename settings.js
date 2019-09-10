@@ -1,9 +1,10 @@
 const electron = require('electron');
-const { BrowserWindow } = electron;
+const { BrowserWindow, ipcMain } = electron;
+const bookmarks = require("./bookmarks");
 
 let settingsWin;
 
-function open(parent) {
+function open(parent, onClose) {
     settingsWin = new BrowserWindow({
         frame: false,
         transparent: false,
@@ -25,19 +26,20 @@ function open(parent) {
     
       settingsWin.once('ready-to-show', () => {
         settingsWin.show();
+        settingsWin.webContents.send('bookmarks-received', bookmarks.get());
         //settingsWin.webContents.openDevTools();
       });
     
-      settingsWin.on('close', () => {
+      settingsWin.on('closed', () => {
         settingsWin = null;
-      });
+        onClose();
+      })
     
-    //   ipcMain.once('change-layout', (event, newLayout) => {
-    //     if (newLayout) {
-    //       setLayout(newLayout, false);
-    //       callback();
-    //     }
-    //   });
+      ipcMain.on('delete-bookmark', (event, bookmark) => {
+        if (bookmark) {
+          bookmarks.remove(bookmark);
+        }
+      });
 }
 
 var exports = module.exports = {

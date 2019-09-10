@@ -10,6 +10,7 @@ const BOOKMARK_STORAGE = "bookmarks";
 const ICON_DIR = `${app.getAppPath()}/icons/` // TODO: separator
 
 let menu = [];
+let bookmarks = [];
 
 function init() {
     storage.setDataPath(app.getAppPath());
@@ -18,7 +19,8 @@ function init() {
         storage.get(BOOKMARK_STORAGE, function(error, data) {
             if (error) throw error;
 
-            menu = buildMenu(data.bookmarks || []);
+            bookmarks = data.bookmarks || [];
+            menu = buildMenu();
 
             onChangeCallbacks.forEach((cb) => {
                 cb();
@@ -33,7 +35,7 @@ function onChange(callback) {
     onChangeCallbacks.push(callback);
 }
 
-function buildMenu(bookmarks) {
+function buildMenu() {
     let menu = [];
 
     bookmarks.forEach((b) => {
@@ -52,6 +54,10 @@ function getMenu(view) {
         item.click = () => { viewManager.loadURL(item.url, view); }
     })
     return menu;
+}
+
+function getBookmarks() {
+    return bookmarks;
 }
 
 function getIcon(fileName) {
@@ -84,17 +90,18 @@ function add(contents) {
     try {
         storage.get(BOOKMARK_STORAGE, function(error, data) {
             if (error) throw error;
-            
+
             data.bookmarks = data.bookmarks || [];
             let icon;
         
             function appendBookmarks() {
-                data.bookmarks.push({ title: contents.getTitle(), url: contents.getURL(), icon: icon });
-        
+                data.bookmarks.push({ id: utilities.newGuid(), title: contents.getTitle(), url: contents.getURL(), icon: icon });
+
                 storage.set(BOOKMARK_STORAGE, data, function(error) {
                     if (error) throw error;
     
-                    menu = buildMenu(data.bookmarks);
+                    bookmarks = data.bookmarks;
+                    menu = buildMenu();
     
                     onChangeCallbacks.forEach((cb) => {
                         cb(menu);
@@ -131,11 +138,40 @@ function add(contents) {
     } catch (ex) {
         console.log("error while adding bookmark: " + ex);
     }
-  }
+}
+
+function remove(bookmark) {
+    if (!bookmark || !bookmark.id)
+        return;
+
+    try {
+        storage.get(BOOKMARK_STORAGE, function(error, data) {
+            if (error) throw error;
+            
+            data.bookmarks = data.bookmarks || [];
+
+            data.bookmarks = data.bookmarks.filter(b => b.id !== bookmark.id);
+            storage.set(BOOKMARK_STORAGE, data, function(error) {
+                if (error) throw error;
+
+                bookmarks = data.bookmarks;
+                menu = buildMenu();
+
+                onChangeCallbacks.forEach((cb) => {
+                    cb(menu);
+                });
+            });
+        });
+    } catch (ex) {
+        console.log("error while removing bookmark: " + ex);
+    }
+}
 
 var exports = module.exports = {
     init: init,
     add: add,
     onChange: onChange,
-    getMenu: getMenu
+    getMenu: getMenu,
+    get: getBookmarks,
+    remove: remove
 };

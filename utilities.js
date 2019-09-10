@@ -37,8 +37,8 @@ function downloadFile(file_url , targetDir, targetFile, downloadedCallback){
     req.on('data', function(chunk) {
         // Update the received bytes
         received_bytes += chunk.length;
-        var percentage = (received_bytes * 100) / total_bytes;
-        console.log(percentage + "% | " + received_bytes + " bytes out of " + total_bytes + " bytes.");
+        //var percentage = (received_bytes * 100) / total_bytes;
+        //console.log(percentage + "% | " + received_bytes + " bytes out of " + total_bytes + " bytes.");
     });
 
     req.on('end', function() {

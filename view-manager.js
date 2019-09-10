@@ -782,7 +782,7 @@ function changeLayout(callback) {
     layoutPickerWnd.webContents.send('set-current', layout);
   });
 
-  layoutPickerWnd.on('close', () => {
+  layoutPickerWnd.on('closed', () => {
     layoutPickerWnd = null;
   });
 
@@ -832,7 +832,7 @@ function createUrlWindow(number) {
     addressChangeWnd.show();
   });
 
-  addressChangeWnd.on('close', () => {
+  addressChangeWnd.on('closed', () => {
     addressChangeWnd = null;
   });
 

@@ -216,7 +216,13 @@ function createMenu() {
     {
       label: 'Bookmarks',
       submenu: [ 
-        { label: "Bookmark manager", click: () => { settings.open(win); }},
+        { label: "Bookmark manager", click: () => { 
+          globalShortcut.unregister('Esc'); // to allow modal to use esc
+          settings.open(win, () => {  
+            globalShortcut.register('Esc', unmaximize);
+          }); 
+        }},
+        { type: "separator" },
         ...bookmarks.getMenu(null) 
       ]
     },
