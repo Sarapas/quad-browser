@@ -1,5 +1,11 @@
 <template>
-    <span>Test</span>
+  <div>
+    <div class="container">
+      <span>{{ bookmark.title }}</span>
+      <img src="../assets/delete.png" class="delete-icon"/>
+    </div>
+    <hr>
+  </div>
 </template>
 
 <script>
@@ -15,5 +21,15 @@ export default {
 <style scoped>
 a {
   color: #42b983;
+}
+.delete-icon {
+  width: 16px;
+  height: 16px;
+  margin: 2px;
+}
+.container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
 }
 </style>
