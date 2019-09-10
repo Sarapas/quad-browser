@@ -9,7 +9,6 @@ let onChangeCallbacks = [];
 const BOOKMARK_STORAGE = "bookmarks";
 const ICON_DIR = `${app.getAppPath()}/icons/` // TODO: separator
 
-let menu = [];
 let bookmarks = [];
 
 function init() {
@@ -29,23 +28,17 @@ function onChange(callback) {
     onChangeCallbacks.push(callback);
 }
 
-function buildMenu() {
-    let menu = [];
-
-    bookmarks.forEach((b) => {
-      menu.push(new MenuItem({
-        label: b.title,
-        url: b.url, // custom property
-        icon: b.iconData
-      }));
-    });
-
-    return menu;
-}
-
 function getMenu(view) {
-    menu.forEach((item) => {
-        item.click = () => { viewManager.loadURL(item.url, view); }
+    let menu = [];
+    bookmarks.forEach((b) => {
+        menu.push(new MenuItem({
+            label: b.title,
+            url: b.url, // custom property
+            icon: b.iconData,
+            click: () => {
+                viewManager.loadURL(b.url, view); 
+            }
+        }));
     })
     return menu;
 }
@@ -140,16 +133,10 @@ function setBookmarks(bMarks) {
         if (b.iconData) {
             b.iconDataURL = b.iconData.toDataURL();
         }
-
-        menu.push(new MenuItem({
-            label: b.title,
-            url: b.url, // custom property
-            icon: b.iconData
-        }));
     });
 
     onChangeCallbacks.forEach((cb) => {
-        cb(menu);
+        cb();
     });
 }
 
