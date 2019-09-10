@@ -18,13 +18,7 @@ function init() {
     try {
         storage.get(BOOKMARK_STORAGE, function(error, data) {
             if (error) throw error;
-
-            bookmarks = data.bookmarks || [];
-            menu = buildMenu();
-
-            onChangeCallbacks.forEach((cb) => {
-                cb();
-            });
+            setBookmarks(data.bookmarks);
         });
     } catch (ex) {
         console.log("error while loading bookmarks: " + ex);
@@ -42,7 +36,7 @@ function buildMenu() {
       menu.push(new MenuItem({
         label: b.title,
         url: b.url, // custom property
-        icon: getIcon(b.icon)
+        icon: b.iconData
       }));
     });
 
@@ -61,15 +55,18 @@ function getBookmarks() {
 }
 
 function getIcon(fileName) {
-    if (!fileName)
-        return null;
+    let file;
+    if (fileName) {
+        file = `${ICON_DIR}${fileName}`;
+    } else {
+        file = "assets/default-bookmark-icon.png";
+    }
 
-    let file = `${ICON_DIR}${fileName}`;
     let icon = null;
     const size = 16;
 
     try {
-        if (fileName.endsWith(".ico")) {
+        if (file.endsWith(".ico")) {
             // converting to png
             const source = fs.readFileSync(file);
             let png = utilities.icoToPng(source, size);
@@ -99,13 +96,7 @@ function add(contents) {
 
                 storage.set(BOOKMARK_STORAGE, data, function(error) {
                     if (error) throw error;
-    
-                    bookmarks = data.bookmarks;
-                    menu = buildMenu();
-    
-                    onChangeCallbacks.forEach((cb) => {
-                        cb(menu);
-                    });
+                    setBookmarks(data.bookmarks);
                 });
             }
 
@@ -140,6 +131,28 @@ function add(contents) {
     }
 }
 
+function setBookmarks(bMarks) {
+    bookmarks = bMarks || [];
+    menu = [];
+
+    bookmarks.forEach(b => {
+        b.iconData = getIcon(b.icon);
+        if (b.iconData) {
+            b.iconDataURL = b.iconData.toDataURL();
+        }
+
+        menu.push(new MenuItem({
+            label: b.title,
+            url: b.url, // custom property
+            icon: b.iconData
+        }));
+    });
+
+    onChangeCallbacks.forEach((cb) => {
+        cb(menu);
+    });
+}
+
 function remove(bookmark) {
     if (!bookmark || !bookmark.id)
         return;
@@ -149,17 +162,11 @@ function remove(bookmark) {
             if (error) throw error;
             
             data.bookmarks = data.bookmarks || [];
-
             data.bookmarks = data.bookmarks.filter(b => b.id !== bookmark.id);
+
             storage.set(BOOKMARK_STORAGE, data, function(error) {
                 if (error) throw error;
-
-                bookmarks = data.bookmarks;
-                menu = buildMenu();
-
-                onChangeCallbacks.forEach((cb) => {
-                    cb(menu);
-                });
+                setBookmarks(data.bookmarks);
             });
         });
     } catch (ex) {

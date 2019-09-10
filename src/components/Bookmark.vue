@@ -1,7 +1,10 @@
 <template>
   <div>
     <div class="container">
-      <span>{{ bookmark.title }}</span>
+      <div class="container">
+        <img v-if="bookmark.iconDataURL" class="bookmark-icon" :src="bookmark.iconDataURL" />
+        <span>{{ bookmark.title }}</span>
+      </div>
       <img src="../assets/delete.png" class="delete-icon" v-on:click="deleteBookmark"/>
     </div>
     <hr>
@@ -33,6 +36,9 @@ a {
   height: 16px;
   margin: 2px;
   cursor: pointer;
+}
+.bookmark-icon {
+  margin-right: 5px;
 }
 .container {
   display: flex;
