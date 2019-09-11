@@ -31,6 +31,7 @@ let addressChangeWnd;
 let layoutPickerWnd;
 let layout;
 let previousLayout;
+let layoutChangeCallbacks = [];
 
 function init(parentWindow) {
   if (isInitialized) throw new Error('Already initialized');
@@ -201,6 +202,10 @@ function setLayoutInternal(newLayout, layoutViews, force, updateFunc) {
         setAudible(audibleView);
       }
     }
+
+    layoutChangeCallbacks.forEach((cb) => {
+      cb();
+    });
   }
 }
 
@@ -915,6 +920,15 @@ function zoomOut(number) {
   }
 }
 
+function getViewBounds(view) {
+  let vb = viewBounds.find(vb => vb.view === view);
+  return vb.bounds;
+}
+
+function onLayoutChange(callback) {
+  layoutChangeCallbacks.push(callback);
+}
+
 var exports = (module.exports = {
   init: init,
   setAudible: setAudible,
@@ -945,5 +959,7 @@ var exports = (module.exports = {
   menuOnClick: appendSwapMenu,
   zoomIn: zoomIn,
   zoomOut: zoomOut,
-  createUrlWindow: createUrlWindow
+  createUrlWindow: createUrlWindow,
+  getViewBounds: getViewBounds,
+  onLayoutChange: onLayoutChange
 });

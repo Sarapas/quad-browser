@@ -2,11 +2,11 @@
   <div id="app">
     <div class="container">
       <img class="icon" src="./assets/find.svg" />
-      <input type="text" class="find-field" placeholder="Find in page" />
-      <span class="counts">{{current}}/{{total}}</span>
-      <img class="button" src="./assets/up.svg" />
-      <img class="button" src="./assets/down.svg" />
-      <img class="button close-button" src="./assets/close.svg" />
+      <input ref="findtext" autofocus v-model="text" @keyup="onTextChange" v-on:keyup.esc="close" type="text" class="find-field" placeholder="Find in page" />
+      <span class="counts">{{match}}/{{totalMatches}}</span>
+      <img class="button" src="./assets/up.svg" v-on:click="up"  />
+      <img class="button" src="./assets/down.svg" v-on:click="down"  />
+      <img class="button close-button" src="./assets/close.svg" v-on:click="close" />
     </div>
   </div>
 </template>
@@ -15,10 +15,53 @@
 
 export default {
   name: 'find',
-  props: [ 'current', 'total' ],
+    data: function() {
+    return {
+      match: 0,
+      totalMatches: 0
+    };
+  },
+  props: [ 'text' ],
+  methods: {
+    onTextChange: function() {
+      const { ipcRenderer } = window.require('electron');
+      if (this.text) {
+        ipcRenderer.send('find', this.text);
+      } else {
+        ipcRenderer.send('find-stop');
+      }
+    },
+    up: function() {
+      if (!this.text)
+        return;
+
+      const { ipcRenderer } = window.require('electron');
+      ipcRenderer.send('find-up', this.text);
+      this.$refs.findtext.focus();
+    },
+    down: function() {
+      if (!this.text)
+        return;
+
+      const { ipcRenderer } = window.require('electron');
+      ipcRenderer.send('find-down', this.text);
+      this.$refs.findtext.focus();
+    },
+    close: function() {
+      const { ipcRenderer, remote } = window.require('electron');
+      const currentWindow = remote.getCurrentWindow();
+      ipcRenderer.send('find-stop');
+      currentWindow.close();
+    },
+  },
   mounted: function() {
-    this.current = 0;
-    this.total = 0;
+    const { ipcRenderer } = window.require('electron');
+    let _this = this;
+
+    ipcRenderer.on('update-matches', function(event, result) {
+      _this.match = result.match;
+      _this.totalMatches = result.totalMatches;
+    });
   }
 }
 </script>

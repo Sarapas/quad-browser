@@ -40,6 +40,10 @@ function createWindow() {
 
   viewManager.init(win);
 
+  viewManager.onLayoutChange(() => {
+    find.close();
+  });
+
   win.setFullScreen(true);
   win.setMenuBarVisibility(false);
 
@@ -69,7 +73,7 @@ function createWindow() {
             { label: 'Back', click: () => { if (view.webContents.canGoBack()) view.webContents.goBack(); } },
             { label: 'Refresh', click: () => { view.webContents.reload(); } },
             { label: 'Change address', click: () => { changeAddress(view.number); } },
-            { label: 'Find', click: () => { find.open(win, () => { }); } },
+            { label: 'Find', click: () => { find.open(win, view, () => { }); } },
             { type: 'separator' },
             { label: 'Save bookmark', click: () => { bookmarks.add(view.webContents); } },
             { label: 'Load bookmark', submenu: bookmarks.getMenu(view) }
@@ -132,6 +136,10 @@ function createWindow() {
     globalShortcut.register(`CommandOrControl+f8`, () => { viewManager.setFiveVerticalLayout(false); });
     globalShortcut.register(`CommandOrControl+f9`, () => { viewManager.setSixHorizontalLayout(false); });
     globalShortcut.register(`CommandOrControl+f10`, () => { viewManager.setSixVerticalLayout(false); });
+    globalShortcut.register(`CommandOrControl+f`, () => {
+      let audible = viewManager.getAudible();
+      find.open(win, audible, () => {});
+    });
 
     ioHook.on('mousedown', onMouseClick);
     ioHook.on('mousemove', onMouseMove);
@@ -163,10 +171,12 @@ function createWindow() {
 
   win.on('resize', () => {
     viewManager.updateLayout();
+    find.close();
   });
 
   win.on('minimize', () => {
     viewManager.suspendAudible();
+    find.close();
   });
 
   win.on('restore', () => {
@@ -291,7 +301,7 @@ function changeAddress(viewNumber = null) {
 }
 
 function unmaximize() {
-  if (win != null) {
+  if (win != null && win.isFocused()) {
     win.setFullScreen(false);
     viewManager.minimizeViews();
   }
