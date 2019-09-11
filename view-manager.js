@@ -32,6 +32,7 @@ let layoutPickerWnd;
 let layout;
 let previousLayout;
 let layoutChangeCallbacks = [];
+let autoRefresh = [];
 
 function init(parentWindow) {
   if (isInitialized) throw new Error('Already initialized');
@@ -929,6 +930,34 @@ function onLayoutChange(callback) {
   layoutChangeCallbacks.push(callback);
 }
 
+function setAutoRefresh(view, seconds) {
+  let ar = autoRefresh.find(ar => ar.view === view);
+  if (ar) {
+    clearInterval(ar.interval);
+    ar.time = null;
+  } 
+
+  if (seconds) {
+    ar = ar || { view: view };
+    ar.interval = setInterval(() => {
+      if (activeViews.includes(view)) {
+        view.webContents.reload();
+      }
+    }, seconds * 1000);
+
+    ar.time = seconds;
+    autoRefresh.push(ar);
+  }
+}
+
+function getAutoRefresh(view) {
+  let ar = autoRefresh.find(ar => ar.view === view);
+  if (ar) {
+    return ar.time;
+  }
+  return null;
+}
+
 var exports = (module.exports = {
   init: init,
   setAudible: setAudible,
@@ -961,5 +990,7 @@ var exports = (module.exports = {
   zoomOut: zoomOut,
   createUrlWindow: createUrlWindow,
   getViewBounds: getViewBounds,
-  onLayoutChange: onLayoutChange
+  onLayoutChange: onLayoutChange,
+  setAutoRefresh: setAutoRefresh,
+  getAutoRefresh: getAutoRefresh
 });

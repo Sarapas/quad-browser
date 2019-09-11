@@ -71,8 +71,17 @@ function createWindow() {
         setTimeout(() => {
           let viewMenuTemplate = [
             { label: 'Back', click: () => { if (view.webContents.canGoBack()) view.webContents.goBack(); } },
-            { label: 'Refresh', click: () => { view.webContents.reload(); } },
             { label: 'Change address', click: () => { changeAddress(view.number); } },
+            { type: 'separator' },
+            { label: 'Refresh', click: () => { view.webContents.reload(); } },
+            { label: 'Auto refresh', submenu: [
+              { label: '30s', type: 'radio', checked: viewManager.getAutoRefresh(view) === 30, click: () => { viewManager.setAutoRefresh(view, 30); } },
+              { label: '1min', type: 'radio', checked: viewManager.getAutoRefresh(view) === 60, click: () => { viewManager.setAutoRefresh(view, 60); } },
+              { label: '5min', type: 'radio', checked: viewManager.getAutoRefresh(view) === 300, click: () => { viewManager.setAutoRefresh(view, 300); } },
+              { label: '10min', type: 'radio', checked: viewManager.getAutoRefresh(view) === 600, click: () => { viewManager.setAutoRefresh(view, 600); } },
+              { label: 'None', type: 'radio', checked: viewManager.getAutoRefresh(view) === null, click: () => { viewManager.setAutoRefresh(view, null); } }
+            ]},
+            { type: 'separator' },
             { label: 'Find', click: () => { find.open(win, view, () => { }); } },
             { type: 'separator' },
             { label: 'Save bookmark', click: () => { bookmarks.add(view.webContents); } },
