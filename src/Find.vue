@@ -1,23 +1,83 @@
 <template>
   <div id="app">
-    <h2>Find</h2>
+    <div class="container">
+      <img class="icon" src="./assets/find.svg" />
+      <input type="text" class="find-field" placeholder="Find in page" />
+      <span class="counts">{{current}}/{{total}}</span>
+      <img class="button" src="./assets/up.svg" />
+      <img class="button" src="./assets/down.svg" />
+      <img class="button close-button" src="./assets/close.svg" />
+    </div>
   </div>
 </template>
 
 <script>
 
 export default {
-  name: 'find'
+  name: 'find',
+  props: [ 'current', 'total' ],
+  mounted: function() {
+    this.current = 0;
+    this.total = 0;
+  }
 }
 </script>
 
 <style>
+body {
+  margin: 0px;
+}
 #app {
   font-family: 'Avenir', Helvetica, Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-align: center;
   color: #2c3e50;
-  margin-top: 60px;
+}
+.container {
+  border-radius: 30px;
+  height: 40px;
+  -webkit-app-region: no-drag;
+  align-items: center;
+  overflow: hidden;
+  display: flex;
+}
+.counts {
+  opacity: 0.54;
+  font-size: 15px;
+  margin-left: 5px;
+  margin-right: 5px;
+}
+.button {
+  opacity: 0.54;
+  padding: 2px;
+  position: relative;
+}
+.icon {
+  margin-left: 12px;
+  height: 20px;
+  opacity: 0.54;
+}
+.close-button {
+  height: 18px;
+  padding: 6px;
+  margin-right: 12px;
+}
+.button:hover {
+  background: lightgray;
+  border-radius: 100%;
+}
+.find-field {
+  font-family: 'Avenir', Helvetica, Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  width: 100%;
+  height: 100%;
+  font-size: 15px;
+  margin-right: 8px;
+  border: none;
+  outline: none;
+  background: transparent;
+  margin-left: 8px;
 }
 </style>

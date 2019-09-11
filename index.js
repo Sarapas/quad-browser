@@ -8,6 +8,7 @@ const contextMenu = require('electron-context-menu');
 const viewManager = require('./view-manager');
 const bookmarks = require('./bookmarks');
 const settings = require('./settings')
+const find = require('./find');
 const Store = require('electron-store');
 const store = new Store();
 //require('electron-reload')(__dirname);
@@ -68,6 +69,7 @@ function createWindow() {
             { label: 'Back', click: () => { if (view.webContents.canGoBack()) view.webContents.goBack(); } },
             { label: 'Refresh', click: () => { view.webContents.reload(); } },
             { label: 'Change address', click: () => { changeAddress(view.number); } },
+            { label: 'Find', click: () => { find.open(win, () => { }); } },
             { type: 'separator' },
             { label: 'Save bookmark', click: () => { bookmarks.add(view.webContents); } },
             { label: 'Load bookmark', submenu: bookmarks.getMenu(view) }
