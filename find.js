@@ -1,6 +1,5 @@
 const electron = require('electron');
 const { BrowserWindow, ipcMain } = electron;
-const viewManager = require("./view-manager");
 
 let findWin;
 
@@ -10,13 +9,12 @@ function open(parent, view, onClose) {
     return;
   }
 
-  let bounds = viewManager.getViewBounds(view);
+  let bounds = view.getBounds();
   let margin = 20;
   let width = 320;
   let height = 40;
-  let parentBounds = parent.getBounds();
-  let x = parentBounds.x + bounds.x + bounds.width - width - margin;
-  let y = parentBounds.y + bounds.y + margin;
+  let x = bounds.x + bounds.width - width - margin;
+  let y = bounds.y + margin;
   let findWinBounds = { x: x, y: y, width: width, height: height };
 
   findWin = new BrowserWindow({

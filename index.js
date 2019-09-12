@@ -10,6 +10,7 @@ const bookmarks = require('./bookmarks');
 const settings = require('./settings')
 const find = require('./find');
 const Store = require('electron-store');
+const util = require('electron-util');
 const store = new Store();
 //require('electron-reload')(__dirname);
 
@@ -19,8 +20,6 @@ let isTrustedAccesibility;
 
 let lastClickTime;
 let lastClickView;
-
-let clickedView = 0;
 
 function createWindow() {
   isTrustedAccesibility = isMac ? systemPreferences.isTrustedAccessibilityClient(false) : true;
@@ -62,6 +61,9 @@ function createWindow() {
   let viewMenu;
 
   function onMouseClick(event) {
+    if (!util.activeWindow())
+      return;
+
     let view = viewManager.inView(event.x, event.y);
 
     if (view) {
@@ -122,7 +124,7 @@ function createWindow() {
   }
 
   if (isTrustedAccesibility) {
-    let viewNumbers = [1, 2, 3, 4];
+    let viewNumbers = [1, 2, 3, 4, 5, 6];
     viewNumbers.forEach(number => {
       globalShortcut.register(`CommandOrControl+${number}`, () => {
         let view = viewManager.getViewByNumber(number);
@@ -145,7 +147,7 @@ function createWindow() {
     globalShortcut.register(`CommandOrControl+f8`, () => { viewManager.setFiveVerticalLayout(false); });
     globalShortcut.register(`CommandOrControl+f9`, () => { viewManager.setSixHorizontalLayout(false); });
     globalShortcut.register(`CommandOrControl+f10`, () => { viewManager.setSixVerticalLayout(false); });
-    globalShortcut.register(`CommandOrControl+f`, () => {
+    globalShortcut.register(`CommandOrControl+t`, () => {
       let audible = viewManager.getAudible();
       find.open(win, audible, () => {});
     });
@@ -167,20 +169,19 @@ function createWindow() {
 
   bookmarks.init();
 
+  win.on('resize', () => {
+    viewManager.updateLayout();
+    find.close();
+  });
+
   win.on('enter-full-screen', () => {
     win.setMenuBarVisibility(false);
-    // updating frame location
-    let audible = viewManager.getAudible();
-    if (audible) viewManager.setAudible(audible);
+    viewManager.updateLayout();
   });
 
   win.on('leave-full-screen', () => {
     win.setMenuBarVisibility(true);
-  });
-
-  win.on('resize', () => {
     viewManager.updateLayout();
-    find.close();
   });
 
   win.on('minimize', () => {
@@ -272,24 +273,10 @@ function createMenu() {
         },
         { type: 'separator' },
         {
-          label: 'Zoom In',
-          accelerator: 'CommandOrControl+m',
-          click: () => {
-            viewManager.zoomIn(clickedView - 1);
-          }
-        },
-        {
-          label: 'Zoom Out',
-          accelerator: 'CommandOrControl+n',
-          click: () => {
-            viewManager.zoomOut(clickedView - 1);
-          }
-        },
-        { type: 'separator' },
-        {
           label: 'Fullscreen players',
           accelerator: 'CmdorCtrl+F',
           click: () => {
+            win.setFullScreen(true);
             viewManager.maximizeViews();
           }
         }
@@ -310,9 +297,12 @@ function changeAddress(viewNumber = null) {
 }
 
 function unmaximize() {
-  if (win != null && win.isFocused()) {
-    win.setFullScreen(false);
-    viewManager.minimizeViews();
+  if (win != null) {
+    let hasFocus = win.isFocused() || win.getChildWindows().find(w => w.isFocused()) !== null;
+    if (hasFocus) {
+      win.setFullScreen(false);
+      viewManager.minimizeViews();
+    }
   }
 }
 

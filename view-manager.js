@@ -1,12 +1,12 @@
 const electron = require('electron');
-const { BrowserWindow, BrowserView, Menu, MenuItem, ipcMain } = electron;
+const { BrowserWindow, MenuItem, ipcMain } = electron;
 const path = require('path');
 const fs = require('fs');
+const util = require('electron-util');
 
 const requestFullscreen = fs.readFileSync(path.resolve(__dirname, 'set-video-fullscreen.js'), 'utf8');
 const exitFullscreen = fs.readFileSync(path.resolve(__dirname, 'exit-video-fullscreen.js'), 'utf8');
 
-const isMac = process.platform === 'darwin';
 let aspect_ratio = 16 / 9;
 
 let SINGLE = 'Single';
@@ -22,7 +22,6 @@ let SIXV = 'SixV';
 
 let views;
 let activeViews;
-let viewBounds;
 let parent;
 let isInitialized;
 let audibleView;
@@ -40,12 +39,12 @@ function init(parentWindow) {
   if (!frame) createFrame();
 
   views = [
-    createBrowserView(1),
-    createBrowserView(2),
-    createBrowserView(3),
-    createBrowserView(4),
-    createBrowserView(5),
-    createBrowserView(6),
+    createView(1),
+    createView(2),
+    createView(3),
+    createView(4),
+    createView(5),
+    createView(6),
   ];
 
   isInitialized = true;
@@ -53,7 +52,7 @@ function init(parentWindow) {
   setQuadLayout(); // default layout
 }
 
-function swapBrowserView(index1, index2) {
+function swapViews(index1, index2) {
   let _temp = views[index1];
   views[index1] = views[index2];
   views[index1].number = index1 + 1;
@@ -74,7 +73,7 @@ function appendSwapMenu(number, ctxMenu) {
     swapMenu.submenu.append(new MenuItem({
       label: `${n}`,
       click: function() {
-        swapBrowserView(number - 1, n - 1);
+        swapViews(number - 1, n - 1);
         updateLayout();
       }
     }));
@@ -84,23 +83,42 @@ function appendSwapMenu(number, ctxMenu) {
   ctxMenu.append(swapMenu);
 }
 
-function createBrowserView(number, title) {
-  let browserView = new BrowserView();
-  browserView.number = number;
-  browserView.webContents.setAudioMuted(true);
-  browserView.webContents.on('new-window', (e, url) => {
-    e.preventDefault()
-    browserView.webContents.loadURL(url);
-  });
-  browserView.webContents.on('page-title-updated', (e, favicons) => {
-    // clearing old favicon
-    browserView.webContents.favicons = null;
-  });
-  browserView.webContents.on('page-favicon-updated', (e, favicons) => {
-    browserView.webContents.favicons = favicons;
+function createView(number, title) {
+  let view = new BrowserWindow({
+    parent: parent,
+    frame: false,
+    transparent: false,
+    show: false,
+    skipTaskbar: true,
+    resizable: false,
+    fullscreen: false,
+    minimizable: false,
+    fullscreenable: false,
+    closable: false,
+    focusable: true,
+    acceptFirstMouse: true,
+    hasShadow: false,
+    titleBarStyle: 'customButtonsOnHover' // together with frame: false makes corners not round on macos. It is a bug that we use as a feature
   });
 
-  return browserView;
+  view.number = number;
+  view.webContents.setAudioMuted(true);
+  view.webContents.on('new-window', (e, url) => {
+    e.preventDefault();
+    view.webContents.loadURL(url);
+  });
+  view.webContents.on('page-title-updated', (e, favicons) => {
+    // clearing old favicon
+    view.webContents.favicons = null;
+    view.webContents.setVisualZoomLevelLimits(1, 5);
+  });
+  view.webContents.on('page-favicon-updated', (e, favicons) => {
+    view.webContents.favicons = favicons;
+  });
+  view.on('focus', () => {
+    setSelected(view);
+  });
+  return view;
 }
 
 function loadURL(url, view) {
@@ -189,12 +207,18 @@ function setLayoutInternal(newLayout, layoutViews, force, updateFunc) {
     previousLayout = layout;
     layout = newLayout;
     activeViews = layoutViews;
-    parent.setBrowserView(null); // clearing browserviews
-    activeViews.forEach(view => {
-      parent.addBrowserView(view);
+
+    views.forEach(view => {
+      view.hide();
     });
 
+    setSelected(false);
+
     updateFunc();
+
+    activeViews.forEach(view => {
+      view.show();
+    });
 
     if (audibleView) {
       if (!activeViews.includes(audibleView)) {
@@ -346,68 +370,50 @@ function getViewNames() {
     ];
 }
 
-function updateSingleLayout() {
-  let bounds = parent.getBounds();
+function getUsableBounds() {
+  let parentX = parent.getPosition()[0];
+  let parentY = parent.getPosition()[1];
   let contentBounds = parent.getContentBounds();
-  let offsetY = isMac ? bounds.height - contentBounds.height : 0; // to avoid hiding webviews under the windowmenu
+  let offsetX = parentX;
+  let offsetY = parentY + (util.is.macos && !parent.isFullScreen() ? util.menuBarHeight() : 0);
+  return { x: offsetX, y: offsetY, width: contentBounds.width, height: contentBounds.height };
+}
 
-  let vBounds = { x: 0, y: offsetY, width: contentBounds.width, height: contentBounds.height };
-  let view = activeViews[0];
-  viewBounds = [{ view: view, bounds: vBounds }];
-  view.setBounds(vBounds);
+function updateSingleLayout() {
+  checkInitialized();
+  activeViews[0].setBounds(getUsableBounds());
 }
 
 function updateDualLayout() {
   checkInitialized();
 
-  // not trying to maintain aspect ratio and letting vide players take care of that
-  let bounds = parent.getBounds();
-  let contentBounds = parent.getContentBounds();
-  let viewWidth = Math.floor(contentBounds.width);
-  let viewHeight = Math.floor(contentBounds.height / 2);
-  let offsetY = isMac ? bounds.height - contentBounds.height : 0; // to avoid hiding webviews under the windowmenu
-  let offsetX = 0;
+  let bounds = getUsableBounds();
+  let viewWidth = bounds.width
+  let viewHeight = Math.floor(bounds.height / 2);
 
-  let bounds1 = { x: offsetX, y: offsetY, width: viewWidth, height: viewHeight };
-  let bounds2 = { x: offsetX, y: offsetY + viewHeight, width: viewWidth, height: viewHeight };
+  let bounds1 = { x: bounds.x, y: bounds.y, width: viewWidth, height: viewHeight };
+  let bounds2 = { x: bounds.x, y: bounds.y + viewHeight, width: viewWidth, height: viewHeight };
 
   views[0].setBounds(bounds1);
   views[1].setBounds(bounds2);
-
-  // preserving view bounds for later reference
-  viewBounds = [
-    { view: views[0], bounds: bounds1 },
-    { view: views[1], bounds: bounds2 }
-  ];
 }
 
 function updateTriLayout() {
   checkInitialized();
 
-  let bounds = parent.getBounds();
-  let contentBounds = parent.getContentBounds();
-  let offsetY = isMac ? bounds.height - contentBounds.height : 0; // to avoid hiding webviews under the windowmenu
-  let offsetX = 0;
-
-  let topViewWidth = Math.floor(contentBounds.width / 2);
+  let bounds = getUsableBounds();
+  let topViewWidth = Math.floor(bounds.width / 2);
   let topViewHeight = Math.floor(topViewWidth / aspect_ratio);
+  let bottomViewWidth = bounds.width;
+  let bottomViewHeight = bounds.height - topViewHeight;
 
-  let bottomViewWidth = contentBounds.width;
-  let bottomViewHeight = contentBounds.height - topViewHeight;
+  let bounds1 = { x: bounds.x, y: bounds.y, width: topViewWidth, height: topViewHeight };
+  let bounds2 = { x: bounds.x + topViewWidth, y: bounds.y, width: topViewWidth, height: topViewHeight };
+  let bounds3 = { x: bounds.x, y: bounds.y + topViewHeight, width: bottomViewWidth, height: bottomViewHeight };
 
-  let bounds1 = { x: offsetX, y: offsetY, width: topViewWidth, height: topViewHeight };
-  let bounds2 = { x: topViewWidth, y: offsetY, width: topViewWidth, height: topViewHeight };
-  let bounds3 = { x: offsetX, y: offsetY + topViewHeight, width: bottomViewWidth, height: bottomViewHeight };
-
-  viewBounds = [
-    { view: views[0], bounds: bounds1 },
-    { view: views[1], bounds: bounds2 },
-    { view: views[2], bounds: bounds3 }
-  ];
-
-  viewBounds.forEach(vb => {
-    vb.view.setBounds(vb.bounds);
-  });
+  views[0].setBounds(bounds1);
+  views[1].setBounds(bounds2);
+  views[2].setBounds(bounds3);
 }
 
 function updateQuadLayout() {
@@ -420,157 +426,116 @@ function updateQuadLayout() {
   let bounds3 = { x: size.x, y: size.y + size.height, width: size.width, height: size.height };
   let bounds4 = { x: size.x + size.width, y: size.y + size.height, width: size.width, height: size.height };
 
-  viewBounds = [
-    { view: views[0], bounds: bounds1 },
-    { view: views[1], bounds: bounds2 },
-    { view: views[2], bounds: bounds3 },
-    { view: views[3], bounds: bounds4 }
-  ];
-
-  viewBounds.forEach(vb => {
-    vb.view.setBounds(vb.bounds);
-  });
+  views[0].setBounds(bounds1);
+  views[1].setBounds(bounds2);
+  views[2].setBounds(bounds3);
+  views[3].setBounds(bounds4);
 }
 
 function updateQuadHorizontalLayout() {
   checkInitialized();
 
-  let bounds = parent.getBounds();
-  let contentBounds = parent.getContentBounds();
-  let offsetY = isMac ? bounds.height - contentBounds.height : 0; // to avoid hiding webviews under the windowmenu
-  let offsetX = 0;
+  let bounds = getUsableBounds();
 
-  let topViewWidth = Math.floor(contentBounds.width / 3);
+  let topViewWidth = Math.floor(bounds.width / 3);
   let topViewHeight = Math.floor(topViewWidth / aspect_ratio);
 
-  let bottomViewWidth = contentBounds.width;
-  let bottomViewHeight = contentBounds.height - topViewHeight;
+  let bottomViewWidth = bounds.width;
+  let bottomViewHeight = bounds.height - topViewHeight;
 
-  let bounds1 = { x: offsetX, y: offsetY, width: topViewWidth, height: topViewHeight };
-  let bounds2 = { x: topViewWidth, y: offsetY, width: topViewWidth, height: topViewHeight };
-  let bounds3 = { x: topViewWidth * 2, y: offsetY, width: topViewWidth, height: topViewHeight };
-  let bounds4 = { x: offsetX, y: offsetY + topViewHeight, width: bottomViewWidth, height: bottomViewHeight };
+  let bounds1 = { x: bounds.x, y: bounds.y, width: topViewWidth, height: topViewHeight };
+  let bounds2 = { x: bounds.x + topViewWidth, y: bounds.y, width: topViewWidth, height: topViewHeight };
+  let bounds3 = { x: bounds.x + topViewWidth * 2, y: bounds.y, width: topViewWidth, height: topViewHeight };
+  let bounds4 = { x: bounds.x, y: bounds.y + topViewHeight, width: bottomViewWidth, height: bottomViewHeight };
 
-  viewBounds = [
-    { view: views[0], bounds: bounds1 },
-    { view: views[1], bounds: bounds2 },
-    { view: views[2], bounds: bounds3 },
-    { view: views[3], bounds: bounds4 }
-  ];
-
-  viewBounds.forEach(vb => {
-    vb.view.setBounds(vb.bounds);
-  });
+  views[0].setBounds(bounds1);
+  views[1].setBounds(bounds2);
+  views[2].setBounds(bounds3);
+  views[3].setBounds(bounds4);
 }
 
 function updateQuadVerticalLayout() {
   checkInitialized();
 
-  let bounds = parent.getBounds();
-  let contentBounds = parent.getContentBounds();
-  let offsetY = isMac ? bounds.height - contentBounds.height : 0; // to avoid hiding webviews under the windowmenu
-  let offsetX = 0;
+  let bounds = getUsableBounds();
 
-  let rightViewHeight = Math.floor(contentBounds.height / 3);
+  let rightViewHeight = Math.floor(bounds.height / 3);
   let rightViewWidth = Math.floor(rightViewHeight * aspect_ratio);
 
-  let leftViewWidth = contentBounds.width - rightViewWidth;
-  let leftViewHeight = contentBounds.height;
+  let leftViewWidth = bounds.width - rightViewWidth;
+  let leftViewHeight = bounds.height;
 
-  let bounds1 = { x: offsetX, y: offsetY, width: leftViewWidth, height: leftViewHeight };
-  let bounds2 = { x: offsetX + leftViewWidth, y: offsetY, width: rightViewWidth, height: rightViewHeight };
-  let bounds3 = { x: offsetX + leftViewWidth, y: offsetY + rightViewHeight, width: rightViewWidth, height: rightViewHeight };
-  let bounds4 = { x: offsetX + leftViewWidth, y: offsetY + rightViewHeight * 2, width: rightViewWidth, height: rightViewHeight };
+  let bounds1 = { x: bounds.x, y: bounds.y, width: leftViewWidth, height: leftViewHeight };
+  let bounds2 = { x: bounds.x + leftViewWidth, y: bounds.y, width: rightViewWidth, height: rightViewHeight };
+  let bounds3 = { x: bounds.x + leftViewWidth, y: bounds.y + rightViewHeight, width: rightViewWidth, height: rightViewHeight };
+  let bounds4 = { x: bounds.x + leftViewWidth, y: bounds.y + rightViewHeight * 2, width: rightViewWidth, height: rightViewHeight };
 
-  viewBounds = [
-    { view: views[0], bounds: bounds1 },
-    { view: views[1], bounds: bounds2 },
-    { view: views[2], bounds: bounds3 },
-    { view: views[3], bounds: bounds4 }
-  ];
-
-  viewBounds.forEach(vb => {
-    vb.view.setBounds(vb.bounds);
-  });
+  views[0].setBounds(bounds1);
+  views[1].setBounds(bounds2);
+  views[2].setBounds(bounds3);
+  views[3].setBounds(bounds4);
 }
 
 function updateFiveHorizontalLayout() {
   checkInitialized();
 
-  let bounds = parent.getBounds();
-  let contentBounds = parent.getContentBounds();
-  let offsetY = isMac ? bounds.height - contentBounds.height : 0; // to avoid hiding webviews under the windowmenu
-  let offsetX = 0;
+  let bounds = getUsableBounds();
 
-  let topViewWidth = Math.floor(contentBounds.width / 3);
+  let topViewWidth = Math.floor(bounds.width / 3);
   let topViewHeight = Math.floor(topViewWidth / aspect_ratio);
 
-  let bottomViewWidth = Math.floor(contentBounds.width / 2);
+  let bottomViewWidth = Math.floor(bounds.width / 2);
   let bottomViewHeight = Math.floor(bottomViewWidth / aspect_ratio);
 
-  offsetY = offsetY + Math.floor((contentBounds.height - topViewHeight - bottomViewHeight) / 2);
+  bounds.y = bounds.y + Math.floor((bounds.height - topViewHeight - bottomViewHeight) / 2);
 
-  let bounds1 = { x: offsetX, y: offsetY, width: topViewWidth, height: topViewHeight };
-  let bounds2 = { x: topViewWidth, y: offsetY, width: topViewWidth, height: topViewHeight };
-  let bounds3 = { x: topViewWidth * 2, y: offsetY, width: topViewWidth, height: topViewHeight };
-  let bounds4 = { x: offsetX, y: offsetY + topViewHeight, width: bottomViewWidth, height: bottomViewHeight };
-  let bounds5 = { x: offsetX + bottomViewWidth, y: offsetY + topViewHeight, width: bottomViewWidth, height: bottomViewHeight };
+  let bounds1 = { x: bounds.x, y: bounds.y, width: topViewWidth, height: topViewHeight };
+  let bounds2 = { x: bounds.x + topViewWidth, y: bounds.y, width: topViewWidth, height: topViewHeight };
+  let bounds3 = { x: bounds.x + topViewWidth * 2, y: bounds.y, width: topViewWidth, height: topViewHeight };
+  let bounds4 = { x: bounds.x, y: bounds.y + topViewHeight, width: bottomViewWidth, height: bottomViewHeight };
+  let bounds5 = { x: bounds.x + bottomViewWidth, y: bounds.y + topViewHeight, width: bottomViewWidth, height: bottomViewHeight };
 
-  viewBounds = [
-    { view: views[0], bounds: bounds1 },
-    { view: views[1], bounds: bounds2 },
-    { view: views[2], bounds: bounds3 },
-    { view: views[3], bounds: bounds4 },
-    { view: views[4], bounds: bounds5 }
-  ];
-
-  viewBounds.forEach(vb => {
-    vb.view.setBounds(vb.bounds);
-  });
+  views[0].setBounds(bounds1);
+  views[1].setBounds(bounds2);
+  views[2].setBounds(bounds3);
+  views[3].setBounds(bounds4);
+  views[4].setBounds(bounds5);
 }
 
 function updateFiveVerticalLayout() {
   checkInitialized();
 
-  let bounds = parent.getBounds();
-  let contentBounds = parent.getContentBounds();
-  let offsetY = isMac ? bounds.height - contentBounds.height : 0; // to avoid hiding webviews under the windowmenu
-  let offsetX = 0;
+  let bounds = getUsableBounds();
 
-  let rightViewHeight = Math.floor(contentBounds.height / 3);
+  let rightViewHeight = Math.floor(bounds.height / 3);
   let rightViewWidth = Math.floor(rightViewHeight * aspect_ratio);
 
   let leftViewWidth = 0;
   let leftViewHeight = 0;
-  let leftOffsetY = offsetY;
 
-  if ((contentBounds.width - rightViewWidth) / (contentBounds.height / 2) < aspect_ratio) {
-    leftViewWidth = contentBounds.width - rightViewWidth;
+  let leftOffset = 0;
+
+  if ((bounds.width - rightViewWidth) / (bounds.height / 2) < aspect_ratio) {
+    leftViewWidth = bounds.width - rightViewWidth;
     leftViewHeight = Math.floor(leftViewWidth / aspect_ratio);
-    leftOffsetY = leftOffsetY + Math.floor(contentBounds.height / 2) - leftViewHeight;
+    leftOffset = Math.floor(bounds.height / 2) - leftViewHeight;
   } else {
-    leftViewHeight = Math.floor(contentBounds.height / 2);
+    leftViewHeight = Math.floor(bounds.height / 2);
     leftViewWidth = Math.floor(leftViewHeight * aspect_ratio);
-    offsetX = offsetX + Math.floor((contentBounds.width - leftViewWidth - rightViewWidth) / 2);
+    bounds.x = bounds.x + Math.floor((bounds.width - leftViewWidth - rightViewWidth) / 2);
   }
 
-  let bounds1 = { x: offsetX, y: leftOffsetY, width: leftViewWidth, height: leftViewHeight };
-  let bounds2 = { x: offsetX, y: leftOffsetY + leftViewHeight, width: leftViewWidth, height: leftViewHeight };
-  let bounds3 = { x: offsetX + leftViewWidth, y: offsetY, width: rightViewWidth, height: rightViewHeight };
-  let bounds4 = { x: offsetX + leftViewWidth, y: offsetY + rightViewHeight, width: rightViewWidth, height: rightViewHeight };
-  let bounds5 = { x: offsetX + leftViewWidth, y: offsetY + rightViewHeight * 2, width: rightViewWidth, height: rightViewHeight };
+  let bounds1 = { x: bounds.x, y: bounds.y + leftOffset, width: leftViewWidth, height: leftViewHeight };
+  let bounds2 = { x: bounds.x, y: bounds.y + leftOffset + leftViewHeight, width: leftViewWidth, height: leftViewHeight };
+  let bounds3 = { x: bounds.x + leftViewWidth, y: bounds.y, width: rightViewWidth, height: rightViewHeight };
+  let bounds4 = { x: bounds.x + leftViewWidth, y: bounds.y + rightViewHeight, width: rightViewWidth, height: rightViewHeight };
+  let bounds5 = { x: bounds.x + leftViewWidth, y: bounds.y + rightViewHeight * 2, width: rightViewWidth, height: rightViewHeight };
 
-  viewBounds = [
-    { view: views[0], bounds: bounds1 },
-    { view: views[1], bounds: bounds2 },
-    { view: views[2], bounds: bounds3 },
-    { view: views[3], bounds: bounds4 },
-    { view: views[4], bounds: bounds5 }
-  ];
-
-  viewBounds.forEach(vb => {
-    vb.view.setBounds(vb.bounds);
-  });
+  views[0].setBounds(bounds1);
+  views[1].setBounds(bounds2);
+  views[2].setBounds(bounds3);
+  views[3].setBounds(bounds4);
+  views[4].setBounds(bounds5);
 }
 
 function updateSixHorizontalLayout() {
@@ -585,18 +550,12 @@ function updateSixHorizontalLayout() {
   let bounds5 = { x: size.x + size.width, y: size.y + size.height, width: size.width, height: size.height };
   let bounds6 = { x: size.x + size.width * 2, y: size.y + size.height, width: size.width, height: size.height };
 
-  viewBounds = [
-    { view: views[0], bounds: bounds1 },
-    { view: views[1], bounds: bounds2 },
-    { view: views[2], bounds: bounds3 },
-    { view: views[3], bounds: bounds4 },
-    { view: views[4], bounds: bounds5 },
-    { view: views[5], bounds: bounds6 }
-  ];
-
-  viewBounds.forEach(vb => {
-    vb.view.setBounds(vb.bounds);
-  });
+  views[0].setBounds(bounds1);
+  views[1].setBounds(bounds2);
+  views[2].setBounds(bounds3);
+  views[3].setBounds(bounds4);
+  views[4].setBounds(bounds5);
+  views[5].setBounds(bounds6);
 }
 
 function updateSixVerticalLayout() {
@@ -611,44 +570,37 @@ function updateSixVerticalLayout() {
   let bounds5 = { x: size.x, y: size.y + size.height * 2, width: size.width, height: size.height };
   let bounds6 = { x: size.x + size.width, y: size.y + size.height * 2, width: size.width, height: size.height };
 
-  viewBounds = [
-    { view: views[0], bounds: bounds1 },
-    { view: views[1], bounds: bounds2 },
-    { view: views[2], bounds: bounds3 },
-    { view: views[3], bounds: bounds4 },
-    { view: views[4], bounds: bounds5 },
-    { view: views[5], bounds: bounds6 }
-  ];
-
-  viewBounds.forEach(vb => {
-    vb.view.setBounds(vb.bounds);
-  });
+  views[0].setBounds(bounds1);
+  views[1].setBounds(bounds2);
+  views[2].setBounds(bounds3);
+  views[3].setBounds(bounds4);
+  views[4].setBounds(bounds5);
+  views[5].setBounds(bounds6);
 }
 
 function calculateViewSize(rows, cols) {
+  let bounds = getUsableBounds();
   let ratio = aspect_ratio * cols / rows;
   let viewWidth = 0;
   let viewHeight = 0;
-  let bounds = parent.getBounds();
-  let contentBounds = parent.getContentBounds();
-  let offsetY = isMac ? bounds.height - contentBounds.height : 0; // to avoid hiding webviews under the windowmenu
-  let offsetX = 0;
+  let x = bounds.x;
+  let y = bounds.y;
 
-  if (contentBounds.width / contentBounds.height < ratio) {
-    let newHeight = contentBounds.width / ratio;
-    const barHeight = Math.floor((contentBounds.height - newHeight) / 2);
-    offsetY += barHeight;
-    viewWidth = Math.floor(contentBounds.width / cols);
+  if (bounds.width / bounds.height < ratio) {
+    let newHeight = bounds.width / ratio;
+    const barHeight = Math.floor((bounds.height - newHeight) / 2);
+    y += barHeight;
+    viewWidth = Math.floor(bounds.width / cols);
     viewHeight = Math.floor(newHeight / rows);
   } else {
-    let newWidth = contentBounds.height * ratio;
-    const barWidth = Math.floor((contentBounds.width - newWidth) / 2);
-    offsetX += barWidth;
+    let newWidth = bounds.height * ratio;
+    const barWidth = Math.floor((bounds.width - newWidth) / 2);
+    x += barWidth;
     viewWidth = Math.floor(newWidth / cols);
-    viewHeight = Math.floor(contentBounds.height / rows);
+    viewHeight = Math.floor(bounds.height / rows);
   }
 
-  return { x: offsetX, y: offsetY, width: viewWidth, height: viewHeight };
+  return { x: x, y: y, width: viewWidth, height: viewHeight };
 }
 
 function checkInitialized() {
@@ -689,24 +641,15 @@ function setSelected(view) {
     return;
   }
 
-  if (!parent.isVisible() || !view) {
+  if (!parent.isVisible() || !view || !view.isVisible()) {
     if (frame) frame.hide();
     return;
   }
 
   if (!frame) createFrame();
 
-  let vb = viewBounds.find(vb => vb.view === view);
-  let initialPos = isMac ? parent.getBounds() : parent.getContentBounds();
-
-  let frameBounds = {
-    x: initialPos.x + vb.bounds.x,
-    y: initialPos.y + vb.bounds.y,
-    width: vb.bounds.width,
-    height: vb.bounds.height
-  };
-
-  frame.setBounds(frameBounds);
+  frame.setBounds(view.getBounds());
+  frame.parent = view;
   frame.show();
 }
 
@@ -720,47 +663,27 @@ function getViewByNumber(number) {
 function inView(x, y) {
   checkInitialized();
 
-  if (!parent || !parent.isFocused() || !parent.isVisible()) return null;
-  if (!viewBounds || viewBounds.length === 0) return null;
+  if (!parent || !parent.isVisible()) return null;
 
-  if (!isMac) {
+  if (!util.is.macos) {
     let scaleFactor = electron.screen.getPrimaryDisplay().scaleFactor;
     x = Math.floor(x / scaleFactor);
     y = Math.floor(y / scaleFactor);
   }
 
-  let initialPos = isMac ? parent.getBounds() : parent.getContentBounds();
-
-  // console.log("------------------");
-  // console.log(`click: x: ${x} y: ${y}`);
-  // console.log(`winpos: x: ${winX} y: ${winY}`);
-
-  let found = viewBounds.find(vb => {
-    let viewLeft = initialPos.x + vb.bounds.x;
-    let viewRight = viewLeft + vb.bounds.width;
-    let viewTop = initialPos.y + vb.bounds.y;
-    let viewBottom = viewTop + vb.bounds.height;
-
+  let found = activeViews.find(view => {
+    let bounds = view.getBounds();
     let tolerance = 10;
 
-    let matchX = x > viewLeft + tolerance && x < viewRight - tolerance;
-    let matchY = y > viewTop + tolerance && y < viewBottom - tolerance;
-
-    // let match = "";
-    // if (matchX && matchY) {
-    //     match = "(MATCH)";
-    // }
-
-    //console.log(`${match} ${vb.view.title} x: ${viewLeft}-${viewRight} y: ${viewTop}-${viewBottom}`)
+    let matchX = x > bounds.x + tolerance && x < (bounds.x + bounds.width) - tolerance;
+    let matchY = y > bounds.y + tolerance && y < (bounds.y + bounds.height) - tolerance;
 
     if (matchX && matchY) {
-      return vb;
+      return view;
     }
   });
 
-  if (!found) return null;
-
-  return found.view;
+  return found;
 }
 
 function changeLayout(callback) {
@@ -817,7 +740,7 @@ function createUrlWindow(number) {
 
   addressChangeWnd.loadFile('renderer/address-change.html');
 
-  let initialPos = isMac ? parent.getBounds() : parent.getContentBounds();
+  let initialPos = util.is.macos ? parent.getBounds() : parent.getContentBounds();
   let width = 272;
   let height = 72;
   let x;
@@ -825,9 +748,9 @@ function createUrlWindow(number) {
 
   if (number) {
     let view = getViewByNumber(number);
-    let vb = viewBounds.find(vb => vb.view === view);
-    x = initialPos.x + vb.bounds.x + Math.floor((vb.bounds.width - width) / 2);
-    y = initialPos.y + vb.bounds.y + Math.floor((vb.bounds.height - height) / 2);
+    let bounds = view.getBounds();
+    x = initialPos.x + bounds.x + Math.floor((bounds.width - width) / 2);
+    y = initialPos.y + bounds.y + Math.floor((bounds.height - height) / 2);
   } else {
     x = initialPos.x + Math.floor((parent.getContentBounds().width - width) / 2);
     y = initialPos.y + Math.floor((parent.getContentBounds().height - height) / 2);
@@ -890,14 +813,10 @@ function minimizeViews() {
 }
 
 function unload() {
-  if (!parent.isDestroyed()) {
-    parent.setBrowserView(null);
-  }
   views.forEach(v => {
     v.destroy();
   });
   views = [];
-  viewBounds = [];
   parent = null;
   isInitialized = false;
   audibleView = null;
@@ -905,25 +824,6 @@ function unload() {
     frame.close();
   }
   frame = null;
-}
-
-function zoomIn(number) {
-  let zoom = activeViews[number].webContents.getZoomFactor();
-  if (zoom < 5) {
-    activeViews[number].webContents.setZoomFactor(zoom + 1);
-  }
-}
-
-function zoomOut(number) {
-  let zoom = activeViews[number].webContents.getZoomFactor();
-  if (zoom >= 1) {
-    activeViews[number].webContents.setZoomFactor(zoom - 1);
-  }
-}
-
-function getViewBounds(view) {
-  let vb = viewBounds.find(vb => vb.view === view);
-  return vb.bounds;
 }
 
 function onLayoutChange(callback) {
@@ -986,10 +886,7 @@ var exports = (module.exports = {
   minimizeViews: minimizeViews,
   unload: unload,
   menuOnClick: appendSwapMenu,
-  zoomIn: zoomIn,
-  zoomOut: zoomOut,
   createUrlWindow: createUrlWindow,
-  getViewBounds: getViewBounds,
   onLayoutChange: onLayoutChange,
   setAutoRefresh: setAutoRefresh,
   getAutoRefresh: getAutoRefresh
