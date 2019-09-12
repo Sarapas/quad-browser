@@ -708,6 +708,7 @@ function changeLayout(callback) {
 
   layoutPickerWnd.once('ready-to-show', () => {
     layoutPickerWnd.show();
+    layoutPickerWnd.setAlwaysOnTop(true, "modal-panel");
     layoutPickerWnd.webContents.send('set-current', layout);
   });
 
