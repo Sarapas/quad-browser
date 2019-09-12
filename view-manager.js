@@ -724,53 +724,6 @@ function changeLayout(callback) {
   });
 }
 
-function createUrlWindow(number) {
-  addressChangeWnd = new BrowserWindow({
-    frame: false,
-    transparent: true,
-    show: false,
-    skipTaskbar: true,
-    parent: parent,
-    closable: true,
-    focusable: true,
-    fullscreenable: false,
-    webPreferences: {
-      nodeIntegration: true
-    }
-  });
-
-  addressChangeWnd.loadFile('renderer/address-change.html');
-
-  let initialPos = util.is.macos ? parent.getBounds() : parent.getContentBounds();
-  let width = 272;
-  let height = 72;
-  let x;
-  let y;
-
-  if (number) {
-    let view = getViewByNumber(number);
-    let bounds = view.getBounds();
-    x = initialPos.x + bounds.x + Math.floor((bounds.width - width) / 2);
-    y = initialPos.y + bounds.y + Math.floor((bounds.height - height) / 2);
-  } else {
-    x = initialPos.x + Math.floor((parent.getContentBounds().width - width) / 2);
-    y = initialPos.y + Math.floor((parent.getContentBounds().height - height) / 2);
-  }
-
-  addressChangeWnd.setBounds({x: x, y: y, width: width, height: height });
-  addressChangeWnd.once('ready-to-show', () => {
-    addressChangeWnd.show();
-  });
-
-  addressChangeWnd.on('closed', () => {
-    addressChangeWnd = null;
-  });
-
-  ipcMain.once('load-url', (event, arg) => {
-    activeViews[number - 1].webContents.loadURL(arg);
-  });
-}
-
 function createFrame() {
   frame = new BrowserWindow({
     frame: false,
@@ -887,7 +840,6 @@ var exports = (module.exports = {
   minimizeViews: minimizeViews,
   unload: unload,
   menuOnClick: appendSwapMenu,
-  createUrlWindow: createUrlWindow,
   onLayoutChange: onLayoutChange,
   setAutoRefresh: setAutoRefresh,
   getAutoRefresh: getAutoRefresh

@@ -11,6 +11,7 @@ const settings = require('./settings')
 const find = require('./find');
 const Store = require('electron-store');
 const util = require('electron-util');
+const address = require('./address');
 const store = new Store();
 //require('electron-reload')(__dirname);
 
@@ -292,8 +293,11 @@ function createMenu() {
   return menu;
 }
 
-function changeAddress(viewNumber = null) {
-  viewManager.createUrlWindow(viewNumber);
+function changeAddress(number = null) {
+  let view = viewManager.getViewByNumber(number);
+  address.open(win, view, (url, v) => {
+    viewManager.loadURL(url, v);
+  });
 }
 
 function unmaximize() {

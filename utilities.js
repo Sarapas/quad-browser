@@ -55,8 +55,17 @@ function uuidv4() {
     });
 }
 
+function centerWindowToParentWindow(parent, child) {
+    let parentBounds = parent.getBounds();
+    let childBounds = child.getBounds();
+    childBounds.x = parentBounds.x + Math.floor((parentBounds.width - childBounds.width) / 2);
+    childBounds.y = parentBounds.y + Math.floor((parentBounds.height - childBounds.height) / 2);
+    child.setBounds(childBounds);
+}
+
 var exports = module.exports = {
     newGuid: uuidv4,
     downloadFile: downloadFile,
-    icoToPng: icoToPng
+    icoToPng: icoToPng,
+    centerWindowToParentWindow: centerWindowToParentWindow
 };

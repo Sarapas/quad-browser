@@ -16,6 +16,11 @@ module.exports = {
       entry: 'src/find.js',
       template: 'src/template.html',
       filename: 'find.html'
+    },
+    address: {
+      entry: 'src/address.js',
+      template: 'src/template.html',
+      filename: 'address.html'
     }
   }
 }
