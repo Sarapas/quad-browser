@@ -704,10 +704,11 @@ function changeLayout(callback) {
     }
   });
 
-  layoutPickerWnd.loadFile(`renderer/layout-picker.html`);
+  layoutPickerWnd.loadFile(`dist/layouts.html`);
 
   layoutPickerWnd.once('ready-to-show', () => {
     layoutPickerWnd.show();
+    layoutPickerWnd.webContents.openDevTools();
     layoutPickerWnd.webContents.send('set-current', layout);
   });
 

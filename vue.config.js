@@ -3,7 +3,7 @@ module.exports = {
   pages: {
     index: {
       // having index for dev purposes, pointing to app currently developed
-      entry: 'src/find.js',
+      entry: 'src/layouts.js',
       template: 'src/template.html',
       filename: 'index.html'
     },
@@ -16,6 +16,11 @@ module.exports = {
       entry: 'src/find.js',
       template: 'src/template.html',
       filename: 'find.html'
+    },
+    layouts: {
+      entry: 'src/layouts.js',
+      template: 'src/template.html',
+      filename: 'layouts.html'
     }
   }
 }
