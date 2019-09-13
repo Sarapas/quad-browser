@@ -6,8 +6,8 @@
   "scripts": {
     "start": "electron .",
     "package-windows": "vue-cli-service build; electron-packager . QuadScreens --overwrite --icon=assets/icons/win/icon.ico --platform=win32 --arch=x64 --prune=true --out=build",
-    "package-mac": "vue-cli-service build; electron-packager . QuadScreens --overwrite --icon=./assets/icons/mac/icon.icns --ignore=bookmarks.json --ignore=history.json --platform=darwin --arch=x64 --prune=true --out=build",
-    "package-mac-dmg": "vue-cli-service build; electron-installer-dmg ./build/QuadScreens-darwin-x64/QuadScreens.app QuadScreens --out=build/ --ignore=bookmarks.json --ignore=history.json --icon=assets/icons/mac/icon.icns --icon-size=80 --overwrite --debug",
+    "package-mac": "vue-cli-service build; electron-packager . QuadScreens --overwrite --icon=./assets/icons/mac/icon.icns --ignore=bookmarks.json --ignore=history.json --ignore=notepad.json --platform=darwin --arch=x64 --prune=true --out=build",
+    "package-mac-dmg": "vue-cli-service build; electron-installer-dmg ./build/QuadScreens-darwin-x64/QuadScreens.app QuadScreens --out=build/ --ignore=bookmarks.json --ignore=history.json --ignore=notepad.json --icon=assets/icons/mac/icon.icns --icon-size=80 --overwrite --debug",
     "vue-serve": "vue-cli-service serve",
     "vue-build": "vue-cli-service build"
   },

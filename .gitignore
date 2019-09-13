@@ -3,4 +3,5 @@ build
 dist
 bookmarks.json
 history.json
+notepad.json
 icons
