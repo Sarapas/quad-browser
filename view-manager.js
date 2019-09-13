@@ -3,22 +3,10 @@ const { BrowserWindow, MenuItem, ipcMain } = electron;
 const path = require('path');
 const fs = require('fs');
 const util = require('electron-util');
+const layouts = require('./layouts');
 
 const requestFullscreen = fs.readFileSync(path.resolve(__dirname, 'set-video-fullscreen.js'), 'utf8');
 const exitFullscreen = fs.readFileSync(path.resolve(__dirname, 'exit-video-fullscreen.js'), 'utf8');
-
-let aspect_ratio = 16 / 9;
-
-let SINGLE = 'Single';
-let QUAD = 'Quad';
-let QUADH = 'QuadH';
-let QUADV = 'QuadV';
-let FIVEH = 'FiveH';
-let FIVEV = 'FiveV';
-let DUAL = 'Dual';
-let TRI = 'Tri';
-let SIXH = 'SixH';
-let SIXV = 'SixV';
 
 let views;
 let activeViews;
@@ -49,7 +37,7 @@ function init(parentWindow) {
 
   isInitialized = true;
 
-  setQuadLayout(); // default layout
+  setLayout(layouts.QUAD, true); // default layout
 }
 
 function swapViews(index1, index2) {
@@ -159,63 +147,13 @@ function resumeAudible() {
   setSelected(audibleView);
 }
 
-function setSixHorizontalLayout(force) {
-  let layoutViews = views.slice(0, 6);
-  setLayoutInternal(SIXH, layoutViews, force, updateSixHorizontalLayout);
-}
-
-function setSixVerticalLayout(force) {
-  let layoutViews = views.slice(0, 6);
-  setLayoutInternal(SIXV, layoutViews, force, updateSixVerticalLayout);
-}
-
-function setFiveHorizontalLayout(force) {
-  let layoutViews = views.slice(0, 5);
-  setLayoutInternal(FIVEH, layoutViews, force, updateFiveHorizontalLayout);
-}
-
-function setFiveVerticalLayout(force) {
-  let layoutViews = views.slice(0, 5);
-  setLayoutInternal(FIVEV, layoutViews, force, updateFiveVerticalLayout);
-}
-
-function setQuadLayout(force) {
-  let layoutViews = views.slice(0, 4);
-  setLayoutInternal(QUAD, layoutViews, force, updateQuadLayout);
-}
-
-function setQuadHorizontalLayout(force) {
-  let layoutViews = views.slice(0, 4);
-  setLayoutInternal(QUADH, layoutViews, force, updateQuadHorizontalLayout);
-}
-
-function setQuadVerticalLayout(force) {
-  let layoutViews = views.slice(0, 4);
-  setLayoutInternal(QUADV, layoutViews, force, updateQuadVerticalLayout);
-}
-
-function setTriLayout(force) {
-  let layoutViews = views.slice(0, 3);
-  setLayoutInternal(TRI, layoutViews, force, updateTriLayout);
-}
-
-function setDualLayout(force) {
-  let layoutViews = views.slice(0, 2);
-  setLayoutInternal(DUAL, layoutViews, force, updateDualLayout);
-}
-
-function setSingleLayout(number) {
-  let layoutViews = [ getViewByNumber(number) ];
-  setLayoutInternal(SINGLE, layoutViews, true, updateSingleLayout);
-}
-
-function setLayoutInternal(newLayout, layoutViews, force, updateFunc) {
+function setLayout(newLayout, force, layoutViews = null) {
   checkInitialized();
 
   if (layout != newLayout || force) {
     previousLayout = layout;
     layout = newLayout;
-    activeViews = layoutViews;
+    activeViews = layoutViews || views.slice(0, layouts.getViewCount(layout));
 
     views.forEach(view => {
       view.hide();
@@ -223,7 +161,7 @@ function setLayoutInternal(newLayout, layoutViews, force, updateFunc) {
 
     setSelected(false);
 
-    updateFunc();
+    layouts.updateLayout(newLayout, parent, activeViews);
 
     activeViews.forEach(view => {
       view.show();
@@ -243,373 +181,21 @@ function setLayoutInternal(newLayout, layoutViews, force, updateFunc) {
   }
 }
 
-function isSingleLayout() {
-  checkInitialized();
-  return layout === SINGLE;
-}
-
-function exitSingleLayout() {
-  checkInitialized();
-  if (layout != SINGLE) return;
-  setLayout(previousLayout, true);
-}
-
 function updateLayout() {
-  if (layout === SINGLE) updateSingleLayout();
-  if (layout === DUAL) updateDualLayout();
-  if (layout === TRI) updateTriLayout();
-  if (layout === QUAD) updateQuadLayout();
-  if (layout === QUADH) updateQuadHorizontalLayout();
-  if (layout === QUADV) updateQuadVerticalLayout();
-  if (layout === FIVEH) updateFiveHorizontalLayout();
-  if (layout === FIVEV) updateFiveVerticalLayout();
-  if (layout === SIXH) updateSixHorizontalLayout();
-  if (layout === SIXV) updateSixVerticalLayout();
-
+  layouts.updateLayout(layout, parent, views);
   if (audibleView) {
     setSelected(audibleView); // updating size and location of the frame
   }
 }
 
-function setLayout(layout, force) {
-  if (layout === SIXH) setSixHorizontalLayout(force);
-  if (layout === SIXV) setSixVerticalLayout(force);
-  if (layout === FIVEH) setFiveHorizontalLayout(force);
-  if (layout === FIVEV) setFiveVerticalLayout(force);
-  if (layout === QUAD) setQuadLayout(force);
-  if (layout === QUADH) setQuadHorizontalLayout(force);
-  if (layout === QUADV) setQuadVerticalLayout(force);
-  if (layout === TRI) setTriLayout(force);
-  if (layout === DUAL) setDualLayout(force);
-  if (layout === SINGLE) {
-    if (audibleView) {
-      setSingleLayout(audibleView.number);
-    } else {
-      setSingleLayout(activeViews[0].number);
-    }
-  }
-}
-
-function getViewNames() {
-  if (layout === SINGLE)
-    return [ { name: "Current", number: null } ];
-    
-  if (layout === DUAL)
-    return [ 
-      { name: "Top", number: 1 },
-      { name: "Bottom", number: 2 },
-      { name: "All", number: null }
-    ];
-
-  if (layout === TRI)
-    return [ 
-      { name: "Top left", number: 1 },
-      { name: "Top right", number: 2 },
-      { name: "Bottom", number: 3 },
-      { name: "All", number: null }
-    ];
-
-  if (layout === QUAD)
-    return [ 
-      { name: "Top left", number: 1 },
-      { name: "Top right", number: 2 },
-      { name: "Bottom left", number: 3 },
-      { name: "Bottom right", number: 4 },
-      { name: "All", number: null }
-    ];
-
-  if (layout === QUADH)
-    return [ 
-      { name: "Top left", number: 1 },
-      { name: "Top center", number: 2 },
-      { name: "Top right", number: 3 },
-      { name: "Bottom", number: 4 },
-      { name: "All", number: null }
-    ];
-
-  if (layout === QUADV)
-    return [ 
-      { name: "Left", number: 1 },
-      { name: "Top right", number: 2 },
-      { name: "Middle right", number: 3 },
-      { name: "Bottom right", number: 4 },
-      { name: "All", number: null }
-    ];
-
-  if (layout === FIVEH)
-    return [ 
-      { name: "Top left", number: 1 },
-      { name: "Top center", number: 2 },
-      { name: "Top right", number: 3 },
-      { name: "Bottom left", number: 4 },
-      { name: "Bottom right", number: 5 },
-      { name: "All", number: null }
-    ];
-
-  if (layout === FIVEV)
-    return [ 
-      { name: "Top left", number: 1 },
-      { name: "Bottom left", number: 2 },
-      { name: "Top right", number: 3 },
-      { name: "Middle right", number: 4 },
-      { name: "Bottom right", number: 5 },
-      { name: "All", number: null }
-    ];
-
-  if (layout === SIXH)
-    return [ 
-      { name: "Top left", number: 1 },
-      { name: "Top center", number: 2 },
-      { name: "Top right", number: 3 },
-      { name: "Bottom left", number: 4 },
-      { name: "Bottom center", number: 5 },
-      { name: "Bottom right", number: 6 },
-      { name: "All", number: null }
-    ];
-
-  if (layout === SIXV)
-    return [ 
-      { name: "Top left", number: 1 },
-      { name: "Top right", number: 2 },
-      { name: "Middle left", number: 3 },
-      { name: "Middle right", number: 4 },
-      { name: "Bottom left", number: 5 },
-      { name: "Bottom right", number: 6 },
-      { name: "All", number: null }
-    ];
-}
-
-function getUsableBounds() {
-  let parentX = parent.getPosition()[0];
-  let parentY = parent.getPosition()[1];
-  let contentBounds = parent.getContentBounds();
-  let offsetX = parentX;
-  let offsetY = parentY + (util.is.macos && !parent.isFullScreen() ? util.menuBarHeight() : 0);
-  return { x: offsetX, y: offsetY, width: contentBounds.width, height: contentBounds.height };
-}
-
-function updateSingleLayout() {
-  checkInitialized();
-  activeViews[0].setBounds(getUsableBounds());
-}
-
-function updateDualLayout() {
+function toggleSingleLayout(view) {
   checkInitialized();
 
-  let bounds = getUsableBounds();
-  let viewWidth = bounds.width
-  let viewHeight = Math.floor(bounds.height / 2);
-
-  let bounds1 = { x: bounds.x, y: bounds.y, width: viewWidth, height: viewHeight };
-  let bounds2 = { x: bounds.x, y: bounds.y + viewHeight, width: viewWidth, height: viewHeight };
-
-  views[0].setBounds(bounds1);
-  views[1].setBounds(bounds2);
-}
-
-function updateTriLayout() {
-  checkInitialized();
-
-  let bounds = getUsableBounds();
-  let topViewWidth = Math.floor(bounds.width / 2);
-  let topViewHeight = Math.floor(topViewWidth / aspect_ratio);
-  let bottomViewWidth = bounds.width;
-  let bottomViewHeight = bounds.height - topViewHeight;
-
-  let bounds1 = { x: bounds.x, y: bounds.y, width: topViewWidth, height: topViewHeight };
-  let bounds2 = { x: bounds.x + topViewWidth, y: bounds.y, width: topViewWidth, height: topViewHeight };
-  let bounds3 = { x: bounds.x, y: bounds.y + topViewHeight, width: bottomViewWidth, height: bottomViewHeight };
-
-  views[0].setBounds(bounds1);
-  views[1].setBounds(bounds2);
-  views[2].setBounds(bounds3);
-}
-
-function updateQuadLayout() {
-  checkInitialized();
-
-  let size = calculateViewSize(2, 2);
-
-  let bounds1 = { x: size.x, y: size.y, width: size.width, height: size.height };
-  let bounds2 = { x: size.x + size.width, y: size.y, width: size.width, height: size.height };
-  let bounds3 = { x: size.x, y: size.y + size.height, width: size.width, height: size.height };
-  let bounds4 = { x: size.x + size.width, y: size.y + size.height, width: size.width, height: size.height };
-
-  views[0].setBounds(bounds1);
-  views[1].setBounds(bounds2);
-  views[2].setBounds(bounds3);
-  views[3].setBounds(bounds4);
-}
-
-function updateQuadHorizontalLayout() {
-  checkInitialized();
-
-  let bounds = getUsableBounds();
-
-  let topViewWidth = Math.floor(bounds.width / 3);
-  let topViewHeight = Math.floor(topViewWidth / aspect_ratio);
-
-  let bottomViewWidth = bounds.width;
-  let bottomViewHeight = bounds.height - topViewHeight;
-
-  let bounds1 = { x: bounds.x, y: bounds.y, width: topViewWidth, height: topViewHeight };
-  let bounds2 = { x: bounds.x + topViewWidth, y: bounds.y, width: topViewWidth, height: topViewHeight };
-  let bounds3 = { x: bounds.x + topViewWidth * 2, y: bounds.y, width: topViewWidth, height: topViewHeight };
-  let bounds4 = { x: bounds.x, y: bounds.y + topViewHeight, width: bottomViewWidth, height: bottomViewHeight };
-
-  views[0].setBounds(bounds1);
-  views[1].setBounds(bounds2);
-  views[2].setBounds(bounds3);
-  views[3].setBounds(bounds4);
-}
-
-function updateQuadVerticalLayout() {
-  checkInitialized();
-
-  let bounds = getUsableBounds();
-
-  let rightViewHeight = Math.floor(bounds.height / 3);
-  let rightViewWidth = Math.floor(rightViewHeight * aspect_ratio);
-
-  let leftViewWidth = bounds.width - rightViewWidth;
-  let leftViewHeight = bounds.height;
-
-  let bounds1 = { x: bounds.x, y: bounds.y, width: leftViewWidth, height: leftViewHeight };
-  let bounds2 = { x: bounds.x + leftViewWidth, y: bounds.y, width: rightViewWidth, height: rightViewHeight };
-  let bounds3 = { x: bounds.x + leftViewWidth, y: bounds.y + rightViewHeight, width: rightViewWidth, height: rightViewHeight };
-  let bounds4 = { x: bounds.x + leftViewWidth, y: bounds.y + rightViewHeight * 2, width: rightViewWidth, height: rightViewHeight };
-
-  views[0].setBounds(bounds1);
-  views[1].setBounds(bounds2);
-  views[2].setBounds(bounds3);
-  views[3].setBounds(bounds4);
-}
-
-function updateFiveHorizontalLayout() {
-  checkInitialized();
-
-  let bounds = getUsableBounds();
-
-  let topViewWidth = Math.floor(bounds.width / 3);
-  let topViewHeight = Math.floor(topViewWidth / aspect_ratio);
-
-  let bottomViewWidth = Math.floor(bounds.width / 2);
-  let bottomViewHeight = Math.floor(bottomViewWidth / aspect_ratio);
-
-  bounds.y = bounds.y + Math.floor((bounds.height - topViewHeight - bottomViewHeight) / 2);
-
-  let bounds1 = { x: bounds.x, y: bounds.y, width: topViewWidth, height: topViewHeight };
-  let bounds2 = { x: bounds.x + topViewWidth, y: bounds.y, width: topViewWidth, height: topViewHeight };
-  let bounds3 = { x: bounds.x + topViewWidth * 2, y: bounds.y, width: topViewWidth, height: topViewHeight };
-  let bounds4 = { x: bounds.x, y: bounds.y + topViewHeight, width: bottomViewWidth, height: bottomViewHeight };
-  let bounds5 = { x: bounds.x + bottomViewWidth, y: bounds.y + topViewHeight, width: bottomViewWidth, height: bottomViewHeight };
-
-  views[0].setBounds(bounds1);
-  views[1].setBounds(bounds2);
-  views[2].setBounds(bounds3);
-  views[3].setBounds(bounds4);
-  views[4].setBounds(bounds5);
-}
-
-function updateFiveVerticalLayout() {
-  checkInitialized();
-
-  let bounds = getUsableBounds();
-
-  let rightViewHeight = Math.floor(bounds.height / 3);
-  let rightViewWidth = Math.floor(rightViewHeight * aspect_ratio);
-
-  let leftViewWidth = 0;
-  let leftViewHeight = 0;
-
-  let leftOffset = 0;
-
-  if ((bounds.width - rightViewWidth) / (bounds.height / 2) < aspect_ratio) {
-    leftViewWidth = bounds.width - rightViewWidth;
-    leftViewHeight = Math.floor(leftViewWidth / aspect_ratio);
-    leftOffset = Math.floor(bounds.height / 2) - leftViewHeight;
+  if (layout === layouts.SINGLE) {
+    setLayout(previousLayout, true);
   } else {
-    leftViewHeight = Math.floor(bounds.height / 2);
-    leftViewWidth = Math.floor(leftViewHeight * aspect_ratio);
-    bounds.x = bounds.x + Math.floor((bounds.width - leftViewWidth - rightViewWidth) / 2);
+    setLayout(layouts.SINGLE, true, [ view ]);
   }
-
-  let bounds1 = { x: bounds.x, y: bounds.y + leftOffset, width: leftViewWidth, height: leftViewHeight };
-  let bounds2 = { x: bounds.x, y: bounds.y + leftOffset + leftViewHeight, width: leftViewWidth, height: leftViewHeight };
-  let bounds3 = { x: bounds.x + leftViewWidth, y: bounds.y, width: rightViewWidth, height: rightViewHeight };
-  let bounds4 = { x: bounds.x + leftViewWidth, y: bounds.y + rightViewHeight, width: rightViewWidth, height: rightViewHeight };
-  let bounds5 = { x: bounds.x + leftViewWidth, y: bounds.y + rightViewHeight * 2, width: rightViewWidth, height: rightViewHeight };
-
-  views[0].setBounds(bounds1);
-  views[1].setBounds(bounds2);
-  views[2].setBounds(bounds3);
-  views[3].setBounds(bounds4);
-  views[4].setBounds(bounds5);
-}
-
-function updateSixHorizontalLayout() {
-  checkInitialized();
-
-  let size = calculateViewSize(2, 3);
-
-  let bounds1 = { x: size.x, y: size.y, width: size.width, height: size.height };
-  let bounds2 = { x: size.x + size.width, y: size.y, width: size.width, height: size.height };
-  let bounds3 = { x: size.x + size.width * 2, y: size.y, width: size.width, height: size.height };
-  let bounds4 = { x: size.x, y: size.y + size.height, width: size.width, height: size.height };
-  let bounds5 = { x: size.x + size.width, y: size.y + size.height, width: size.width, height: size.height };
-  let bounds6 = { x: size.x + size.width * 2, y: size.y + size.height, width: size.width, height: size.height };
-
-  views[0].setBounds(bounds1);
-  views[1].setBounds(bounds2);
-  views[2].setBounds(bounds3);
-  views[3].setBounds(bounds4);
-  views[4].setBounds(bounds5);
-  views[5].setBounds(bounds6);
-}
-
-function updateSixVerticalLayout() {
-  checkInitialized();
-
-  let size = calculateViewSize(3, 2);
-
-  let bounds1 = { x: size.x, y: size.y, width: size.width, height: size.height };
-  let bounds2 = { x: size.x + size.width, y: size.y, width: size.width, height: size.height };
-  let bounds3 = { x: size.x, y: size.y + size.height, width: size.width, height: size.height };
-  let bounds4 = { x: size.x + size.width, y: size.y + size.height, width: size.width, height: size.height };
-  let bounds5 = { x: size.x, y: size.y + size.height * 2, width: size.width, height: size.height };
-  let bounds6 = { x: size.x + size.width, y: size.y + size.height * 2, width: size.width, height: size.height };
-
-  views[0].setBounds(bounds1);
-  views[1].setBounds(bounds2);
-  views[2].setBounds(bounds3);
-  views[3].setBounds(bounds4);
-  views[4].setBounds(bounds5);
-  views[5].setBounds(bounds6);
-}
-
-function calculateViewSize(rows, cols) {
-  let bounds = getUsableBounds();
-  let ratio = aspect_ratio * cols / rows;
-  let viewWidth = 0;
-  let viewHeight = 0;
-  let x = bounds.x;
-  let y = bounds.y;
-
-  if (bounds.width / bounds.height < ratio) {
-    let newHeight = bounds.width / ratio;
-    const barHeight = Math.floor((bounds.height - newHeight) / 2);
-    y += barHeight;
-    viewWidth = Math.floor(bounds.width / cols);
-    viewHeight = Math.floor(newHeight / rows);
-  } else {
-    let newWidth = bounds.height * ratio;
-    const barWidth = Math.floor((bounds.width - newWidth) / 2);
-    x += barWidth;
-    viewWidth = Math.floor(newWidth / cols);
-    viewHeight = Math.floor(bounds.height / rows);
-  }
-
-  return { x: x, y: y, width: viewWidth, height: viewHeight };
 }
 
 function checkInitialized() {
@@ -645,7 +231,7 @@ function setAudible(view) {
 function setSelected(view) {
   checkInitialized();
 
-  if (isSingleLayout() && frame) {
+  if (layout === layouts.SINGLE && frame) {
     frame.hide();
     return;
   }
@@ -825,6 +411,10 @@ function onNewAddressLoaded(callback) {
   newAddressLoadedCallbacks.push(callback);
 }
 
+function getViewNames() {
+  return layouts.getViewNames(layout);
+}
+
 var exports = (module.exports = {
   init: init,
   setAudible: setAudible,
@@ -833,20 +423,9 @@ var exports = (module.exports = {
   resumeAudible: resumeAudible,
   inView: inView,
   getViewByNumber: getViewByNumber,
-  setSixHorizontalLayout: setSixHorizontalLayout,
-  setSixVerticalLayout: setSixVerticalLayout,
-  setFiveHorizontalLayout: setFiveHorizontalLayout,
-  setFiveVerticalLayout: setFiveVerticalLayout,
-  setQuadLayout: setQuadLayout,
-  setQuadHorizontalLayout: setQuadHorizontalLayout,
-  setQuadVerticalLayout: setQuadVerticalLayout,
-  setTriLayout: setTriLayout,
-  setDualLayout: setDualLayout,
-  setSingleLayout: setSingleLayout,
-  exitSingleLayout: exitSingleLayout,
-  isSingleLayout: isSingleLayout,
-  getViewNames: getViewNames,
+  toggleSingleLayout: toggleSingleLayout,
   changeLayout: changeLayout,
+  getViewNames: getViewNames,
   loadURL: loadURL,
   updateLayout: updateLayout,
   maximizeViews: maximizeViews,

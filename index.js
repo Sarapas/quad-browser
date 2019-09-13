@@ -110,11 +110,8 @@ function createWindow() {
       let currentClickTime = new Date().getTime();
       if (currentClickTime - lastClickTime < 200 && lastClickView === view) {
         // double click
-        if (viewManager.isSingleLayout()) {
-          viewManager.exitSingleLayout();
-        } else {
-          viewManager.setSingleLayout(view.number);
-        }
+
+        viewManager.toggleSingleLayout(view);
 
         updateMenu();
 
@@ -138,21 +135,6 @@ function createWindow() {
       });
     });
 
-    globalShortcut.register(`CommandOrControl+f1`, () => { 
-      let audibleView = viewManager.getAudible();
-      if (audibleView) {
-        viewManager.setSingleLayout(audibleView.number); 
-      }
-    });
-    globalShortcut.register(`CommandOrControl+f2`, () => { viewManager.setDualLayout(false); });
-    globalShortcut.register(`CommandOrControl+f3`, () => { viewManager.setTriLayout(false); });
-    globalShortcut.register(`CommandOrControl+f4`, () => { viewManager.setQuadLayout(false); });
-    globalShortcut.register(`CommandOrControl+f5`, () => { viewManager.setQuadHorizontalLayout(false); });
-    globalShortcut.register(`CommandOrControl+f6`, () => { viewManager.setQuadVerticalLayout(false); });
-    globalShortcut.register(`CommandOrControl+f7`, () => { viewManager.setFiveHorizontalLayout(false); });
-    globalShortcut.register(`CommandOrControl+f8`, () => { viewManager.setFiveVerticalLayout(false); });
-    globalShortcut.register(`CommandOrControl+f9`, () => { viewManager.setSixHorizontalLayout(false); });
-    globalShortcut.register(`CommandOrControl+f10`, () => { viewManager.setSixVerticalLayout(false); });
     globalShortcut.register(`CommandOrControl+t`, () => {
       let audible = viewManager.getAudible();
       find.open(win, audible, () => {});
