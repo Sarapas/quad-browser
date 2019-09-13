@@ -121,6 +121,7 @@ function createView(number, title) {
     view.webContents.favicons = favicons;
   });
   view.on('focus', () => {
+    setAudible(view);
     setSelected(view);
   });
   return view;
