@@ -9,6 +9,7 @@ const viewManager = require('./view-manager');
 const bookmarks = require('./bookmarks');
 const settings = require('./settings')
 const find = require('./find');
+const history = require('./history');
 const Store = require('electron-store');
 const util = require('electron-util');
 const address = require('./address');
@@ -88,7 +89,8 @@ function createWindow() {
             { label: 'Find', click: () => { find.open(win, view, () => { }); } },
             { type: 'separator' },
             { label: 'Save bookmark', click: () => { bookmarks.add(view.webContents); } },
-            { label: 'Load bookmark', submenu: bookmarks.getMenu(view) }
+            { label: 'Load bookmark', submenu: bookmarks.getMenu(view) },
+            { label: 'History', submenu: history.getMenu(view) }
           ]
           viewMenu = Menu.buildFromTemplate(viewMenuTemplate);
 
@@ -111,7 +113,7 @@ function createWindow() {
           viewManager.setSingleLayout(view.number);
         }
 
-        Menu.setApplicationMenu(createMenu());
+        updateMenu();
 
         lastClickTime = null;
         lastClickView = null;
@@ -164,8 +166,16 @@ function createWindow() {
     viewManager.updateLayout();
   });
 
+  viewManager.onNewAddressLoaded((address) => {
+    history.add(address, () => { updateMenu(); });
+  });
+
+  history.init(() => {
+    updateMenu();
+  });
+
   bookmarks.onChange(() => {
-    Menu.setApplicationMenu(createMenu());
+    updateMenu();
   });
 
   bookmarks.init();
@@ -250,6 +260,14 @@ function createMenu() {
       ]
     },
     {
+      label: 'History',
+      submenu: [ 
+        ...history.getMenu(null),
+        { type: 'separator' },
+        { label: 'Clear', click: () => { history.clear(() => { updateMenu() }); }}
+       ]
+    },
+    {
       label: 'View',
       submenu: [
         { role: 'togglefullscreen' },
@@ -260,7 +278,7 @@ function createMenu() {
             globalShortcut.unregister('Esc'); // to allow modal to use esc
             viewManager.changeLayout(() => {
               globalShortcut.register('Esc', unmaximize);
-              Menu.setApplicationMenu(createMenu());
+              updateMenu();
             });
           }
         },
@@ -308,6 +326,10 @@ function unmaximize() {
       viewManager.minimizeViews();
     }
   }
+}
+
+function updateMenu() {
+  Menu.setApplicationMenu(createMenu());
 }
 
 function changeHomepage() {

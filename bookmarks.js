@@ -7,7 +7,7 @@ const viewManager = require('./view-manager');
 let onChangeCallbacks = [];
 
 const BOOKMARK_STORAGE = "bookmarks";
-const ICON_DIR = `${app.getAppPath()}/icons/` // TODO: separator
+const ICON_DIR = `${app.getAppPath()}/icons/`
 
 let bookmarks = [];
 
@@ -126,7 +126,6 @@ function add(contents) {
 
 function setBookmarks(bMarks) {
     bookmarks = bMarks || [];
-    menu = [];
 
     bookmarks.forEach(b => {
         b.iconData = getIcon(b.icon);

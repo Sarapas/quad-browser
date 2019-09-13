@@ -26,11 +26,11 @@ let parent;
 let isInitialized;
 let audibleView;
 let frame;
-let addressChangeWnd;
 let layoutPickerWnd;
 let layout;
 let previousLayout;
 let layoutChangeCallbacks = [];
+let newAddressLoadedCallbacks = [];
 let autoRefresh = [];
 
 function init(parentWindow) {
@@ -111,6 +111,11 @@ function createView(number, title) {
     // clearing old favicon
     view.webContents.favicons = null;
     view.webContents.setVisualZoomLevelLimits(1, 5);
+    if (newAddressLoadedCallbacks && newAddressLoadedCallbacks.length) {
+      newAddressLoadedCallbacks.forEach((cb) => {
+        cb({ title: view.webContents.getTitle(), url: view.webContents.getURL() });
+      })
+    }
   });
   view.webContents.on('page-favicon-updated', (e, favicons) => {
     view.webContents.favicons = favicons;
@@ -812,6 +817,10 @@ function getAutoRefresh(view) {
   return null;
 }
 
+function onNewAddressLoaded(callback) {
+  newAddressLoadedCallbacks.push(callback);
+}
+
 var exports = (module.exports = {
   init: init,
   setAudible: setAudible,
@@ -842,5 +851,6 @@ var exports = (module.exports = {
   menuOnClick: appendSwapMenu,
   onLayoutChange: onLayoutChange,
   setAutoRefresh: setAutoRefresh,
-  getAutoRefresh: getAutoRefresh
+  getAutoRefresh: getAutoRefresh,
+  onNewAddressLoaded: onNewAddressLoaded
 });
