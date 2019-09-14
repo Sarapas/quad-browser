@@ -5,11 +5,15 @@ let QUAD = 'Quad';
 let QUADH = 'QuadH';
 let QUADV = 'QuadV';
 let FIVEH = 'FiveH';
+let H4n1 = 'H4n1';
 let FIVEV = 'FiveV';
+let V1n4 = 'V1n4';
 let DUAL = 'Dual';
 let TRI = 'Tri';
-let SIXH = 'SixH';
-let SIXV = 'SixV';
+let H6 = 'SixH';
+let V6 = 'SixV';
+let H8 = 'H8';
+let V8 = 'V8';
 let NINE = 'Nine'
 
 let aspect_ratio = 16 / 9;
@@ -37,23 +41,7 @@ function updateQuadHorizontalLayout(parent, views) {
 }
   
 function updateQuadVerticalLayout(parent, views) {
-    let bounds = getUsableBounds(parent);
-
-    let rightViewHeight = Math.floor(bounds.height / 3);
-    let rightViewWidth = Math.floor(rightViewHeight * aspect_ratio);
-
-    let leftViewWidth = bounds.width - rightViewWidth;
-    let leftViewHeight = bounds.height;
-
-    let bounds1 = { x: bounds.x, y: bounds.y, width: leftViewWidth, height: leftViewHeight };
-    let bounds2 = { x: bounds.x + leftViewWidth, y: bounds.y, width: rightViewWidth, height: rightViewHeight };
-    let bounds3 = { x: bounds.x + leftViewWidth, y: bounds.y + rightViewHeight, width: rightViewWidth, height: rightViewHeight };
-    let bounds4 = { x: bounds.x + leftViewWidth, y: bounds.y + rightViewHeight * 2, width: rightViewWidth, height: rightViewHeight };
-
-    views[0].setBounds(bounds1);
-    views[1].setBounds(bounds2);
-    views[2].setBounds(bounds3);
-    views[3].setBounds(bounds4);
+    set1PlusMVerticalLayout(parent, views, 3);
 }
   
 function updateFiveHorizontalLayout(parent, views) {
@@ -94,6 +82,14 @@ function updateFiveVerticalLayout(parent, views) {
     views[4].setBounds(bounds5);
 }
   
+function updateH4n1Layout(parent, views) {
+    setNPlusMHorizontalLayout(parent, views, 4, 1);
+}
+
+function updateV1n4Layout(parent, views) {
+    set1PlusMVerticalLayout(parent, views, 4);
+}
+
 function updateSixHorizontalLayout(parent, views) {
     setRectangleLayout(parent, views, 3, 2);
 }
@@ -102,8 +98,39 @@ function updateSixVerticalLayout(parent, views) {
     setRectangleLayout(parent, views, 2, 3);
 }
 
+function updateH8Layout(parent, views) {
+    setRectangleLayout(parent, views, 4, 2);
+}
+
+function updateV8Layout(parent, views) {
+    setRectangleLayout(parent, views, 2, 4);
+}
+
 function updateNineLayout(parent, views) {
     setRectangleLayout(parent, views, 3, 3);
+}
+
+function set1PlusMVerticalLayout(parent, views, m) {
+    // LIMITATIONS
+    // * Assumes 2 cols
+    // * Assumes right col has more views than left row
+    // * Works with 1 on the left
+
+    let bounds = getUsableBounds(parent);
+
+    let rightViewHeight = Math.floor(bounds.height / m);
+    let rightViewWidth = Math.floor(rightViewHeight * aspect_ratio);
+
+    let leftViewWidth = bounds.width - rightViewWidth;
+    let leftViewHeight = bounds.height;
+
+    let leftBounds = { x: bounds.x, y: bounds.y, width: leftViewWidth, height: leftViewHeight };
+    views[0].setBounds(leftBounds);
+
+    for (var i = 0; i < m; i++) {
+        let rightBounds = { x: bounds.x + leftViewWidth, y: bounds.y + rightViewHeight * i, width: rightViewWidth, height: rightViewHeight };
+        views[i + 1].setBounds(rightBounds);
+    }
 }
 
 function setNPlusMHorizontalLayout(parent, views, n, m) {
@@ -195,8 +222,12 @@ function updateLayout(layout, parent, views) {
     if (layout === QUADV) updateQuadVerticalLayout(parent, views);
     if (layout === FIVEH) updateFiveHorizontalLayout(parent, views);
     if (layout === FIVEV) updateFiveVerticalLayout(parent, views);
-    if (layout === SIXH) updateSixHorizontalLayout(parent, views);
-    if (layout === SIXV) updateSixVerticalLayout(parent, views);
+    if (layout === H4n1) updateH4n1Layout(parent, views);
+    if (layout === V1n4) updateV1n4Layout(parent, views);
+    if (layout === H6) updateSixHorizontalLayout(parent, views);
+    if (layout === V6) updateSixVerticalLayout(parent, views);
+    if (layout === H8) updateH8Layout(parent, views);
+    if (layout === V8) updateV8Layout(parent, views);
     if (layout === NINE) updateNineLayout(parent, views);
 }
 
@@ -265,8 +296,28 @@ function getViewNames(layout) {
             { name: "Bottom right", number: 5 },
             { name: "All", number: null }
         ];
+
+    if (layout === V1n4)
+        return [ 
+            { name: "Left", number: 1 },
+            { name: "Top right", number: 2 },
+            { name: "Upper right", number: 3 },
+            { name: "Lower right", number: 4 },
+            { name: "Bottom right", number: 5 },
+            { name: "All", number: null }
+        ];
+
+    if (layout === H4n1)
+        return [ 
+            { name: "Top left", number: 1 },
+            { name: "Top center left", number: 2 },
+            { name: "Top center right", number: 3 },
+            { name: "Top right", number: 4 },
+            { name: "Bottom", number: 5 },
+            { name: "All", number: null }
+        ];
   
-    if (layout === SIXH)
+    if (layout === H6)
         return [ 
             { name: "Top left", number: 1 },
             { name: "Top center", number: 2 },
@@ -277,7 +328,7 @@ function getViewNames(layout) {
             { name: "All", number: null }
         ];
   
-    if (layout === SIXV)
+    if (layout === V6)
         return [ 
             { name: "Top left", number: 1 },
             { name: "Top right", number: 2 },
@@ -285,6 +336,32 @@ function getViewNames(layout) {
             { name: "Middle right", number: 4 },
             { name: "Bottom left", number: 5 },
             { name: "Bottom right", number: 6 },
+            { name: "All", number: null }
+        ];
+
+    if (layout === V8)
+        return [ 
+            { name: "Top left", number: 1 },
+            { name: "Top right", number: 2 },
+            { name: "Upper-Middle left", number: 3 },
+            { name: "Upper-Middle right", number: 4 },
+            { name: "Lower-Middle left", number: 5 },
+            { name: "Lower-Middle right", number: 6 },
+            { name: "Bottom left", number: 7 },
+            { name: "Bottom right", number: 8 },
+            { name: "All", number: null }
+        ];
+
+    if (layout === H8)
+        return [ 
+            { name: "Top left", number: 1 },
+            { name: "Top-left center", number: 2 },
+            { name: "Top-right center", number: 3 },
+            { name: "Top right", number: 4 },
+            { name: "Bottom left", number: 5 },
+            { name: "Bottom-left center", number: 6 },
+            { name: "Bottom-right center", number: 7 },
+            { name: "Bottom right", number: 8 },
             { name: "All", number: null }
         ];
 
@@ -315,8 +392,12 @@ function getViewCount(layout) {
         VIEW_COUNT[QUADV] = 4;
         VIEW_COUNT[FIVEH] = 5;
         VIEW_COUNT[FIVEV] = 5;
-        VIEW_COUNT[SIXH] = 6;
-        VIEW_COUNT[SIXV] = 6;
+        VIEW_COUNT[V1n4] = 5;
+        VIEW_COUNT[H4n1] = 5;
+        VIEW_COUNT[H6] = 6;
+        VIEW_COUNT[V6] = 6;
+        VIEW_COUNT[H8] = 8;
+        VIEW_COUNT[V8] = 8;
         VIEW_COUNT[NINE] = 9;
     }
     
@@ -335,7 +416,11 @@ var exports = (module.exports = {
     QUADV: QUADV,
     FIVEH: FIVEH,
     FIVEV: FIVEV,
-    SIXH: SIXH,
-    SIXV: SIXV,
+    H4n1: H4n1,
+    V1n4: V1n4,
+    SIXH: H6,
+    SIXV: V6,
+    H8: H8,
+    V8: V8,
     NINE: NINE
 });

@@ -295,7 +295,7 @@ function changeLayout(callback) {
     modal: true,
     focusable: true,
     fullscreenable: false,
-    height: 450,
+    height: 550,
     width: 800,
     webPreferences: {
       nodeIntegration: true

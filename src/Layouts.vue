@@ -30,11 +30,23 @@
           <div class="layout" v-bind:class="{ current: isCurrent('FiveV') }" v-on:click="onPick('FiveV')">
             <img src="./assets/layout-img/FIVEV.jpg" />
           </div>
+          <div class="layout" v-bind:class="{ current: isCurrent('V1n4') }" v-on:click="onPick('V1n4')">
+            <img src="./assets/layout-img/V1n4.jpg" />
+          </div>
+          <div class="layout" v-bind:class="{ current: isCurrent('H4n1') }" v-on:click="onPick('H4n1')">
+            <img src="./assets/layout-img/H4n1.jpg" />
+          </div>
           <div class="layout" v-bind:class="{ current: isCurrent('SixH') }" v-on:click="onPick('SixH')">
             <img src="./assets/layout-img/SIXH.jpg" />
           </div>
           <div class="layout" v-bind:class="{ current: isCurrent('SixV') }" v-on:click="onPick('SixV')">
             <img src="./assets/layout-img/SIXV.jpg" />
+          </div>
+          <div class="layout" v-bind:class="{ current: isCurrent('H8') }" v-on:click="onPick('H8')">
+            <img src="./assets/layout-img/H8.jpg" />
+          </div>
+          <div class="layout" v-bind:class="{ current: isCurrent('V8') }" v-on:click="onPick('V8')">
+            <img src="./assets/layout-img/V8.jpg" />
           </div>
           <div class="layout" v-bind:class="{ current: isCurrent('Nine') }" v-on:click="onPick('Nine')">
             <img src="./assets/layout-img/NINE.jpg" />
