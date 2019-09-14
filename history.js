@@ -11,7 +11,7 @@ let history = [];
 // use only host for URL
 
 function init(callback) {
-    storage.setDataPath(app.getAppPath());
+    storage.setDataPath(app.getPath('userData'));
 
     try {
         storage.get(HISTORY_STORAGE, function(error, data) {

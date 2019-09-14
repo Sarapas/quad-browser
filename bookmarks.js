@@ -7,12 +7,12 @@ const viewManager = require('./view-manager');
 let onChangeCallbacks = [];
 
 const BOOKMARK_STORAGE = "bookmarks";
-const ICON_DIR = `${app.getAppPath()}/icons/`
+const ICON_DIR = `${app.getPath('userData')}/icons/`
 
 let bookmarks = [];
 
 function init() {
-    storage.setDataPath(app.getAppPath());
+    storage.setDataPath(app.getPath('userData'));
 
     try {
         storage.get(BOOKMARK_STORAGE, function(error, data) {
