@@ -12,6 +12,9 @@
           <div class="layout" v-bind:class="{ current: isCurrent('Dual') }" v-on:click="onPick('Dual')">
             <img src="./assets/layout-img/DUAL.jpg" />
           </div>
+          <div class="layout" v-bind:class="{ current: isCurrent('Sides') }" v-on:click="onPick('Sides')">
+            <img src="./assets/layout-img/SIDES.jpg" />
+          </div>
           <div class="layout" v-bind:class="{ current: isCurrent('Tri') }" v-on:click="onPick('Tri')">
             <img src="./assets/layout-img/TRI.jpg" />
           </div>

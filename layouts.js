@@ -9,6 +9,7 @@ let H4n1 = 'H4n1';
 let FIVEV = 'FiveV';
 let V1n4 = 'V1n4';
 let DUAL = 'Dual';
+let SIDES = 'Sides';
 let TRI = 'Tri';
 let H6 = 'SixH';
 let V6 = 'SixV';
@@ -26,6 +27,10 @@ function updateSingleLayout(parent, views) {
   
 function updateDualLayout(parent, views) {
     setRectangleLayout(parent, views, 1, 2);
+}
+
+function updateSidesLayout(parent, views) {
+    setRectangleLayout(parent, views, 2, 1);
 }
   
 function updateTriLayout(parent, views) {
@@ -216,6 +221,7 @@ function getUsableBounds(parent) {
 function updateLayout(layout, parent, views) {
     if (layout === SINGLE) updateSingleLayout(parent, views);
     if (layout === DUAL) updateDualLayout(parent, views);
+    if (layout === SIDES) updateSidesLayout(parent, views);
     if (layout === TRI) updateTriLayout(parent, views);
     if (layout === QUAD) updateQuadLayout(parent, views);
     if (layout === QUADH) updateQuadHorizontalLayout(parent, views);
@@ -239,6 +245,13 @@ function getViewNames(layout) {
         return [ 
             { name: "Top", number: 1 },
             { name: "Bottom", number: 2 },
+            { name: "All", number: null }
+        ];
+
+    if (layout === SIDES)
+        return [ 
+            { name: "Left", number: 1 },
+            { name: "Right", number: 2 },
             { name: "All", number: null }
         ];
   
@@ -386,6 +399,7 @@ function getViewCount(layout) {
     if (VIEW_COUNT.length === 0) {
         VIEW_COUNT[SINGLE] = 1;
         VIEW_COUNT[DUAL] = 2;
+        VIEW_COUNT[SIDES] = 2;
         VIEW_COUNT[TRI] = 3;
         VIEW_COUNT[QUAD] = 4;
         VIEW_COUNT[QUADH] = 4;
@@ -410,6 +424,7 @@ var exports = (module.exports = {
     getViewCount: getViewCount,
     SINGLE : SINGLE,
     DUAL: DUAL,
+    SIDES: SIDES,
     TRI: TRI,
     QUAD: QUAD,
     QUADH: QUADH,
