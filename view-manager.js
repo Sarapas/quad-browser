@@ -8,7 +8,7 @@ const layouts = require('./layouts');
 const requestFullscreen = fs.readFileSync(path.resolve(__dirname, 'set-video-fullscreen.js'), 'utf8');
 const exitFullscreen = fs.readFileSync(path.resolve(__dirname, 'exit-video-fullscreen.js'), 'utf8');
 
-let views;
+let views = [];
 let activeViews;
 let parent;
 let isInitialized;
@@ -20,23 +20,14 @@ let previousLayout;
 let layoutChangeCallbacks = [];
 let newAddressLoadedCallbacks = [];
 let autoRefresh = [];
+let homepage;
 
-function init(parentWindow) {
+function init(parentWindow, defaultURL) {
   if (isInitialized) throw new Error('Already initialized');
   parent = parentWindow;
+  homepage = defaultURL;
   if (!frame) createFrame();
-
-  views = [
-    createView(1),
-    createView(2),
-    createView(3),
-    createView(4),
-    createView(5),
-    createView(6),
-  ];
-
   isInitialized = true;
-
   setLayout(layouts.QUAD, true); // default layout
 }
 
@@ -72,6 +63,7 @@ function appendSwapMenu(number, ctxMenu) {
 }
 
 function createView(number, title) {
+  console.log("Creating view: " + number);
   let view = new BrowserWindow({
     parent: parent,
     frame: false,
@@ -115,6 +107,7 @@ function createView(number, title) {
     setAudible(view);
     setSelected(view);
   });
+  view.loadURL(homepage);
   return view;
 }
 
@@ -124,6 +117,7 @@ function loadURL(url, view) {
   if (view) {
     view.webContents.loadURL(url);
   } else {
+    lastGlobalURL = url;
     views.forEach(view => {
       view.webContents.loadURL(url);
     });
@@ -153,7 +147,13 @@ function setLayout(newLayout, force, layoutViews = null) {
   if (layout != newLayout || force) {
     previousLayout = layout;
     layout = newLayout;
-    activeViews = layoutViews || views.slice(0, layouts.getViewCount(layout));
+    let viewCount = layouts.getViewCount(layout);
+
+    // making sure we have enough views
+    for (var i = views.length; i < viewCount; i++) {
+      views.push(createView(i + 1));
+    }
+    activeViews = layoutViews || views.slice(0, viewCount);
 
     views.forEach(view => {
       view.hide();

@@ -40,7 +40,8 @@ function createWindow() {
     backgroundColor: '#000'
   });
 
-  viewManager.init(win);
+  let defaultURL = store.get('homepage') || 'https://google.com';
+  viewManager.init(win, defaultURL);
 
   viewManager.onLayoutChange(() => {
     find.close();
@@ -48,9 +49,6 @@ function createWindow() {
 
   win.setFullScreen(true);
   win.setMenuBarVisibility(false);
-
-  let defaultURL = store.get('homepage') || 'https://google.com';
-  viewManager.loadURL(defaultURL);
 
   function onMouseMove(event) {
     if (hoverMode) {

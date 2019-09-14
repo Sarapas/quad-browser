@@ -10,6 +10,7 @@ let DUAL = 'Dual';
 let TRI = 'Tri';
 let SIXH = 'SixH';
 let SIXV = 'SixV';
+let NINE = 'Nine'
 
 let aspect_ratio = 16 / 9;
 
@@ -194,6 +195,32 @@ function updateSixVerticalLayout(parent, views) {
     views[4].setBounds(bounds5);
     views[5].setBounds(bounds6);
 }
+
+function updateNineLayout(parent, views) {
+    let size = calculateViewSize(parent, 3, 3);
+
+    let bounds1 = { x: size.x, y: size.y, width: size.width, height: size.height };
+    let bounds2 = { x: size.x + size.width, y: size.y, width: size.width, height: size.height };
+    let bounds3 = { x: size.x + size.width * 2, y: size.y, width: size.width, height: size.height };
+
+    let bounds4 = { x: size.x, y: size.y + size.height, width: size.width, height: size.height };
+    let bounds5 = { x: size.x + size.width, y: size.y + size.height, width: size.width, height: size.height };
+    let bounds6 = { x: size.x + size.width * 2, y: size.y + size.height, width: size.width, height: size.height };
+
+    let bounds7 = { x: size.x, y: size.y + size.height * 2, width: size.width, height: size.height };
+    let bounds8 = { x: size.x + size.width, y: size.y + size.height * 2, width: size.width, height: size.height };
+    let bounds9 = { x: size.x + size.width * 2, y: size.y + size.height * 2, width: size.width, height: size.height };
+
+    views[0].setBounds(bounds1);
+    views[1].setBounds(bounds2);
+    views[2].setBounds(bounds3);
+    views[3].setBounds(bounds4);
+    views[4].setBounds(bounds5);
+    views[5].setBounds(bounds6);
+    views[6].setBounds(bounds7);
+    views[7].setBounds(bounds8);
+    views[8].setBounds(bounds9);
+}
   
 function calculateViewSize(parent, rows, cols) {
     let bounds = getUsableBounds(parent);
@@ -240,6 +267,7 @@ function updateLayout(layout, parent, views) {
     if (layout === FIVEV) updateFiveVerticalLayout(parent, views);
     if (layout === SIXH) updateSixHorizontalLayout(parent, views);
     if (layout === SIXV) updateSixVerticalLayout(parent, views);
+    if (layout === NINE) updateNineLayout(parent, views);
 }
 
 function getViewNames(layout) {
@@ -329,6 +357,22 @@ function getViewNames(layout) {
             { name: "Bottom right", number: 6 },
             { name: "All", number: null }
         ];
+
+    if (layout === NINE)
+        return [ 
+            { name: "Top left", number: 1 },
+            { name: "Top center", number: 2 },
+            { name: "Top right", number: 3 },
+            { name: "Middle left", number: 4 },
+            { name: "Middle center", number: 5 },
+            { name: "Middle right", number: 6 },
+            { name: "Bottom left", number: 7 },
+            { name: "Bottom center", number: 8 },
+            { name: "Bottom right", number: 9 },
+            { name: "All", number: null }
+        ];
+
+    throw new Error('Unknown layout: ' + layout);
 }
 
 function getViewCount(layout) {
@@ -343,6 +387,7 @@ function getViewCount(layout) {
         VIEW_COUNT[FIVEV] = 5;
         VIEW_COUNT[SIXH] = 6;
         VIEW_COUNT[SIXV] = 6;
+        VIEW_COUNT[NINE] = 9;
     }
     
     return VIEW_COUNT[layout];
@@ -361,5 +406,6 @@ var exports = (module.exports = {
     FIVEH: FIVEH,
     FIVEV: FIVEV,
     SIXH: SIXH,
-    SIXV: SIXV
+    SIXV: SIXV,
+    NINE: NINE
 });
