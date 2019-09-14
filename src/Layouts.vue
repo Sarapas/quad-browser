@@ -36,9 +36,9 @@
           <div class="layout" v-bind:class="{ current: isCurrent('SixV') }" v-on:click="onPick('SixV')">
             <img src="./assets/layout-img/SIXV.jpg" />
           </div>
-          <!-- <div class="layout" v-bind:class="{ current: isCurrent('Nine') }" v-on:click="onPick('Nine')">
+          <div class="layout" v-bind:class="{ current: isCurrent('Nine') }" v-on:click="onPick('Nine')">
             <img src="./assets/layout-img/NINE.jpg" />
-          </div> -->
+          </div>
         </div>
     </div>
 </template>

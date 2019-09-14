@@ -17,19 +17,11 @@ let aspect_ratio = 16 / 9;
 const VIEW_COUNT = [];
 
 function updateSingleLayout(parent, views) {
-    views[0].setBounds(getUsableBounds(parent));
+    setRectangleLayout(parent, views, 1, 1);
 }
   
 function updateDualLayout(parent, views) {
-    let bounds = getUsableBounds(parent);
-    let viewWidth = bounds.width
-    let viewHeight = Math.floor(bounds.height / 2);
-
-    let bounds1 = { x: bounds.x, y: bounds.y, width: viewWidth, height: viewHeight };
-    let bounds2 = { x: bounds.x, y: bounds.y + viewHeight, width: viewWidth, height: viewHeight };
-
-    views[0].setBounds(bounds1);
-    views[1].setBounds(bounds2);
+    setRectangleLayout(parent, views, 1, 2);
 }
   
 function updateTriLayout(parent, views) {
@@ -49,17 +41,7 @@ function updateTriLayout(parent, views) {
 }
   
 function updateQuadLayout(parent, views) {
-    let size = calculateViewSize(parent, 2, 2);
-
-    let bounds1 = { x: size.x, y: size.y, width: size.width, height: size.height };
-    let bounds2 = { x: size.x + size.width, y: size.y, width: size.width, height: size.height };
-    let bounds3 = { x: size.x, y: size.y + size.height, width: size.width, height: size.height };
-    let bounds4 = { x: size.x + size.width, y: size.y + size.height, width: size.width, height: size.height };
-
-    views[0].setBounds(bounds1);
-    views[1].setBounds(bounds2);
-    views[2].setBounds(bounds3);
-    views[3].setBounds(bounds4);
+    setRectangleLayout(parent, views, 2, 2);
 }
   
 function updateQuadHorizontalLayout(parent, views) {
@@ -161,87 +143,55 @@ function updateFiveVerticalLayout(parent, views) {
 }
   
 function updateSixHorizontalLayout(parent, views) {
-    let size = calculateViewSize(parent, 2, 3);
-
-    let bounds1 = { x: size.x, y: size.y, width: size.width, height: size.height };
-    let bounds2 = { x: size.x + size.width, y: size.y, width: size.width, height: size.height };
-    let bounds3 = { x: size.x + size.width * 2, y: size.y, width: size.width, height: size.height };
-    let bounds4 = { x: size.x, y: size.y + size.height, width: size.width, height: size.height };
-    let bounds5 = { x: size.x + size.width, y: size.y + size.height, width: size.width, height: size.height };
-    let bounds6 = { x: size.x + size.width * 2, y: size.y + size.height, width: size.width, height: size.height };
-
-    views[0].setBounds(bounds1);
-    views[1].setBounds(bounds2);
-    views[2].setBounds(bounds3);
-    views[3].setBounds(bounds4);
-    views[4].setBounds(bounds5);
-    views[5].setBounds(bounds6);
+    setRectangleLayout(parent, views, 3, 2);
 }
   
 function updateSixVerticalLayout(parent, views) {
-    let size = calculateViewSize(parent, 3, 2);
-
-    let bounds1 = { x: size.x, y: size.y, width: size.width, height: size.height };
-    let bounds2 = { x: size.x + size.width, y: size.y, width: size.width, height: size.height };
-    let bounds3 = { x: size.x, y: size.y + size.height, width: size.width, height: size.height };
-    let bounds4 = { x: size.x + size.width, y: size.y + size.height, width: size.width, height: size.height };
-    let bounds5 = { x: size.x, y: size.y + size.height * 2, width: size.width, height: size.height };
-    let bounds6 = { x: size.x + size.width, y: size.y + size.height * 2, width: size.width, height: size.height };
-
-    views[0].setBounds(bounds1);
-    views[1].setBounds(bounds2);
-    views[2].setBounds(bounds3);
-    views[3].setBounds(bounds4);
-    views[4].setBounds(bounds5);
-    views[5].setBounds(bounds6);
+    setRectangleLayout(parent, views, 2, 3);
 }
 
 function updateNineLayout(parent, views) {
-    let size = calculateViewSize(parent, 3, 3);
+    setRectangleLayout(parent, views, 3, 3);
+}
 
-    let bounds1 = { x: size.x, y: size.y, width: size.width, height: size.height };
-    let bounds2 = { x: size.x + size.width, y: size.y, width: size.width, height: size.height };
-    let bounds3 = { x: size.x + size.width * 2, y: size.y, width: size.width, height: size.height };
+function setRectangleLayout(parent, views, cols, rows) {
+    let size = calculateViewSize(parent, rows, cols);
 
-    let bounds4 = { x: size.x, y: size.y + size.height, width: size.width, height: size.height };
-    let bounds5 = { x: size.x + size.width, y: size.y + size.height, width: size.width, height: size.height };
-    let bounds6 = { x: size.x + size.width * 2, y: size.y + size.height, width: size.width, height: size.height };
-
-    let bounds7 = { x: size.x, y: size.y + size.height * 2, width: size.width, height: size.height };
-    let bounds8 = { x: size.x + size.width, y: size.y + size.height * 2, width: size.width, height: size.height };
-    let bounds9 = { x: size.x + size.width * 2, y: size.y + size.height * 2, width: size.width, height: size.height };
-
-    views[0].setBounds(bounds1);
-    views[1].setBounds(bounds2);
-    views[2].setBounds(bounds3);
-    views[3].setBounds(bounds4);
-    views[4].setBounds(bounds5);
-    views[5].setBounds(bounds6);
-    views[6].setBounds(bounds7);
-    views[7].setBounds(bounds8);
-    views[8].setBounds(bounds9);
+    for (var r = 0; r < rows; r++) {
+        for (var c = 0; c < cols; c++) {
+            let viewIndex = r * cols + c;
+            let x = size.x + size.width * c;
+            let y = size.y + size.height * r;
+            let bounds = { x: x, y: y, width: size.width, height: size.height };
+            views[viewIndex].setBounds(bounds);
+        }
+    }
 }
   
 function calculateViewSize(parent, rows, cols) {
     let bounds = getUsableBounds(parent);
     let ratio = aspect_ratio * cols / rows;
-    let viewWidth = 0;
-    let viewHeight = 0;
+    let viewWidth = bounds.width;
+    let viewHeight = bounds.height;
     let x = bounds.x;
     let y = bounds.y;
 
     if (bounds.width / bounds.height < ratio) {
-        let newHeight = bounds.width / ratio;
-        const barHeight = Math.floor((bounds.height - newHeight) / 2);
-        y += barHeight;
         viewWidth = Math.floor(bounds.width / cols);
-        viewHeight = Math.floor(newHeight / rows);
+        if (rows > 1) {
+            let newHeight = bounds.width / ratio;
+            viewHeight = Math.floor(newHeight / rows);
+            const barHeight = Math.floor((bounds.height - newHeight) / 2);
+            y += barHeight;
+        }
     } else {
-        let newWidth = bounds.height * ratio;
-        const barWidth = Math.floor((bounds.width - newWidth) / 2);
-        x += barWidth;
-        viewWidth = Math.floor(newWidth / cols);
         viewHeight = Math.floor(bounds.height / rows);
+        if (cols > 1) {
+            let newWidth = bounds.height * ratio;
+            viewWidth = Math.floor(newWidth / cols);
+            const barWidth = Math.floor((bounds.width - newWidth) / 2);
+            x += barWidth;
+        }
     }
 
     return { x: x, y: y, width: viewWidth, height: viewHeight };
