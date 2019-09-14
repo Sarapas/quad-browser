@@ -55,6 +55,18 @@
             <img src="./assets/layout-img/NINE.jpg" />
           </div>
         </div>
+        <!-- <hr />
+        <div class="alignments">
+          <div class="radio">
+            <input type="radio" name="alignment" v-model="alginment" value="left" /> LEFT
+          </div>
+          <div class="radio">
+            <input type="radio" name="alignment" v-model="alginment" value="center" /> CENTER
+          </div>
+          <div class="radio">
+            <input type="radio" name="alignment" v-model="alginment" value="right" /> RIGHT
+          </div>
+        </div> -->
     </div>
 </template>
 
@@ -63,7 +75,8 @@ export default {
   name: 'layouts',
   data: function() {
     return {
-        current: ''
+        current: '',
+        alignment: ''
     };
   },
   methods: {
@@ -124,6 +137,15 @@ export default {
     justify-content: center;
     flex-direction: row;
     flex-wrap: wrap;
+}
+.alignments {
+    display: flex;
+    justify-content: space-between;
+    max-width: 50%;
+    margin: 0 auto;
+}
+.radio {
+    display: flex;
 }
 .title {
     display: flex;

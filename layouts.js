@@ -19,6 +19,12 @@ let NINE = 'Nine'
 
 let aspect_ratio = 16 / 9;
 
+const CENTER = 'center';
+const LEFT = 'left';
+const RIGHT = 'right';
+
+let options = { alignment: CENTER };
+
 const VIEW_COUNT = [];
 
 function updateSingleLayout(parent, views) {
@@ -150,13 +156,20 @@ function setNPlusMHorizontalLayout(parent, views, n, m) {
     let topViewHeight = Math.floor(topViewWidth / aspect_ratio);
 
     let bottomViewWidth = Math.floor(bounds.width / m);
-    let bottomViewHeight = Math.floor(bottomViewWidth / aspect_ratio);
+    let bottomViewHeight = 0;
+    let bottomOffsetX = 0;
 
     if (m > 1) {
         bottomViewHeight = Math.floor(bottomViewWidth / aspect_ratio);
         bounds.y = bounds.y + Math.floor((bounds.height - topViewHeight - bottomViewHeight) / 2);
     } else {
         bottomViewHeight = bounds.height - topViewHeight;
+        if (options.alignment !== CENTER) {
+            bottomViewWidth = Math.floor(bottomViewHeight * aspect_ratio);
+            if (options.alignment === RIGHT) {
+                bottomOffsetX += bounds.width - bottomViewWidth;
+            }
+        }
     }
 
     for (let i = 0; i < n; i++) {
@@ -165,7 +178,7 @@ function setNPlusMHorizontalLayout(parent, views, n, m) {
     }
 
     for (let i = 0; i < m; i++) {
-        let bottomBounds = { x: bounds.x + bottomViewWidth * i, y: bounds.y + topViewHeight, width: bottomViewWidth, height: bottomViewHeight };
+        let bottomBounds = { x: bounds.x + bottomOffsetX + bottomViewWidth * i, y: bounds.y + topViewHeight, width: bottomViewWidth, height: bottomViewHeight };
         views[n + i].setBounds(bottomBounds);
     }
 }
@@ -192,7 +205,12 @@ function setRectangleLayout(parent, views, cols, rows) {
             let newWidth = bounds.height * ratio;
             viewWidth = Math.floor(newWidth / cols);
             const barWidth = Math.floor((bounds.width - newWidth) / 2);
-            x += barWidth;
+            if (options.alignment === CENTER) {
+                x += barWidth;
+            }
+            if (options.alignment === RIGHT) {
+                x += barWidth * 2;
+            }
         }
     }
 
@@ -395,6 +413,14 @@ function getViewNames(layout) {
     throw new Error('Unknown layout: ' + layout);
 }
 
+function setAlignment(alignment) {
+    if (![ CENTER, LEFT, RIGHT ].includes(alignment)) {
+        throw new Error("Unknown alignment: " + alignment);
+    }
+
+    options.alignment = alignment;
+}
+
 function getViewCount(layout) {
     if (VIEW_COUNT.length === 0) {
         VIEW_COUNT[SINGLE] = 1;
@@ -422,6 +448,7 @@ var exports = (module.exports = {
     updateLayout: updateLayout,
     getViewNames: getViewNames,
     getViewCount: getViewCount,
+    setAlignment: setAlignment,
     SINGLE : SINGLE,
     DUAL: DUAL,
     SIDES: SIDES,
