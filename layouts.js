@@ -25,19 +25,7 @@ function updateDualLayout(parent, views) {
 }
   
 function updateTriLayout(parent, views) {
-    let bounds = getUsableBounds(parent);
-    let topViewWidth = Math.floor(bounds.width / 2);
-    let topViewHeight = Math.floor(topViewWidth / aspect_ratio);
-    let bottomViewWidth = bounds.width;
-    let bottomViewHeight = bounds.height - topViewHeight;
-
-    let bounds1 = { x: bounds.x, y: bounds.y, width: topViewWidth, height: topViewHeight };
-    let bounds2 = { x: bounds.x + topViewWidth, y: bounds.y, width: topViewWidth, height: topViewHeight };
-    let bounds3 = { x: bounds.x, y: bounds.y + topViewHeight, width: bottomViewWidth, height: bottomViewHeight };
-
-    views[0].setBounds(bounds1);
-    views[1].setBounds(bounds2);
-    views[2].setBounds(bounds3);
+    setNPlusMHorizontalLayout(parent, views, 2, 1);
 }
   
 function updateQuadLayout(parent, views) {
@@ -45,23 +33,7 @@ function updateQuadLayout(parent, views) {
 }
   
 function updateQuadHorizontalLayout(parent, views) {
-    let bounds = getUsableBounds(parent);
-
-    let topViewWidth = Math.floor(bounds.width / 3);
-    let topViewHeight = Math.floor(topViewWidth / aspect_ratio);
-
-    let bottomViewWidth = bounds.width;
-    let bottomViewHeight = bounds.height - topViewHeight;
-
-    let bounds1 = { x: bounds.x, y: bounds.y, width: topViewWidth, height: topViewHeight };
-    let bounds2 = { x: bounds.x + topViewWidth, y: bounds.y, width: topViewWidth, height: topViewHeight };
-    let bounds3 = { x: bounds.x + topViewWidth * 2, y: bounds.y, width: topViewWidth, height: topViewHeight };
-    let bounds4 = { x: bounds.x, y: bounds.y + topViewHeight, width: bottomViewWidth, height: bottomViewHeight };
-
-    views[0].setBounds(bounds1);
-    views[1].setBounds(bounds2);
-    views[2].setBounds(bounds3);
-    views[3].setBounds(bounds4);
+    setNPlusMHorizontalLayout(parent, views, 3, 1);
 }
   
 function updateQuadVerticalLayout(parent, views) {
@@ -85,27 +57,7 @@ function updateQuadVerticalLayout(parent, views) {
 }
   
 function updateFiveHorizontalLayout(parent, views) {
-    let bounds = getUsableBounds(parent);
-
-    let topViewWidth = Math.floor(bounds.width / 3);
-    let topViewHeight = Math.floor(topViewWidth / aspect_ratio);
-
-    let bottomViewWidth = Math.floor(bounds.width / 2);
-    let bottomViewHeight = Math.floor(bottomViewWidth / aspect_ratio);
-
-    bounds.y = bounds.y + Math.floor((bounds.height - topViewHeight - bottomViewHeight) / 2);
-
-    let bounds1 = { x: bounds.x, y: bounds.y, width: topViewWidth, height: topViewHeight };
-    let bounds2 = { x: bounds.x + topViewWidth, y: bounds.y, width: topViewWidth, height: topViewHeight };
-    let bounds3 = { x: bounds.x + topViewWidth * 2, y: bounds.y, width: topViewWidth, height: topViewHeight };
-    let bounds4 = { x: bounds.x, y: bounds.y + topViewHeight, width: bottomViewWidth, height: bottomViewHeight };
-    let bounds5 = { x: bounds.x + bottomViewWidth, y: bounds.y + topViewHeight, width: bottomViewWidth, height: bottomViewHeight };
-
-    views[0].setBounds(bounds1);
-    views[1].setBounds(bounds2);
-    views[2].setBounds(bounds3);
-    views[3].setBounds(bounds4);
-    views[4].setBounds(bounds5);
+    setNPlusMHorizontalLayout(parent, views, 3, 2);
 }
   
 function updateFiveVerticalLayout(parent, views) {
@@ -154,21 +106,39 @@ function updateNineLayout(parent, views) {
     setRectangleLayout(parent, views, 3, 3);
 }
 
-function setRectangleLayout(parent, views, cols, rows) {
-    let size = calculateViewSize(parent, rows, cols);
+function setNPlusMHorizontalLayout(parent, views, n, m) {
+    // LIMITATIONS
+    // * Assumes 2 rows
+    // * Assumes top row has more views than bottom row
+    // * Works with enough height
 
-    for (var r = 0; r < rows; r++) {
-        for (var c = 0; c < cols; c++) {
-            let viewIndex = r * cols + c;
-            let x = size.x + size.width * c;
-            let y = size.y + size.height * r;
-            let bounds = { x: x, y: y, width: size.width, height: size.height };
-            views[viewIndex].setBounds(bounds);
-        }
+    let bounds = getUsableBounds(parent);
+
+    let topViewWidth = Math.floor(bounds.width / n);
+    let topViewHeight = Math.floor(topViewWidth / aspect_ratio);
+
+    let bottomViewWidth = Math.floor(bounds.width / m);
+    let bottomViewHeight = Math.floor(bottomViewWidth / aspect_ratio);
+
+    if (m > 1) {
+        bottomViewHeight = Math.floor(bottomViewWidth / aspect_ratio);
+        bounds.y = bounds.y + Math.floor((bounds.height - topViewHeight - bottomViewHeight) / 2);
+    } else {
+        bottomViewHeight = bounds.height - topViewHeight;
+    }
+
+    for (let i = 0; i < n; i++) {
+        let topBounds = { x: bounds.x + topViewWidth * i, y: bounds.y, width: topViewWidth, height: topViewHeight };
+        views[i].setBounds(topBounds);
+    }
+
+    for (let i = 0; i < m; i++) {
+        let bottomBounds = { x: bounds.x + bottomViewWidth * i, y: bounds.y + topViewHeight, width: bottomViewWidth, height: bottomViewHeight };
+        views[n + i].setBounds(bottomBounds);
     }
 }
-  
-function calculateViewSize(parent, rows, cols) {
+
+function setRectangleLayout(parent, views, cols, rows) {
     let bounds = getUsableBounds(parent);
     let ratio = aspect_ratio * cols / rows;
     let viewWidth = bounds.width;
@@ -194,7 +164,17 @@ function calculateViewSize(parent, rows, cols) {
         }
     }
 
-    return { x: x, y: y, width: viewWidth, height: viewHeight };
+    let size = { x: x, y: y, width: viewWidth, height: viewHeight };
+
+    for (var r = 0; r < rows; r++) {
+        for (var c = 0; c < cols; c++) {
+            let viewIndex = r * cols + c;
+            let viewX = size.x + size.width * c;
+            let viewY = size.y + size.height * r;
+            let viewBounds = { x: viewX, y: viewY, width: size.width, height: size.height };
+            views[viewIndex].setBounds(viewBounds);
+        }
+    }
 }
 
 function getUsableBounds(parent) {
