@@ -1,10 +1,18 @@
 const electron = require('electron');
-const { ipcMain } = electron;
+const { ipcMain, app } = electron;
 const storage = require('electron-json-storage');
 
 const NOTEPAD_STORAGE = "notepad";
+let saveHandler;
+
+let openOn;
+let previousUrl;
 
 function open(view) {
+    openOn = view;
+    previousUrl = view.webContents.getURL();
+
+    storage.setDataPath(app.getPath('userData'));
 
     storage.get(NOTEPAD_STORAGE, function(error, data) {
         if (error) throw error;
@@ -19,18 +27,45 @@ function open(view) {
         view.show();
     });
 
+    ipcMain.on('close-notepad', () => {
+        close();
+    });
+
     if (ipcMain.listenerCount('save-notepad') === 0) {
         ipcMain.on('save-notepad', (event, notepad) => {
-            storage.set(NOTEPAD_STORAGE, { text: notepad}, function(error) {
-                if (error) throw error;
-            });
+            if (saveHandler) {
+                clearTimeout(saveHandler);
+            }
+
+            saveHandler = setTimeout(() => {
+                storage.set(NOTEPAD_STORAGE, { text: notepad}, function(error) {
+                    if (error) throw error;
+                    saveHandler = null;
+                    console.log('saved');
+                });
+            }, 1000);
         });
     }
+}
 
-    // TODO: deal with trying to open multiple notepads
-    // TODO: debounce on save
+function isOpen() {
+    return !!openOn;
+}
+
+function isOpenOn(view) {
+    return openOn === view;
+}
+
+function close() {
+    openOn.loadURL(previousUrl);
+    setTimeout(() => {
+        openOn = null;
+        previousUrl = null;
+    }, 1000);
 }
 
 var exports = module.exports = {
-    open: open
+    open: open,
+    isOpen: isOpen,
+    isOpenOn: isOpenOn
 };

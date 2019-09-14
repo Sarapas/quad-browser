@@ -92,9 +92,17 @@ function createWindow() {
             { label: 'Save bookmark', click: () => { bookmarks.add(view.webContents); } },
             { label: 'Load bookmark', submenu: bookmarks.getMenu(view) },
             { label: 'History', submenu: history.getMenu(view) },
-            // { type: 'separator' },
-            // { label: 'Open Notepad', click: () => { notepad.open(view); }}
           ]
+
+          if (!notepad.isOpen()) {
+            viewMenuTemplate.push({ type: 'separator' });
+            viewMenuTemplate.push({ label: 'Open Notepad', click: () => { notepad.open(view); }});
+          } 
+
+          if (notepad.isOpenOn(view)) {
+            viewMenuTemplate = [ { label: 'Find', click: () => { find.open(win, view, () => { }); } } ];
+          }
+          
           viewMenu = Menu.buildFromTemplate(viewMenuTemplate);
 
           viewManager.menuOnClick(view.number, viewMenu);

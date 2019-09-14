@@ -1,6 +1,10 @@
 <template>
   <div id="app">
-    <h2 class="title">Notepad</h2>
+    <div class="header">
+      <h2>Notepad</h2>
+      <img class="close-button" src="./assets/close.svg" v-on:click="close" />
+    </div>
+    <h2 class="title"></h2>
     <textarea autofocus @keyup="onTextChange" v-model="text" class="text-field" placeholder="Type in your notes"></textarea>
   </div>
 </template>
@@ -22,6 +26,10 @@ export default {
 
         const { ipcRenderer } = window.require('electron');
         ipcRenderer.send('save-notepad', this.text);
+    },
+    close: function() {
+        const { ipcRenderer } = window.require('electron');
+        ipcRenderer.send('close-notepad', this.text);
     }
   },
   mounted: function() {
@@ -46,10 +54,10 @@ export default {
   text-align: center;
   color: #2c3e50;
 }
-.title {
+.header {
     height: 8vh;
-    margin-top: 3vh;
-    margin-bottom: 1vh;
+    margin-top: 2vh;
+    margin-bottom: 2vh;
 }
 .container {
   border-radius: 30px;
@@ -71,5 +79,16 @@ export default {
   outline: none;
   background: transparent;
   margin-left: 8px;
+}
+.close-button {
+	position: absolute;
+	right: 6px;
+	top: 6px;
+  opacity: 0.54;
+	height: 33px;
+}
+.close-button:hover {
+  	background: lightgray;
+  	border-radius: 100%;
 }
 </style>
