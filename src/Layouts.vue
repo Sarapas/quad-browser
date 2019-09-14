@@ -1,6 +1,9 @@
 <template>
     <div id="app" class="page">
-        <h2>Layouts</h2>
+        <div class="header">
+        	<h2>Layouts</h2>
+        	<img class="button close-button" src="./assets/close.svg" v-on:click="close" />
+        </div>
         <hr />
         <div class="images">
           <div class="layout" v-bind:class="{ current: isCurrent('Single') }" v-on:click="onPick('Single')">
@@ -56,7 +59,12 @@ export default {
     },
     isCurrent: function(layout) {
         return this.current === this.layout;
-    },
+	},
+	close: function() {
+        const { ipcRenderer, remote } = window.require('electron');
+        const currentWindow = remote.getCurrentWindow();
+        currentWindow.close();
+	}
   },
   mounted: function () {
     const { ipcRenderer, remote } = window.require('electron');
@@ -70,9 +78,7 @@ export default {
 
     document.addEventListener('keyup', function (e) {
       if (e.keyCode === 27) {
-        const { ipcRenderer, remote } = window.require('electron');
-        const currentWindow = remote.getCurrentWindow();
-        currentWindow.close();
+		  _this.close();
       }
     });
   }
@@ -88,9 +94,14 @@ export default {
   color: #2c3e50;
   margin-top: 60px;
 }
+.header {
+	position: relative;
+	display: flex;
+  	justify-content: center;
+}
 .page {
-  max-width: 90%;
-  margin: 0 auto;
+  	max-width: 90%;
+  	margin: 0 auto;
 }
 .images {
     display: flex;
@@ -140,5 +151,19 @@ export default {
 }
 .layout:hover:after {
     opacity:1;
+}
+.close-button {
+	position: absolute;
+	right: 0;
+	top: 0;
+  	opacity: 0.54;
+	height: 33px;
+}
+.close-button:hover {
+  	background: lightgray;
+  	border-radius: 100%;
+}
+h2 {
+	margin: 0;
 }
 </style>

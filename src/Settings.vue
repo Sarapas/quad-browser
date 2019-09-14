@@ -1,10 +1,12 @@
 <template>
-  <div id="app" @keydown.esc="close">
-    <h2>Bookmarks</h2>
-    <div class="page">
-      <Bookmark v-for="(b, index) in bookmarks" :key="index" v-bind:bookmark="b" v-on:delete="onDelete" />
-    </div>
-  </div>
+  	<div id="app" class="page" @keydown.esc="close">
+        <div class="header">
+        	<h2>Bookmarks</h2>
+        	<img class="button close-button" src="./assets/close.svg" v-on:click="close" />
+        </div>
+		<hr />
+      	<Bookmark v-for="(b, index) in bookmarks" :key="index" v-bind:bookmark="b" v-on:delete="onDelete" />
+  	</div>
 </template>
 
 <script>
@@ -17,11 +19,6 @@ export default {
   },
   data: function() {
     return {
-      // bookmarks: [
-      //   { title: 'Google', url: "https://google.com" },
-      //   { title: 'YouTube', url: "https://youtube.com" },
-      //   { title: 'GitHub', url: "https://github.com" }
-      // ]
       bookmarks: []
     };
   },
@@ -30,7 +27,12 @@ export default {
       this.bookmarks = this.bookmarks.filter(b => b.id !== bookmark.id);
       const { ipcRenderer } = window.require('electron');
       ipcRenderer.send('delete-bookmark', bookmark);
-    }
+	},
+	close: function() {
+        const { ipcRenderer, remote } = window.require('electron');
+        const currentWindow = remote.getCurrentWindow();
+        currentWindow.close();
+	}
   },
   mounted: function () {
     const { ipcRenderer } = window.require('electron');
@@ -51,15 +53,31 @@ export default {
 
 <style>
 #app {
-  font-family: 'Avenir', Helvetica, Arial, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  text-align: center;
-  color: #2c3e50;
-  margin-top: 60px;
+	font-family: 'Avenir', Helvetica, Arial, sans-serif;
+	-webkit-font-smoothing: antialiased;
+	-moz-osx-font-smoothing: grayscale;
+	text-align: center;
+	color: #2c3e50;
+	margin-top: 60px;
+}
+.header {
+	position: relative;
+	display: flex;
+  	justify-content: center;
 }
 .page {
-  max-width: 90%;
-  margin: 0 auto;
+	max-width: 90%;
+	margin: 0 auto;
+}
+.close-button {
+	position: absolute;
+	right: 0;
+	top: 0;
+  	opacity: 0.54;
+	height: 33px;
+}
+.close-button:hover {
+  	background: lightgray;
+  	border-radius: 100%;
 }
 </style>
