@@ -3,34 +3,34 @@
         <h2>Layouts</h2>
         <hr />
         <div class="images">
-          <div class="layout" v-bind:class="{ current: isCurrent('SINGLE') }" v-on:click="onPick('SINGLE')">
+          <div class="layout" v-bind:class="{ current: isCurrent('Single') }" v-on:click="onPick('Single')">
             <img src="./assets/layout-img/SINGLE.jpg" />
           </div>
-          <div class="layout" v-bind:class="{ current: isCurrent('DUAL') }" v-on:click="onPick('DUAL')">
+          <div class="layout" v-bind:class="{ current: isCurrent('Dual') }" v-on:click="onPick('Dual')">
             <img src="./assets/layout-img/DUAL.jpg" />
           </div>
-          <div class="layout" v-bind:class="{ current: isCurrent('TRI') }" v-on:click="onPick('TRI')">
+          <div class="layout" v-bind:class="{ current: isCurrent('Tri') }" v-on:click="onPick('Tri')">
             <img src="./assets/layout-img/TRI.jpg" />
           </div>
-          <div class="layout" v-bind:class="{ current: isCurrent('QUAD') }" v-on:click="onPick('QUAD')">
+          <div class="layout" v-bind:class="{ current: isCurrent('Quad') }" v-on:click="onPick('Quad')">
             <img src="./assets/layout-img/QUAD.jpg" />
           </div>
-          <div class="layout" v-bind:class="{ current: isCurrent('QUADH') }" v-on:click="onPick('QUADH')">
+          <div class="layout" v-bind:class="{ current: isCurrent('QuadH') }" v-on:click="onPick('QuadH')">
             <img src="./assets/layout-img/QUADH.jpg" />
           </div>
-          <div class="layout" v-bind:class="{ current: isCurrent('QUADV') }" v-on:click="onPick('QUADV')">
+          <div class="layout" v-bind:class="{ current: isCurrent('QuadV') }" v-on:click="onPick('QuadV')">
             <img src="./assets/layout-img/QUADV.jpg" />
           </div>
-          <div class="layout" v-bind:class="{ current: isCurrent('FIVEH') }" v-on:click="onPick('FIVEH')">
+          <div class="layout" v-bind:class="{ current: isCurrent('FiveH') }" v-on:click="onPick('FiveH')">
             <img src="./assets/layout-img/FIVEH.jpg" />
           </div>
-          <div class="layout" v-bind:class="{ current: isCurrent('FIVEV') }" v-on:click="onPick('FIVEV')">
+          <div class="layout" v-bind:class="{ current: isCurrent('FiveV') }" v-on:click="onPick('FiveV')">
             <img src="./assets/layout-img/FIVEV.jpg" />
           </div>
-          <div class="layout" v-bind:class="{ current: isCurrent('SIXH') }" v-on:click="onPick('SIXH')">
+          <div class="layout" v-bind:class="{ current: isCurrent('SixH') }" v-on:click="onPick('SixH')">
             <img src="./assets/layout-img/SIXH.jpg" />
           </div>
-          <div class="layout" v-bind:class="{ current: isCurrent('SIXV') }" v-on:click="onPick('SIXV')">
+          <div class="layout" v-bind:class="{ current: isCurrent('SixV') }" v-on:click="onPick('SixV')">
             <img src="./assets/layout-img/SIXV.jpg" />
           </div>
           <!-- <div class="layout" v-bind:class="{ current: isCurrent('NINE') }" v-on:click="onPick('NINE')">
@@ -62,9 +62,11 @@ export default {
     const { ipcRenderer, remote } = window.require('electron');
     const _this = this;
 
-    ipcRenderer.on('set-current', function (event,layout) {
+    ipcRenderer.on('set-current-layout', function (event,layout) {
         _this.current = layout;
     });
+
+    ipcRenderer.send('change-layout-loaded', null);
 
     document.addEventListener('keyup', function (e) {
       if (e.keyCode === 27) {

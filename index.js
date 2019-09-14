@@ -92,8 +92,8 @@ function createWindow() {
             { label: 'Save bookmark', click: () => { bookmarks.add(view.webContents); } },
             { label: 'Load bookmark', submenu: bookmarks.getMenu(view) },
             { label: 'History', submenu: history.getMenu(view) },
-            { type: 'separator' },
-            { label: 'Open Notepad', click: () => { notepad.open(view); }}
+            // { type: 'separator' },
+            // { label: 'Open Notepad', click: () => { notepad.open(view); }}
           ]
           viewMenu = Menu.buildFromTemplate(viewMenuTemplate);
 

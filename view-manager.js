@@ -292,7 +292,7 @@ function changeLayout(callback) {
     modal: true,
     focusable: true,
     fullscreenable: false,
-    height: 310,
+    height: 450,
     width: 800,
     webPreferences: {
       nodeIntegration: true
@@ -305,7 +305,10 @@ function changeLayout(callback) {
     layoutPickerWnd.show();
     layoutPickerWnd.setAlwaysOnTop(true, "modal-panel");
     //layoutPickerWnd.webContents.openDevTools();
-    layoutPickerWnd.webContents.send('set-current', layout);
+  });
+
+  ipcMain.once('change-layout-loaded', () => {
+    layoutPickerWnd.webContents.send('set-current-layout', layout);
   });
 
   layoutPickerWnd.on('closed', () => {
