@@ -303,6 +303,15 @@ function createMenu() {
             win.setFullScreen(true);
             viewManager.maximizeViews();
           }
+        },
+        {
+          label: 'Mute',
+          accelerator: 'CmdorCtrl+M',
+          type: 'checkbox',
+          checked: viewManager.isMuted(),
+          click: () => {
+            viewManager.muteAll(!viewManager.isMuted());
+          }
         }
       ]
     },

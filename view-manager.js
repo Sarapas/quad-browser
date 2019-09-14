@@ -21,6 +21,7 @@ let layoutChangeCallbacks = [];
 let newAddressLoadedCallbacks = [];
 let autoRefresh = [];
 let homepage;
+let muted;
 
 function init(parentWindow, defaultURL) {
   if (isInitialized) throw new Error('Already initialized');
@@ -112,6 +113,21 @@ function createView(number, title) {
   });
   view.loadURL(homepage);
   return view;
+}
+
+function muteAll(mute) {
+  muted = mute;
+  if (muted) {
+    views.forEach(v => {
+      v.webContents.setAudioMuted(true);
+    });
+  } else if (audibleView) {
+    setAudible(audibleView);
+  }
+}
+
+function isMuted() {
+  return !!muted;
 }
 
 function loadURL(url, view) {
@@ -225,7 +241,9 @@ function setAudible(view) {
     });
 
     audibleView = view;
-    audibleView.webContents.setAudioMuted(false);
+    if (!muted) {
+      audibleView.webContents.setAudioMuted(false);
+    }
   }
 
   setSelected(view);
@@ -451,5 +469,7 @@ var exports = (module.exports = {
   onLayoutChange: onLayoutChange,
   setAutoRefresh: setAutoRefresh,
   getAutoRefresh: getAutoRefresh,
-  onNewAddressLoaded: onNewAddressLoaded
+  onNewAddressLoaded: onNewAddressLoaded,
+  muteAll: muteAll,
+  isMuted: isMuted
 });
