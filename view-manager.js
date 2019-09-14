@@ -84,6 +84,7 @@ function createView(number, title) {
     }
   });
 
+  view.focusable = true; // adding custom property for macOs usage
   view.number = number;
   view.webContents.setAudioMuted(true);
   view.webContents.on('new-window', (e, url) => {
@@ -104,8 +105,10 @@ function createView(number, title) {
     view.webContents.favicons = favicons;
   });
   view.on('focus', () => {
-    setAudible(view);
-    setSelected(view);
+    if (view.focusable) {
+      setAudible(view);
+      setSelected(view);
+    }
   });
   view.loadURL(homepage);
   return view;
@@ -313,6 +316,7 @@ function changeLayout(callback) {
 
   layoutPickerWnd.on('closed', () => {
     layoutPickerWnd = null;
+    callback();
   });
 
   ipcMain.once('change-layout', (event, newLayout) => {
@@ -419,6 +423,13 @@ function getViewNames() {
   return layouts.getViewNames(layout);
 }
 
+function setFocusable(focusable) {
+  views.forEach(v => {
+    v.setFocusable(focusable);
+    v.focusable = focusable;
+  })
+}
+
 var exports = (module.exports = {
   init: init,
   setAudible: setAudible,
@@ -434,6 +445,7 @@ var exports = (module.exports = {
   updateLayout: updateLayout,
   maximizeViews: maximizeViews,
   minimizeViews: minimizeViews,
+  setFocusable: setFocusable,
   unload: unload,
   menuOnClick: appendSwapMenu,
   onLayoutChange: onLayoutChange,

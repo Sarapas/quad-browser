@@ -24,6 +24,8 @@ let isTrustedAccesibility;
 let lastClickTime;
 let lastClickView;
 
+let suspendViewFocus;
+
 function createWindow() {
   isTrustedAccesibility = isMac ? systemPreferences.isTrustedAccessibilityClient(false) : true;
 
@@ -51,7 +53,7 @@ function createWindow() {
   win.setMenuBarVisibility(false);
 
   function onMouseMove(event) {
-    if (hoverMode) {
+    if (hoverMode && !suspendViewFocus) {
       let view = viewManager.inView(event.x, event.y);
       if (view) {
         viewManager.setAudible(view);
@@ -62,7 +64,7 @@ function createWindow() {
   let viewMenu;
 
   function onMouseClick(event) {
-    if (!util.activeWindow())
+    if (!util.activeWindow() || suspendViewFocus)
       return;
 
     let view = viewManager.inView(event.x, event.y);
@@ -96,7 +98,15 @@ function createWindow() {
           viewMenu = Menu.buildFromTemplate(viewMenuTemplate);
 
           viewManager.menuOnClick(view.number, viewMenu);
-          viewMenu.popup({ window: win });
+
+          viewMenu.on('menu-will-show', () => {
+            setFocusable(false);
+          });
+          viewMenu.on('menu-will-close', () => {
+            setFocusable(true);
+          });
+
+          viewMenu.popup({ window: view });
         }, 50);
         return;
       }
@@ -233,8 +243,10 @@ function createMenu() {
       label: 'Bookmarks',
       submenu: [ 
         { label: "Bookmark manager", click: () => { 
+          setFocusable(false);
           globalShortcut.unregister('Esc'); // to allow modal to use esc
           settings.open(win, () => {  
+            setFocusable(true);
             globalShortcut.register('Esc', unmaximize);
           }); 
         }},
@@ -258,8 +270,10 @@ function createMenu() {
           label: 'Change layout',
           accelerator: 'CmdOrCtrl+L',
           click: () => {
+            setFocusable(false);
             globalShortcut.unregister('Esc'); // to allow modal to use esc
             viewManager.changeLayout(() => {
+              setFocusable(true);
               globalShortcut.register('Esc', unmaximize);
               updateMenu();
             });
@@ -313,6 +327,11 @@ function unmaximize() {
 
 function updateMenu() {
   Menu.setApplicationMenu(createMenu());
+}
+
+function setFocusable(focusable) {
+  viewManager.setFocusable(focusable);
+  suspendViewFocus = !focusable;
 }
 
 function changeHomepage() {
