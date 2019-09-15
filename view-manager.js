@@ -81,9 +81,10 @@ function createView(number, title) {
     acceptFirstMouse: true,
     hasShadow: false,
     titleBarStyle: 'customButtonsOnHover', // together with frame: false makes corners not round on macos. It is a bug that we use as a feature
-    webPreferences: {
-      nodeIntegration: true
-    }
+    // TODO: needed for notepad, but makes problems for regular websites
+    // webPreferences: {
+    //   nodeIntegration: true
+    // }
   });
 
   view.focusable = true; // adding custom property for macOs usage
@@ -177,6 +178,7 @@ function setLayout(newLayout, force, layoutViews = null) {
 
     views.forEach(view => {
       view.hide();
+      view.webContents.setBackgroundThrottling(true);
     });
 
     setSelected(false);
@@ -184,6 +186,7 @@ function setLayout(newLayout, force, layoutViews = null) {
     layouts.updateLayout(newLayout, parent, activeViews);
 
     activeViews.forEach(view => {
+      view.webContents.setBackgroundThrottling(false);
       view.show();
     });
 

@@ -4,7 +4,7 @@
         <span>{{ shortcut.title }}</span>
         <div>
             <span>Command + </span>
-            <input class="hotkey" type="text" v-model="shortcut.hotkey" />
+            <input class="hotkey" v-on:keydown="onKey($event)" type="text" v-model="shortcut.hotkey" />
         </div>
     </div>
     <hr>
@@ -18,6 +18,10 @@ export default {
   name: 'Shortcut',
   props: [ 'shortcut', 'hotkey' ],
   methods: {
+    onKey: function ($event) {
+      event.preventDefault();
+      this.shortcut.hotkey = $event.key;
+    }
   }
 }
 </script>

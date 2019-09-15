@@ -57,7 +57,7 @@ function update(win, onModalOpen, onModalClose) {
       {
         label: 'History',
         submenu: [ 
-          ...history.getMenu(null),
+          ...history.getMenu(null, 20),
           { type: 'separator' },
           { label: 'Clear', click: () => { history.clear(() => { update(win, onModalOpen, onModalClose); }); }}
          ]
@@ -95,15 +95,15 @@ function update(win, onModalOpen, onModalClose) {
               viewManager.maximizeViews();
             }
           },
-          {
-            label: 'Mute',
-            accelerator: 'CmdorCtrl+M',
-            type: 'checkbox',
-            checked: viewManager.isMuted(),
-            click: () => {
-              viewManager.muteAll(!viewManager.isMuted());
-            }
-          }
+          // {
+          //   label: 'Mute',
+          //   accelerator: 'CmdorCtrl+M',
+          //   type: 'checkbox',
+          //   checked: viewManager.isMuted(),
+          //   click: () => {
+          //     viewManager.muteAll(!viewManager.isMuted());
+          //   }
+          // }
         ]
       },
       {
