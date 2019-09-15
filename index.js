@@ -1,24 +1,20 @@
 const electron = require('electron');
-const { BrowserWindow, app, Menu, globalShortcut, systemPreferences } = electron;
+const { BrowserWindow, app, globalShortcut, systemPreferences } = electron;
 const path = require('path');
-const prompt = require('electron-prompt');
 const ioHook = require('iohook');
-const isMac = process.platform === 'darwin';
 const contextMenu = require('electron-context-menu');
-const viewManager = require('./view-manager');
-const bookmarks = require('./bookmarks');
-const settings = require('./settings')
-const find = require('./find');
-const history = require('./history');
 const Store = require('electron-store');
 const util = require('electron-util');
-const address = require('./address');
-const viewContextMenu = require('./view-context-menu');
 const store = new Store();
-//require('electron-reload')(__dirname);
+
+const viewManager = require('./view-manager');
+const bookmarks = require('./bookmarks');
+const find = require('./find');
+const history = require('./history');
+const appMenu = require('./app-menu');
+const viewContextMenu = require('./view-context-menu');
 
 let win;
-let hoverMode = false;
 let isTrustedAccesibility;
 
 let lastClickTime;
@@ -27,7 +23,7 @@ let lastClickView;
 let suspendViewFocus;
 
 function createWindow() {
-  isTrustedAccesibility = isMac ? systemPreferences.isTrustedAccessibilityClient(false) : true;
+  isTrustedAccesibility = util.is.macos ? systemPreferences.isTrustedAccessibilityClient(false) : true;
 
   contextMenu({
     showLookUpSelection: false
@@ -53,7 +49,7 @@ function createWindow() {
   win.setMenuBarVisibility(false);
 
   function onMouseMove(event) {
-    if (hoverMode && !suspendViewFocus) {
+    if (viewManager.isHoverMode() && !suspendViewFocus) {
       let view = viewManager.inView(event.x, event.y);
       if (view) {
         viewManager.setAudible(view);
@@ -77,7 +73,7 @@ function createWindow() {
         return;
       }
 
-      if (!hoverMode) {
+      if (!viewManager.isHoverMode()) {
         viewManager.setAudible(view);
       }
 
@@ -174,118 +170,6 @@ function createWindow() {
   win.show();
 }
 
-function createMenu() {
-  let addressSubmenu = [];
-
-  let viewNames = viewManager.getViewNames();
-  viewNames.forEach((vn) => {
-    addressSubmenu.push({label: vn.name, click: () => {
-      let view = viewManager.getViewByNumber(vn.number);
-      address.open(win, view, (url, v) => { viewManager.loadURL(url, v); });
-    } });
-  });
-
-  addressSubmenu.push({ type: 'separator' });
-  addressSubmenu.push({ label: 'Change homepage', click: () => { changeHomepage(); } });
-
-  const template = [
-    ...(isMac
-      ? [ { label: app.getName(), submenu: [{ role: 'about' }, { role: 'quit' }] } ] 
-      : [ { label: 'File', submenu: [{ role: 'quit' }] } ]),
-    {
-      label: 'Edit',
-      submenu: [
-        { label: 'Undo', accelerator: 'CmdOrCtrl+Z', selector: 'undo:' },
-        { label: 'Redo', accelerator: 'Shift+CmdOrCtrl+Z', selector: 'redo:' },
-        { type: 'separator' },
-        { label: 'Cut', accelerator: 'CmdOrCtrl+X', selector: 'cut:' },
-        { label: 'Copy', accelerator: 'CmdOrCtrl+C', selector: 'copy:' },
-        { label: 'Paste', accelerator: 'CmdOrCtrl+V', selector: 'paste:' },
-        {
-          label: 'Select All',
-          accelerator: 'CmdOrCtrl+A',
-          selector: 'selectAll:'
-        }
-      ]
-    },
-    {
-      label: 'Bookmarks',
-      submenu: [ 
-        { label: "Bookmark manager", click: () => { 
-          setFocusable(false);
-          globalShortcut.unregister('Esc'); // to allow modal to use esc
-          settings.open(win, () => {  
-            setFocusable(true);
-            globalShortcut.register('Esc', unmaximize);
-          }); 
-        }},
-        { type: "separator" },
-        ...bookmarks.getMenu(null) 
-      ]
-    },
-    {
-      label: 'History',
-      submenu: [ 
-        ...history.getMenu(null),
-        { type: 'separator' },
-        { label: 'Clear', click: () => { history.clear(() => { updateMenu() }); }}
-       ]
-    },
-    {
-      label: 'View',
-      submenu: [
-        { role: 'togglefullscreen' },
-        {
-          label: 'Change layout',
-          accelerator: 'CmdOrCtrl+L',
-          click: () => {
-            setFocusable(false);
-            globalShortcut.unregister('Esc'); // to allow modal to use esc
-            viewManager.changeLayout(() => {
-              setFocusable(true);
-              globalShortcut.register('Esc', unmaximize);
-              updateMenu();
-            });
-          }
-        },
-        {
-          label: 'Hover mode',
-          type: 'checkbox',
-          accelerator: 'CmdOrCtrl+H',
-          click: () => {
-            hoverMode = !hoverMode;
-          }
-        },
-        { type: 'separator' },
-        {
-          label: 'Fullscreen players',
-          accelerator: 'CmdorCtrl+F',
-          click: () => {
-            win.setFullScreen(true);
-            viewManager.maximizeViews();
-          }
-        },
-        {
-          label: 'Mute',
-          accelerator: 'CmdorCtrl+M',
-          type: 'checkbox',
-          checked: viewManager.isMuted(),
-          click: () => {
-            viewManager.muteAll(!viewManager.isMuted());
-          }
-        }
-      ]
-    },
-    {
-      label: 'Address',
-      submenu: addressSubmenu
-    }
-  ];
-
-  const menu = Menu.buildFromTemplate(template);
-  return menu;
-}
-
 function unmaximize() {
   if (win != null) {
     let hasFocus = win.isFocused() || win.getChildWindows().find(w => w.isFocused()) !== null;
@@ -297,35 +181,18 @@ function unmaximize() {
 }
 
 function updateMenu() {
-  Menu.setApplicationMenu(createMenu());
+  appMenu.update(win, () => {
+    setFocusable(false);
+    globalShortcut.unregister('Esc');
+  }, () => {
+    setFocusable(true);
+    globalShortcut.register('Esc', unmaximize);
+  })
 }
 
 function setFocusable(focusable) {
   viewManager.setFocusable(focusable);
   suspendViewFocus = !focusable;
-}
-
-function changeHomepage() {
-  prompt(
-    {
-      title: 'Change homepage',
-      label: 'Homepage:',
-      height: 150,
-      width: 400,
-      resizable: false,
-      value: 'https://',
-      inputAttrs: {
-        type: 'url'
-      }
-    },
-    win
-  )
-    .then(result => {
-      if (result !== null) {
-        store.set('homepage', result);
-      }
-    })
-    .catch(console.error);
 }
 
 app.on('ready', createWindow);
@@ -342,7 +209,6 @@ let suspendClose = false;
 app.on('window-all-closed', function() {
   // On macOS it is common for applications and their menu bar
   // to stay active until the user quits explicitly with Cmd + Q
-  //if (!isMac && !suspendClose) app.quit()
   if (!suspendClose) app.quit();
 });
 

@@ -22,6 +22,7 @@ let newAddressLoadedCallbacks = [];
 let autoRefresh = [];
 let homepage;
 let muted;
+let hover;
 
 function init(parentWindow, defaultURL) {
   if (isInitialized) throw new Error('Already initialized');
@@ -452,6 +453,14 @@ function suspend(view) {
   view.webContents.loadFile('dist/blank.html');
 }
 
+function toggleHoverMode() {
+  hover = !hover;
+}
+
+function isHoverMode() {
+  return !!hover;
+}
+
 var exports = (module.exports = {
   init: init,
   setAudible: setAudible,
@@ -476,5 +485,7 @@ var exports = (module.exports = {
   getAutoRefresh: getAutoRefresh,
   onNewAddressLoaded: onNewAddressLoaded,
   muteAll: muteAll,
-  isMuted: isMuted
+  isMuted: isMuted,
+  toggleHoverMode: toggleHoverMode,
+  isHoverMode: isHoverMode
 });
