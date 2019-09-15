@@ -1,5 +1,5 @@
 const electron = require('electron');
-const { BrowserWindow, app, Menu, MenuItem, globalShortcut, systemPreferences } = electron;
+const { BrowserWindow, app, Menu, globalShortcut, systemPreferences } = electron;
 const path = require('path');
 const prompt = require('electron-prompt');
 const ioHook = require('iohook');
@@ -13,7 +13,7 @@ const history = require('./history');
 const Store = require('electron-store');
 const util = require('electron-util');
 const address = require('./address');
-const notepad = require('./notepad');
+const viewContextMenu = require('./view-context-menu');
 const store = new Store();
 //require('electron-reload')(__dirname);
 
@@ -61,8 +61,6 @@ function createWindow() {
     }
   }
 
-  let viewMenu;
-
   function onMouseClick(event) {
     if (!util.activeWindow() || suspendViewFocus)
       return;
@@ -74,49 +72,7 @@ function createWindow() {
       if (event.button === 2) {
         // without timeout propagated event closes the context menu; if event had preventDefault - it wouldn't be needed
         setTimeout(() => {
-          let viewMenuTemplate = [
-            { label: 'Back', click: () => { if (view.webContents.canGoBack()) view.webContents.goBack(); } },
-            { label: 'Change address', click: () => { changeAddress(view.number); } },
-            { type: 'separator' },
-            { label: 'Refresh', click: () => { view.webContents.reload(); } },
-            { label: 'Auto refresh', submenu: [
-              { label: '30s', type: 'radio', checked: viewManager.getAutoRefresh(view) === 30, click: () => { viewManager.setAutoRefresh(view, 30); } },
-              { label: '1min', type: 'radio', checked: viewManager.getAutoRefresh(view) === 60, click: () => { viewManager.setAutoRefresh(view, 60); } },
-              { label: '5min', type: 'radio', checked: viewManager.getAutoRefresh(view) === 300, click: () => { viewManager.setAutoRefresh(view, 300); } },
-              { label: '10min', type: 'radio', checked: viewManager.getAutoRefresh(view) === 600, click: () => { viewManager.setAutoRefresh(view, 600); } },
-              { label: 'None', type: 'radio', checked: viewManager.getAutoRefresh(view) === null, click: () => { viewManager.setAutoRefresh(view, null); } }
-            ]},
-            { type: 'separator' },
-            { label: 'Find', click: () => { find.open(win, view, () => { }); } },
-            { type: 'separator' },
-            { label: 'Save bookmark', click: () => { bookmarks.add(view.webContents); } },
-            { label: 'Load bookmark', submenu: bookmarks.getMenu(view) },
-            { label: 'History', submenu: history.getMenu(view) },
-          ]
-
-          if (!notepad.isOpen()) {
-            viewMenuTemplate.push({ type: 'separator' });
-            viewMenuTemplate.push({ label: 'Open Notepad', click: () => { notepad.open(view); }});
-          } 
-
-          if (notepad.isOpenOn(view)) {
-            viewMenuTemplate = [ { label: 'Find', click: () => { find.open(win, view, () => { }); } } ];
-          }
-          
-          viewMenu = Menu.buildFromTemplate(viewMenuTemplate);
-
-          viewManager.menuOnClick(view.number, viewMenu);
-
-          //viewMenu.append(new MenuItem({ label: 'Close', click: () => { viewManager.suspend(view); }}));
-
-          viewMenu.on('menu-will-show', () => {
-            setFocusable(false);
-          });
-          viewMenu.on('menu-will-close', () => {
-            setFocusable(true);
-          });
-
-          viewMenu.popup({ window: view });
+          viewContextMenu.show(win, view, () => { setFocusable(false); }, () => { setFocusable(true); })
         }, 50);
         return;
       }
@@ -145,7 +101,7 @@ function createWindow() {
   }
 
   if (isTrustedAccesibility) {
-    let viewNumbers = [1, 2, 3, 4, 5, 6];
+    let viewNumbers = [1, 2, 3, 4, 5, 6, 7, 8, 9];
     viewNumbers.forEach(number => {
       globalShortcut.register(`CommandOrControl+${number}`, () => {
         let view = viewManager.getViewByNumber(number);
@@ -223,7 +179,10 @@ function createMenu() {
 
   let viewNames = viewManager.getViewNames();
   viewNames.forEach((vn) => {
-    addressSubmenu.push({label: vn.name, click: () => { changeAddress(vn.number); } });
+    addressSubmenu.push({label: vn.name, click: () => {
+      let view = viewManager.getViewByNumber(vn.number);
+      address.open(win, view, (url, v) => { viewManager.loadURL(url, v); });
+    } });
   });
 
   addressSubmenu.push({ type: 'separator' });
@@ -325,13 +284,6 @@ function createMenu() {
 
   const menu = Menu.buildFromTemplate(template);
   return menu;
-}
-
-function changeAddress(number = null) {
-  let view = viewManager.getViewByNumber(number);
-  address.open(win, view, (url, v) => {
-    viewManager.loadURL(url, v);
-  });
 }
 
 function unmaximize() {
