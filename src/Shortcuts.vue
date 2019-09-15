@@ -23,39 +23,30 @@ export default {
   },
   data: function() {
     return {
-      shortcuts: [
-          { title: 'Save bookmark', hotkey: 'B' },
-          { title: 'Change layout', hotkey: 'L' },
-          { title: 'Hover mode', hotkey: 'H' },
-          { title: 'Fullscreen players', hotkey: 'Q' },
-          { title: 'Mute', hotkey: 'M' },
-          { title: 'Change address', hotkey: 'D' },
-          { title: 'Find', hotkey: 'F' },
-          { title: 'Refresh', hotkey: 'R' },
-          { title: 'Open Notepad', hotkey: 'N' }
-      ]
+      shortcuts: []
     };
   },
   methods: {
     save: function() {
         // TODO: validate
+        const { ipcRenderer } = window.require('electron');
         ipcRenderer.send('save-shortcuts', this.shortcuts);
-        close();
-	},
-	close: function() {
-        const { ipcRenderer, remote } = window.require('electron');
-        const currentWindow = remote.getCurrentWindow();
-        currentWindow.close();
-	}
+        this.close();
+    },
+    close: function() {
+          const { ipcRenderer, remote } = window.require('electron');
+          const currentWindow = remote.getCurrentWindow();
+          currentWindow.close();
+    }
   },
   mounted: function () {
     const { ipcRenderer } = window.require('electron');
     let _this = this;
 
     ipcRenderer.on('set-shortcuts', function (event,shortcuts) {
-      //_this.shortcuts = shortcuts;
+      _this.shortcuts = shortcuts;
     });
-    ipcRenderer.send('shortcuts-loaded');
+    ipcRenderer.send('shortcuts-loaded', null);  
   }
 }
 </script>

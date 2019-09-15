@@ -9,6 +9,7 @@ const address = require('./address');
 const bookmarks = require('./bookmarks');
 const history = require('./history');
 const viewManager = require('./view-manager');
+const shortcuts = require('./shortcuts');
 
 function update(win, onModalOpen, onModalClose) {
     let addressSubmenu = [];
@@ -112,6 +113,17 @@ function update(win, onModalOpen, onModalClose) {
             ...addressSubmenu,
             { type: 'separator' },
             { label: 'Change homepage', click: () => { changeHomepage(win); } }
+        ]
+      },
+      {
+        label: 'Options',
+        submenu: [
+          { label: 'Shortcuts', click: () => { 
+            if (onModalOpen) onModalOpen();
+            shortcuts.open(win, () => {
+              if (onModalClose) onModalClose();
+            });
+          }}
         ]
       }
     ];
