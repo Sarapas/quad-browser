@@ -81,10 +81,6 @@ function createView(number, title) {
     acceptFirstMouse: true,
     hasShadow: false,
     titleBarStyle: 'customButtonsOnHover', // together with frame: false makes corners not round on macos. It is a bug that we use as a feature
-    // TODO: needed for notepad, but makes problems for regular websites
-    // webPreferences: {
-    //   nodeIntegration: true
-    // }
   });
 
   view.focusable = true; // adding custom property for macOs usage
@@ -117,6 +113,19 @@ function createView(number, title) {
   return view;
 }
 
+function substituteView(view, newView) {
+  views[view.number - 1] = newView;
+  let activeIndex = activeViews.indexOf(view);
+  if (activeIndex >= 0) {
+    activeViews[activeIndex] = newView;
+  }
+  newView.number = view.number;
+  parent.focus(); // to avoid focus jumping around
+  view.hide();
+  newView.show();
+  updateLayout();
+}
+
 function muteAll(mute) {
   muted = mute;
   if (muted) {
@@ -136,11 +145,15 @@ function loadURL(url, view) {
   checkInitialized();
 
   if (view) {
-    view.webContents.loadURL(url);
+    if (!view.isNotepad) {
+      view.webContents.loadURL(url);
+    }
   } else {
     lastGlobalURL = url;
     views.forEach(view => {
-      view.webContents.loadURL(url);
+      if (!view.isNotepad) {
+        view.webContents.loadURL(url);
+      }
     });
   }
 }
@@ -495,5 +508,6 @@ var exports = (module.exports = {
   muteAll: muteAll,
   isMuted: isMuted,
   toggleHoverMode: toggleHoverMode,
-  isHoverMode: isHoverMode
+  isHoverMode: isHoverMode,
+  substituteView: substituteView
 });

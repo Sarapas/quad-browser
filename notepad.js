@@ -1,30 +1,68 @@
 const electron = require('electron');
-const { ipcMain, app } = electron;
+const { ipcMain, app, BrowserWindow } = electron;
 const storage = require('electron-json-storage');
+const viewManager = require('./view-manager');
 
 const NOTEPAD_STORAGE = "notepad";
 let saveHandler;
 
 let openOn;
-let previousUrl;
+let notepadView;
 
 function open(view) {
-    openOn = view;
-    previousUrl = view.webContents.getURL();
-
     storage.setDataPath(app.getPath('userData'));
+
+    let parent = view.getParentWindow();
+    if (!notepadView) {
+        notepadView = createNotepad(parent);
+    }
+
+    openOn = view;
+    viewManager.substituteView(view, notepadView);
+}
+
+function isOpen() {
+    return !!openOn;
+}
+
+function isOpenOn(view) {
+    return !!view.isNotepad;
+}
+
+function close() {
+    viewManager.substituteView(notepadView, openOn);
+    openOn = null;
+}
+
+function createNotepad(parent) {
+    let notepad = new BrowserWindow({
+      parent: parent,
+      frame: false,
+      transparent: false,
+      show: false,
+      skipTaskbar: true,
+      resizable: false,
+      fullscreen: false,
+      minimizable: false,
+      fullscreenable: false,
+      closable: false,
+      focusable: true,
+      acceptFirstMouse: true,
+      hasShadow: false,
+      titleBarStyle: 'customButtonsOnHover', // together with frame: false makes corners not round on macos. It is a bug that we use as a feature
+      webPreferences: {
+        nodeIntegration: true
+      }
+    });
+  
+    notepad.isNotepad = true; // custom property
 
     storage.get(NOTEPAD_STORAGE, function(error, data) {
         if (error) throw error;
 
-        view.loadFile("dist/notepad.html");
-        //view.webContents.openDevTools();
-
         ipcMain.on('notepad-loaded', function(event, result) {
-            view.webContents.send('get-notepad', data.text);
+            notepad.webContents.send('get-notepad', data.text);
         });
-
-        view.show();
     });
 
     ipcMain.on('close-notepad', () => {
@@ -41,27 +79,13 @@ function open(view) {
                 storage.set(NOTEPAD_STORAGE, { text: notepad}, function(error) {
                     if (error) throw error;
                     saveHandler = null;
-                    console.log('saved');
                 });
             }, 1000);
         });
     }
-}
 
-function isOpen() {
-    return !!openOn;
-}
-
-function isOpenOn(view) {
-    return openOn === view;
-}
-
-function close() {
-    openOn.loadURL(previousUrl);
-    setTimeout(() => {
-        openOn = null;
-        previousUrl = null;
-    }, 1000);
+    notepad.loadFile("dist/notepad.html");
+    return notepad;
 }
 
 var exports = module.exports = {

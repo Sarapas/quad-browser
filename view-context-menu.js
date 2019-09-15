@@ -28,14 +28,14 @@ function show(win, view, onShow, onClose) {
         { label: 'History', submenu: history.getMenu(view, 20) },
       ]
 
-      // if (!notepad.isOpen()) {
-      //   viewMenuTemplate.push({ type: 'separator' });
-      //   viewMenuTemplate.push({ label: 'Open Notepad', click: () => { notepad.open(view); }});
-      // } 
+      if (!notepad.isOpen()) {
+        viewMenuTemplate.push({ type: 'separator' });
+        viewMenuTemplate.push({ label: 'Open Notepad', click: () => { notepad.open(view); }});
+      } 
 
-      // if (notepad.isOpenOn(view)) {
-      //   viewMenuTemplate = [ { label: 'Find', click: () => { find.open(win, view, () => { }); } } ];
-      // }
+      if (notepad.isOpenOn(view)) {
+        viewMenuTemplate = [ { label: 'Find', click: () => { find.open(win, view, () => { }); } } ];
+      }
       
       //viewMenuTemplate.push({ label: 'Open Dev Tools', click: () => { view.webContents.openDevTools(); }});
 
