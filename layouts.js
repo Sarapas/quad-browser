@@ -421,6 +421,10 @@ function setAlignment(alignment) {
     options.alignment = alignment;
 }
 
+function getAlignment() {
+    return options.alignment;
+}
+
 function getViewCount(layout) {
     if (VIEW_COUNT.length === 0) {
         VIEW_COUNT[SINGLE] = 1;
@@ -449,6 +453,7 @@ var exports = (module.exports = {
     getViewNames: getViewNames,
     getViewCount: getViewCount,
     setAlignment: setAlignment,
+    getAlignment: getAlignment,
     SINGLE : SINGLE,
     DUAL: DUAL,
     SIDES: SIDES,

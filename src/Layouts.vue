@@ -55,18 +55,18 @@
             <img src="./assets/layout-img/NINE.jpg" />
           </div>
         </div>
-        <!-- <hr />
+        <hr />
         <div class="alignments">
           <div class="radio">
-            <input type="radio" name="alignment" v-model="alginment" value="left" /> LEFT
+            <input class="radio-button" type="radio" id="left" v-model="alignment" value="left" /> LEFT
           </div>
           <div class="radio">
-            <input type="radio" name="alignment" v-model="alginment" value="center" /> CENTER
+            <input class="radio-button" type="radio" id="center" v-model="alignment" value="center" /> CENTER
           </div>
           <div class="radio">
-            <input type="radio" name="alignment" v-model="alginment" value="right" /> RIGHT
+            <input class="radio-button" type="radio" id="right" v-model="alignment" value="right" /> RIGHT
           </div>
-        </div> -->
+        </div>
     </div>
 </template>
 
@@ -76,13 +76,13 @@ export default {
   data: function() {
     return {
         current: '',
-        alignment: ''
+        alignment: 'center'
     };
   },
   methods: {
     onPick: function(layout) {
         const { ipcRenderer, remote } = window.require('electron');
-        ipcRenderer.send('change-layout', layout);
+        ipcRenderer.send('change-layout', { layout: layout, alignment: this.alignment });
         remote.getCurrentWindow().close();
     },
     isCurrent: function(layout) {
@@ -98,8 +98,9 @@ export default {
     const { ipcRenderer, remote } = window.require('electron');
     const _this = this;
 
-    ipcRenderer.on('set-current-layout', function (event,layout) {
-        _this.current = layout;
+    ipcRenderer.on('set-current-layout', function (event,layoutData) {
+        _this.current = layoutData.layout;
+        _this.alignment = layoutData.alignment;
     });
 
     ipcRenderer.send('change-layout-loaded', null);
@@ -146,6 +147,9 @@ export default {
 }
 .radio {
     display: flex;
+}
+.radio-button {
+    margin-right: 5px;
 }
 .title {
     display: flex;

@@ -317,7 +317,7 @@ function changeLayout(callback) {
     modal: true,
     focusable: true,
     fullscreenable: false,
-    height: 550,
+    height: 600,
     width: 800,
     webPreferences: {
       nodeIntegration: true
@@ -333,7 +333,7 @@ function changeLayout(callback) {
   });
 
   ipcMain.once('change-layout-loaded', () => {
-    layoutPickerWnd.webContents.send('set-current-layout', layout);
+    layoutPickerWnd.webContents.send('set-current-layout', { layout: layout, alignment: layouts.getAlignment() });
   });
 
   layoutPickerWnd.on('closed', () => {
@@ -341,9 +341,14 @@ function changeLayout(callback) {
     callback();
   });
 
-  ipcMain.once('change-layout', (event, newLayout) => {
-    if (newLayout) {
-      setLayout(newLayout, false);
+  ipcMain.once('change-layout', (event, layoutResult) => {
+    if (layoutResult) {
+      let force = false;
+      if (layouts.getAlignment() !== layoutResult.alignment) {
+        layouts.setAlignment(layoutResult.alignment);
+        force = true;
+      }
+      setLayout(layoutResult.layout, force);
       callback();
     }
   });
