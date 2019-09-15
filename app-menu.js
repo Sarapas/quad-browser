@@ -6,7 +6,6 @@ const Store = require('electron-store');
 const store = new Store();
 
 const address = require('./address');
-const settings = require('./settings');
 const bookmarks = require('./bookmarks');
 const history = require('./history');
 const viewManager = require('./view-manager');
@@ -47,7 +46,7 @@ function update(win, onModalOpen, onModalClose) {
         submenu: [ 
           { label: "Bookmark manager", click: () => { 
             if (onModalOpen) onModalOpen();
-            settings.open(win, () => {  
+            bookmarks.open(win, () => {  
                 if (onModalClose) onModalClose();
             }); 
           }},

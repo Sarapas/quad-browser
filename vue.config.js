@@ -3,14 +3,14 @@ module.exports = {
   pages: {
     index: {
       // having index for dev purposes, pointing to app currently developed
-      entry: 'src/blank.js',
+      entry: 'src/shortcuts.js',
       template: 'src/template.html',
       filename: 'index.html'
     },
-    settings: {
-      entry: 'src/settings.js',
+    bookmarks: {
+      entry: 'src/bookmarks.js',
       template: 'src/template.html',
-      filename: 'settings.html'
+      filename: 'bookmarks.html'
     },
     find: {
       entry: 'src/find.js',
@@ -36,6 +36,11 @@ module.exports = {
       entry: 'src/blank.js',
       template: 'src/template.html',
       filename: 'blank.html'
+    },
+    shortcuts: {
+      entry: 'src/shortcuts.js',
+      template: 'src/template.html',
+      filename: 'shortcuts.html'
     }
   }
 }

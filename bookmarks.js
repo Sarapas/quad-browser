@@ -1,15 +1,17 @@
 const electron = require('electron');
-const { app, MenuItem, nativeImage } = electron;
+const { BrowserWindow, ipcMain, app, MenuItem, nativeImage } = electron;
 const utilities = require('./utilities');
 const fs = require('fs');
 const storage = require('electron-json-storage');
 const viewManager = require('./view-manager');
+
 let onChangeCallbacks = [];
 
 const BOOKMARK_STORAGE = "bookmarks";
 const ICON_DIR = `${app.getPath('userData')}/icons/`
 
 let bookmarks = [];
+let bookmarksWin;
 
 function init() {
     storage.setDataPath(app.getPath('userData'));
@@ -160,11 +162,50 @@ function remove(bookmark) {
     }
 }
 
+function open(parent, onClose) {
+    bookmarksWin = new BrowserWindow({
+        frame: false,
+        transparent: false,
+        show: false,
+        skipTaskbar: true,
+        parent: parent,
+        closable: true,
+        modal: true,
+        focusable: true,
+        fullscreenable: false,
+        height: 400,
+        width: 600,
+        webPreferences: {
+          nodeIntegration: true
+        }
+      });
+
+      bookmarksWin.loadFile(`dist/bookmarks.html`);
+    
+      bookmarksWin.once('ready-to-show', () => {
+        bookmarksWin.show();
+        bookmarksWin.webContents.send('bookmarks-received', getBookmarks());
+        //bookmarksWin.webContents.openDevTools();
+      });
+    
+      bookmarksWin.on('closed', () => {
+        bookmarksWin = null;
+        onClose();
+      })
+    
+      ipcMain.on('delete-bookmark', (event, bookmark) => {
+        if (bookmark) {
+          remove(bookmark);
+        }
+      });
+}
+
 var exports = module.exports = {
     init: init,
     add: add,
     onChange: onChange,
     getMenu: getMenu,
     get: getBookmarks,
-    remove: remove
+    remove: remove,
+    open: open
 };

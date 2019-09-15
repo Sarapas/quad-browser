@@ -1,8 +1,8 @@
 import Vue from 'vue'
-import Settings from './Settings.vue'
+import Shortcuts from './Shortcuts.vue'
 
 Vue.config.productionTip = false
 
 new Vue({
-  render: h => h(Settings),
+  render: h => h(Shortcuts),
 }).$mount('#app')
