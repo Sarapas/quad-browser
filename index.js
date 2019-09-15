@@ -1,5 +1,5 @@
 const electron = require('electron');
-const { BrowserWindow, app, Menu, globalShortcut, systemPreferences } = electron;
+const { BrowserWindow, app, Menu, MenuItem, globalShortcut, systemPreferences } = electron;
 const path = require('path');
 const prompt = require('electron-prompt');
 const ioHook = require('iohook');
@@ -106,6 +106,8 @@ function createWindow() {
           viewMenu = Menu.buildFromTemplate(viewMenuTemplate);
 
           viewManager.menuOnClick(view.number, viewMenu);
+
+          //viewMenu.append(new MenuItem({ label: 'Close', click: () => { viewManager.suspend(view); }}));
 
           viewMenu.on('menu-will-show', () => {
             setFocusable(false);

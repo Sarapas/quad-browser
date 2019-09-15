@@ -448,11 +448,16 @@ function setFocusable(focusable) {
   })
 }
 
+function suspend(view) {
+  view.webContents.loadFile('dist/blank.html');
+}
+
 var exports = (module.exports = {
   init: init,
   setAudible: setAudible,
   getAudible: getAudible,
   suspendAudible: suspendAudible,
+  suspend: suspend,
   resumeAudible: resumeAudible,
   inView: inView,
   getViewByNumber: getViewByNumber,
