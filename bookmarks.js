@@ -107,9 +107,13 @@ function add(contents) {
                 }
 
                 icon = `${utilities.newGuid()}${ext}`;
-                utilities.downloadFile(src, ICON_DIR, icon, () => {
+                if (src) {
+                    utilities.downloadFile(src, ICON_DIR, icon, () => {
+                        appendBookmarks();
+                    });
+                } else {
                     appendBookmarks();
-                });
+                }
             } else {
                 appendBookmarks();
             }
@@ -181,7 +185,7 @@ function open(parent, onClose) {
     bookmarksWin.once('ready-to-show', () => {
         bookmarksWin.show();
         bookmarksWin.webContents.send('bookmarks-received', getBookmarks());
-        bookmarksWin.webContents.openDevTools();
+        //bookmarksWin.webContents.openDevTools();
     });
 
     bookmarksWin.on('closed', () => {

@@ -9,14 +9,16 @@ export default {
   name: 'blank',
   data: function() {
     return {
-      number: 5
+      number: ''
     };
   },
   methods: {
 
   },
   mounted: function () {
-
+    let uri = window.location.search.substring(1); 
+    let params = new URLSearchParams(uri);
+    this.number = params.get("number") || '';
   }
 }
 </script>

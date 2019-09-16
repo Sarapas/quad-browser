@@ -13,7 +13,7 @@
         </div>
       </div>
       <div v-if="!editMode">
-        <img src="../assets/delete.png" class="action-icon" v-on:click="editBookmark" />
+        <img src="../assets/edit.png" class="action-icon" v-on:click="editBookmark" />
         <img src="../assets/delete.png" class="action-icon" v-on:click="deleteBookmark" />
       </div>
     </div>

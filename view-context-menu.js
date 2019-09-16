@@ -45,7 +45,9 @@ function show(win, view, onShow, onClose) {
 
       viewManager.menuOnClick(view.number, viewMenu);
 
-      //viewMenu.append(new MenuItem({ label: 'Close', click: () => { viewManager.suspend(view); }}));
+      if (!notepad.isOpenOn(view)) {
+        viewMenu.append(new MenuItem({ label: 'Close', click: () => { viewManager.suspend(view); }}));
+      } 
 
       viewMenu.once('menu-will-show', () => {
         if (onShow) {
@@ -66,7 +68,7 @@ function findFunc(view) {
 }
 
 function changeAddress(view) {
-  if (!notepad.isOpen()) {
+  if (!notepad.isOpenOn(view)) {
     address.open(view.getParentWindow(), view, (url, v) => {
       viewManager.loadURL(url, v);
     });
@@ -74,7 +76,7 @@ function changeAddress(view) {
 }
 
 function refresh(view) {
-  if (!notepad.isOpen()) {
+  if (!notepad.isOpenOn(view)) {
     view.webContents.reload();
   }
 }
@@ -86,7 +88,7 @@ function openNotepad(view) {
 }
 
 function saveBookmark(view) {
-  if (!notepad.isOpen()) {
+  if (!notepad.isOpenOn(view) && !view.isBlank) {
     bookmarks.add(view.webContents);
   }
 }

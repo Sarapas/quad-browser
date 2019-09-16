@@ -39,6 +39,14 @@ function swapViews(index1, index2) {
   views[index1].number = index1 + 1;
   views[index2] = _temp;
   views[index2].number = index2 + 1;
+
+  if (views[index1].isBlank) {
+    suspend(views[index1]); // to refresh the number
+  }
+
+  if (views[index2].isBlank) {
+    suspend(views[index2]); // to refresh the number
+  }
 }
 
 function appendSwapMenu(number, ctxMenu) {
@@ -89,15 +97,18 @@ function createView(number, title) {
   view.webContents.on('new-window', (e, url) => {
     e.preventDefault();
     view.webContents.loadURL(url);
+    view.isBlank = false;
   });
   view.webContents.on('page-title-updated', (e, favicons) => {
     // clearing old favicon
     view.webContents.favicons = null;
     view.webContents.setVisualZoomLevelLimits(1, 5);
-    if (newAddressLoadedCallbacks && newAddressLoadedCallbacks.length) {
-      newAddressLoadedCallbacks.forEach((cb) => {
-        cb({ title: view.webContents.getTitle(), url: view.webContents.getURL() });
-      })
+    if (!view.isBlank) {
+      if (newAddressLoadedCallbacks && newAddressLoadedCallbacks.length) {
+        newAddressLoadedCallbacks.forEach((cb) => {
+          cb({ title: view.webContents.getTitle(), url: view.webContents.getURL() });
+        })
+      }
     }
   });
   view.webContents.on('page-favicon-updated', (e, favicons) => {
@@ -147,12 +158,13 @@ function loadURL(url, view) {
   if (view) {
     if (!view.isNotepad) {
       view.webContents.loadURL(url);
+      view.isBlank = false;
     }
   } else {
-    lastGlobalURL = url;
     views.forEach(view => {
       if (!view.isNotepad) {
         view.webContents.loadURL(url);
+        view.isBlank = false;
       }
     });
   }
@@ -471,7 +483,9 @@ function setFocusable(focusable) {
 }
 
 function suspend(view) {
-  view.webContents.loadFile('dist/blank.html');
+  view.webContents.loadFile(`dist/blank.html`, { query: { number: view.number }});
+  //view.webContents.openDevTools();
+  view.isBlank = true;
 }
 
 function toggleHoverMode() {
