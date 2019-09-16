@@ -2,13 +2,14 @@ const electron = require('electron');
 const { ipcMain, app, BrowserWindow } = electron;
 const storage = require('electron-json-storage');
 
-const SHORTCUT_STORAGE = "notepad";
+const SHORTCUT_STORAGE = "shortcuts";
 
 let shortcutsWin;
 let onChange;
 let onObsolete;
 
 function init(changeCallback, obsoleteCallback) {
+	storage.setDataPath(app.getPath('userData'));
 	onChange = changeCallback;
 	onObsolete = obsoleteCallback;
 	load((shortcuts, defaults) => {
@@ -17,8 +18,6 @@ function init(changeCallback, obsoleteCallback) {
 }
 
 function open(parent, onClose) {
-	storage.setDataPath(app.getPath('userData'));
-
 	shortcutsWin = new BrowserWindow({
 		frame: false,
 		transparent: false,
