@@ -16,12 +16,45 @@ import Shortcut from "./Shortcut";
 
 export default {
   name: "Shortcut",
-  props: ["baseKey", "shortcut", "hotkey"],
+  props: ["baseKey", "shortcut"],
+  data: function() {
+    return {
+      notAllowed: [
+        "META",
+        "ALT",
+        "CONTROL",
+        "SHIFT",
+        "CAPSLOCK",
+        "ARROWUP",
+        "ARROWDOWN",
+        "ARROWLEFT",
+        "ARROWRIGHT",
+        " ",
+        "1", // numbers for switching audible view
+        "2",
+        "3",
+        "4",
+        "5",
+        "6",
+        "7",
+        "8",
+        "9",
+        "Q", // quit
+        "X", // cut
+        "Z", // undo
+        "C", // copy
+        "V", // paste
+        "A" // select
+      ]
+    };
+  },
   methods: {
     onKey: function($event) {
       event.preventDefault();
       let oldKey = this.shortcut.hotkey;
       let newKey = $event.key.toUpperCase();
+
+      if (this.notAllowed.includes(newKey)) return;
 
       this.shortcut.hotkey = newKey;
       if (newKey !== oldKey) {
@@ -33,11 +66,7 @@ export default {
       }
     }
   },
-  mounted: function() {
-    const util = window.require("electron-util");
-    if (util.is.macos) this.baseKey = "Command";
-    if (util.is.windows) this.baseKey = "Ctrl";
-  }
+  mounted: function() {}
 };
 </script>
 

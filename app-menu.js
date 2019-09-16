@@ -69,7 +69,7 @@ function update(win, onModalOpen, onModalClose) {
           { role: 'togglefullscreen' },
           {
             label: 'Change layout',
-            accelerator: 'CmdOrCtrl+L',
+            accelerator: shortcuts.CHANGE_LAYOUT,
             click: () => {
                 if (onModalOpen) onModalOpen();
                 viewManager.changeLayout(() => {
@@ -81,7 +81,7 @@ function update(win, onModalOpen, onModalClose) {
           {
             label: 'Hover mode',
             type: 'checkbox',
-            accelerator: 'CmdOrCtrl+H',
+            accelerator: shortcuts.HOVER_MODE,
             checked: viewManager.isHoverMode(),
             click: () => {
                 viewManager.toggleHoverMode();
@@ -90,21 +90,21 @@ function update(win, onModalOpen, onModalClose) {
           { type: 'separator' },
           {
             label: 'Fullscreen players',
-            accelerator: 'CmdorCtrl+F',
+            accelerator: shortcuts.FULLSCREEN_PLAYERS,
             click: () => {
               win.setFullScreen(true);
               viewManager.maximizeViews();
             }
           },
-          // {
-          //   label: 'Mute',
-          //   accelerator: 'CmdorCtrl+M',
-          //   type: 'checkbox',
-          //   checked: viewManager.isMuted(),
-          //   click: () => {
-          //     viewManager.muteAll(!viewManager.isMuted());
-          //   }
-          // }
+          {
+            label: 'Mute',
+            accelerator: shortcuts.MUTE,
+            type: 'checkbox',
+            checked: viewManager.isMuted(),
+            click: () => {
+              viewManager.muteAll(!viewManager.isMuted());
+            }
+          }
         ]
       },
       {

@@ -13,6 +13,7 @@ const find = require('./find');
 const history = require('./history');
 const appMenu = require('./app-menu');
 const viewContextMenu = require('./view-context-menu');
+const shortcuts = require('./shortcuts');
 
 let win;
 let isTrustedAccesibility;
@@ -105,11 +106,6 @@ function createWindow() {
       });
     });
 
-    globalShortcut.register(`CommandOrControl+t`, () => {
-      let audible = viewManager.getAudible();
-      find.open(win, audible, () => {});
-    });
-
     ioHook.on('mousedown', onMouseClick);
     ioHook.on('mousemove', onMouseMove);
     ioHook.start();
@@ -129,11 +125,31 @@ function createWindow() {
     updateMenu();
   });
 
-  bookmarks.onChange(() => {
+  function updateContextMenu() {
+    function execute(viewAction) {
+      let audible = viewManager.getAudible();
+      if (audible) {
+        viewAction(audible);
+      }
+    }
+
+    globalShortcut.register(shortcuts.FIND, () => { execute(viewContextMenu.find); });
+    globalShortcut.register(shortcuts.REFRESH, () => { execute(viewContextMenu.refresh) });
+    globalShortcut.register(shortcuts.CHANGE_ADDRESS, () => { execute(viewContextMenu.changeAddress) });
+    globalShortcut.register(shortcuts.OPEN_NOTEPAD, () => { execute(viewContextMenu.openNotepad) });
+    globalShortcut.register(shortcuts.SAVE_BOOKMARK, () => { execute(viewContextMenu.saveBookmark) });
+  }
+
+  shortcuts.init(() => {
     updateMenu();
+    updateContextMenu();
+  }, (obsoleteShortcut) => {
+    globalShortcut.unregister(obsoleteShortcut.oldHotkey);
   });
 
-  bookmarks.init();
+  bookmarks.init(() => {
+    updateMenu();
+  });
 
   win.on('resize', () => {
     viewManager.updateLayout();

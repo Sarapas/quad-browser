@@ -13,8 +13,9 @@ const ICON_DIR = `${app.getPath('userData')}/icons/`
 let bookmarks = [];
 let bookmarksWin;
 
-function init() {
+function init(onChange) {
     storage.setDataPath(app.getPath('userData'));
+    onChangeCallbacks.push(onChange);
 
     try {
         storage.get(BOOKMARK_STORAGE, function(error, data) {
@@ -24,10 +25,6 @@ function init() {
     } catch (ex) {
         console.log("error while loading bookmarks: " + ex);
     }
-}
-
-function onChange(callback) {
-    onChangeCallbacks.push(callback);
 }
 
 function getMenu(view) {
@@ -203,7 +200,6 @@ function open(parent, onClose) {
 var exports = module.exports = {
     init: init,
     add: add,
-    onChange: onChange,
     getMenu: getMenu,
     get: getBookmarks,
     remove: remove,

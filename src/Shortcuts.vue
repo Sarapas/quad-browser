@@ -9,6 +9,7 @@
       v-for="(s, index) in shortcuts"
       :key="index"
       v-bind:shortcut="s"
+      v-bind:baseKey="baseKey"
       v-on:change="onChange"
     />
     <div class="button-container">
@@ -34,7 +35,8 @@ export default {
   data: function() {
     return {
       shortcuts: [],
-      defaults: []
+      defaults: [],
+      baseKey: ''
     };
   },
   methods: {
@@ -65,6 +67,10 @@ export default {
   mounted: function() {
     const { ipcRenderer } = window.require("electron");
     let _this = this;
+
+    const util = window.require("electron-util");
+    if (util.is.macos) this.baseKey = "Command";
+    if (util.is.windows) this.baseKey = "Ctrl";
 
     ipcRenderer.on("set-shortcuts", function(event, shortcutInfo) {
       _this.shortcuts = shortcutInfo.shortcuts;

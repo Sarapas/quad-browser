@@ -1,18 +1,20 @@
 const electron = require('electron');
 const { Menu, MenuItem } = electron;
+
 const address = require('./address');
 const notepad = require('./notepad');
 const bookmarks = require('./bookmarks');
 const history = require('./history');
 const find = require('./find');
 const viewManager = require('./view-manager');
+const shortcuts = require('./shortcuts');
 
 function show(win, view, onShow, onClose) {
     let viewMenuTemplate = [
         { label: 'Back', click: () => { if (view.webContents.canGoBack()) view.webContents.goBack(); } },
-        { label: 'Change address', click: () => { address.open(win, view, (url, v) => { viewManager.loadURL(url, v); }); } },
+        { label: 'Change address', accelerator: shortcuts.CHANGE_ADDRESS, click: () => { changeAddress(view) } },
         { type: 'separator' },
-        { label: 'Refresh', click: () => { view.webContents.reload(); } },
+        { label: 'Refresh', accelerator: shortcuts.REFRESH, click: () => { refresh(view) } },
         { label: 'Auto refresh', submenu: [
           { label: '30s', type: 'radio', checked: viewManager.getAutoRefresh(view) === 30, click: () => { viewManager.setAutoRefresh(view, 30); } },
           { label: '1min', type: 'radio', checked: viewManager.getAutoRefresh(view) === 60, click: () => { viewManager.setAutoRefresh(view, 60); } },
@@ -21,20 +23,20 @@ function show(win, view, onShow, onClose) {
           { label: 'None', type: 'radio', checked: viewManager.getAutoRefresh(view) === null, click: () => { viewManager.setAutoRefresh(view, null); } }
         ]},
         { type: 'separator' },
-        { label: 'Find', click: () => { find.open(win, view, () => { }); } },
+        { label: 'Find', accelerator: shortcuts.FIND, click: () => { findFunc(view) } },
         { type: 'separator' },
-        { label: 'Save bookmark', click: () => { bookmarks.add(view.webContents); } },
+        { label: 'Save bookmark', accelerator: shortcuts.SAVE_BOOKMARK, click: () => { saveBookmark(view) } },
         { label: 'Load bookmark', submenu: bookmarks.getMenu(view) },
         { label: 'History', submenu: history.getMenu(view, 20) },
       ]
 
       if (!notepad.isOpen()) {
         viewMenuTemplate.push({ type: 'separator' });
-        viewMenuTemplate.push({ label: 'Open Notepad', click: () => { notepad.open(view); }});
+        viewMenuTemplate.push({ label: 'Open Notepad', accelerator: shortcuts.OPEN_NOTEPAD, click: () => { openNotepad(view) } });
       } 
 
       if (notepad.isOpenOn(view)) {
-        viewMenuTemplate = [ { label: 'Find', click: () => { find.open(win, view, () => { }); } } ];
+        viewMenuTemplate = [ { label: 'Find', click: () => { findFunc(view) } } ];
       }
       
       //viewMenuTemplate.push({ label: 'Open Dev Tools', click: () => { view.webContents.openDevTools(); }});
@@ -59,6 +61,41 @@ function show(win, view, onShow, onClose) {
       viewMenu.popup({ window: view });
 }
 
+function findFunc(view) {
+  find.open(view.getParentWindow(), view, () => { });
+}
+
+function changeAddress(view) {
+  if (!notepad.isOpen()) {
+    address.open(view.getParentWindow(), view, (url, v) => {
+      viewManager.loadURL(url, v);
+    });
+  }
+}
+
+function refresh(view) {
+  if (!notepad.isOpen()) {
+    view.webContents.reload();
+  }
+}
+
+function openNotepad(view) {
+  if (!notepad.isOpen()) {
+    notepad.open(view);
+  }
+}
+
+function saveBookmark(view) {
+  if (!notepad.isOpen()) {
+    bookmarks.add(view.webContents);
+  }
+}
+
 var exports = (module.exports = {
-    show: show
+    show: show,
+    find: findFunc,
+    changeAddress: changeAddress,
+    saveBookmark: saveBookmark,
+    openNotepad: openNotepad,
+    refresh: refresh
 });
