@@ -18,7 +18,7 @@ function init(onChange) {
     onChangeCallbacks.push(onChange);
 
     try {
-        storage.get(BOOKMARK_STORAGE, function(error, data) {
+        storage.get(BOOKMARK_STORAGE, function (error, data) {
             if (error) throw error;
             setBookmarks(data.bookmarks);
         });
@@ -35,7 +35,7 @@ function getMenu(view) {
             url: b.url, // custom property
             icon: b.iconData,
             click: () => {
-                viewManager.loadURL(b.url, view); 
+                viewManager.loadURL(b.url, view);
             }
         }));
     })
@@ -77,27 +77,23 @@ function getIcon(fileName) {
 
 function add(contents) {
     try {
-        storage.get(BOOKMARK_STORAGE, function(error, data) {
+        storage.get(BOOKMARK_STORAGE, function (error, data) {
             if (error) throw error;
 
             data.bookmarks = data.bookmarks || [];
             let icon;
-        
+
             function appendBookmarks() {
                 data.bookmarks.push({ id: utilities.newGuid(), title: contents.getTitle(), url: contents.getURL(), icon: icon });
-
-                storage.set(BOOKMARK_STORAGE, data, function(error) {
-                    if (error) throw error;
-                    setBookmarks(data.bookmarks);
-                });
+                save(data.bookmarks);
             }
 
             if (contents.favicons && contents.favicons.length) {
-        
+
                 let png = contents.favicons.find(f => f.endsWith("png"));
                 let jpg = contents.favicons.find(f => f.endsWith("jpg"));
                 let ico = contents.favicons.find(f => f.endsWith("ico"));
-        
+
                 let ext;
                 if (png) {
                     src = png;
@@ -109,7 +105,7 @@ function add(contents) {
                     src = ico;
                     ext = ".ico";
                 }
-        
+
                 icon = `${utilities.newGuid()}${ext}`;
                 utilities.downloadFile(src, ICON_DIR, icon, () => {
                     appendBookmarks();
@@ -143,20 +139,23 @@ function remove(bookmark) {
         return;
 
     try {
-        storage.get(BOOKMARK_STORAGE, function(error, data) {
+        storage.get(BOOKMARK_STORAGE, function (error, data) {
             if (error) throw error;
-            
+
             data.bookmarks = data.bookmarks || [];
             data.bookmarks = data.bookmarks.filter(b => b.id !== bookmark.id);
-
-            storage.set(BOOKMARK_STORAGE, data, function(error) {
-                if (error) throw error;
-                setBookmarks(data.bookmarks);
-            });
+            save(data.bookmarks);
         });
     } catch (ex) {
         console.log("error while removing bookmark: " + ex);
     }
+}
+
+function save(bookmarks) {
+    storage.set(BOOKMARK_STORAGE, { bookmarks: bookmarks }, function (error) {
+        if (error) throw error;
+        setBookmarks(bookmarks);
+    });
 }
 
 function open(parent, onClose) {
@@ -173,28 +172,36 @@ function open(parent, onClose) {
         height: 400,
         width: 600,
         webPreferences: {
-          nodeIntegration: true
+            nodeIntegration: true
         }
-      });
+    });
 
-      bookmarksWin.loadFile(`dist/bookmarks.html`);
-    
-      bookmarksWin.once('ready-to-show', () => {
+    bookmarksWin.loadFile(`dist/bookmarks.html`);
+
+    bookmarksWin.once('ready-to-show', () => {
         bookmarksWin.show();
         bookmarksWin.webContents.send('bookmarks-received', getBookmarks());
-        //bookmarksWin.webContents.openDevTools();
-      });
-    
-      bookmarksWin.on('closed', () => {
+        bookmarksWin.webContents.openDevTools();
+    });
+
+    bookmarksWin.on('closed', () => {
         bookmarksWin = null;
         onClose();
-      })
-    
-      ipcMain.on('delete-bookmark', (event, bookmark) => {
+    })
+
+    ipcMain.on('delete-bookmark', (event, bookmark) => {
         if (bookmark) {
-          remove(bookmark);
+            remove(bookmark);
         }
-      });
+    });
+
+    ipcMain.on('edit-bookmark', (event, bookmarks) => {
+        try {
+            save(bookmarks);
+        } catch (ex) {
+            console.log("error while editing bookmark: " + ex);
+        }
+    });
 }
 
 var exports = module.exports = {
