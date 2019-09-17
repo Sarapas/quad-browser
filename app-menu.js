@@ -87,6 +87,15 @@ function update(win, onModalOpen, onModalClose) {
                 viewManager.toggleHoverMode();
             }
           },
+          {
+            label: 'Watch mode',
+            type: 'checkbox',
+            accelerator: shortcuts.WATCH_MODE,
+            checked: viewManager.isWatchMode(),
+            click: () => {
+                viewManager.toggleWatchMode();
+            }
+          },
           { type: 'separator' },
           {
             label: 'Fullscreen players',

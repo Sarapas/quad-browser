@@ -1,5 +1,5 @@
 const electron = require('electron');
-const { BrowserWindow, MenuItem, ipcMain } = electron;
+const { BrowserWindow, MenuItem, ipcMain, globalShortcut } = electron;
 const path = require('path');
 const fs = require('fs');
 const util = require('electron-util');
@@ -23,6 +23,7 @@ let autoRefresh = [];
 let homepage;
 let muted;
 let hover;
+let watch;
 
 function init(parentWindow, defaultURL) {
   if (isInitialized) throw new Error('Already initialized');
@@ -114,6 +115,14 @@ function createView(number, title) {
   view.webContents.on('page-favicon-updated', (e, favicons) => {
     view.webContents.favicons = favicons;
   });
+  // view.webContents.on('before-input-event', (e, input) => {
+  //   if (watch && input.type === 'keyDown') {
+  //     if (['1', '2', '3', '4', '5', '6', '7', '8', '9'].includes(input.key)) {
+  //       e.preventDefault();
+  //       console.log(`Prevented ${input.type} ${input.key}`);
+  //     }
+  //   }
+  // });
   view.on('focus', () => {
     if (view.focusable) {
       setAudible(view);
@@ -397,27 +406,20 @@ function createFrame() {
 
 function maximizeViews() {
   checkInitialized();
-
-  activeViews.forEach(v => {
-    v.webContents
-      .executeJavaScript(requestFullscreen, true)
-      .then(result => {})
-      .catch(error => {
-        console.log(`Fullscreen ${error}`);
-      });
-  });
+  injectToAll(requestFullscreen);
 }
 
 function minimizeViews() {
   checkInitialized();
+  injectToAll(exitFullscreen);
+}
 
+function injectToAll(script) {
   activeViews.forEach(v => {
     v.webContents
-      .executeJavaScript(exitFullscreen, true)
+      .executeJavaScript(script, true)
       .then(result => {})
-      .catch(error => {
-        console.log(`Exit Fullscreen ${error}`);
-      });
+      .catch(error => {});
   });
 }
 
@@ -496,6 +498,29 @@ function isHoverMode() {
   return !!hover;
 }
 
+function toggleWatchMode() {
+  watch = !watch;
+
+  let viewNumbers = [1, 2, 3, 4, 5, 6, 7, 8, 9];
+
+  if (watch) {
+    viewNumbers.forEach(number => {
+      globalShortcut.register(`${number}`, () => {
+        let view = getViewByNumber(number);
+        if (view) setAudible(view);
+      });
+    });
+  } else {
+    viewNumbers.forEach(number => {
+      globalShortcut.unregister(`${number}`);
+    });
+  }
+}
+
+function isWatchMode() {
+  return !!watch;
+}
+
 var exports = (module.exports = {
   init: init,
   setAudible: setAudible,
@@ -523,5 +548,7 @@ var exports = (module.exports = {
   isMuted: isMuted,
   toggleHoverMode: toggleHoverMode,
   isHoverMode: isHoverMode,
+  toggleWatchMode: toggleWatchMode,
+  isWatchMode: isWatchMode,
   substituteView: substituteView
 });

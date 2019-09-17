@@ -28,7 +28,7 @@ function open(parent, onClose) {
 		modal: true,
 		focusable: true,
 		fullscreenable: false,
-		height: 620,
+		height: 670,
 		width: 600,
 		webPreferences: {
 			nodeIntegration: true
@@ -66,8 +66,17 @@ function open(parent, onClose) {
 function load(onLoad) {
 	storage.get(SHORTCUT_STORAGE, function (error, data) {
 		if (error) throw error;
-		let shortcuts = data.shortcuts || getDefaults();
 		let defaults = getDefaults();
+		let shortcuts = data.shortcuts || defaults;
+
+		// after adding new shortcuts in code - we need to update saved shortcuts
+		defaults.forEach(d => {
+			let exists = shortcuts.find(s => s.title === d.title);
+			if (!exists) {
+				shortcuts.push(d);
+			}
+		});
+
 		if (onLoad) {
 			onLoad(shortcuts, defaults);
 		}
@@ -79,12 +88,13 @@ function getDefaults() {
 		{ title: 'Save bookmark', hotkey: 'B' },
 		{ title: 'Change layout', hotkey: 'L' },
 		{ title: 'Hover mode', hotkey: 'H' },
-		{ title: 'Fullscreen players', hotkey: 'W' },
+		{ title: 'Fullscreen players', hotkey: 'E' },
 		{ title: 'Mute', hotkey: 'M' },
 		{ title: 'Change address', hotkey: 'D' },
 		{ title: 'Find', hotkey: 'F' },
 		{ title: 'Refresh', hotkey: 'R' },
-		{ title: 'Open Notepad', hotkey: 'N' }
+		{ title: 'Open Notepad', hotkey: 'N' },
+		{ title: 'Watch Mode', hotkey: 'W' }
 	];
 }
 
@@ -107,6 +117,7 @@ function set(shortcuts) {
 	updateHotkey('FIND', 'Find');
 	updateHotkey('REFRESH', 'Refresh');
 	updateHotkey('OPEN_NOTEPAD', 'Open Notepad');
+	updateHotkey('WATCH_MODE', 'Watch Mode');
 
 	if (onChange) {
 		onChange();
@@ -126,4 +137,5 @@ var exports = (module.exports = {
 	FIND: null,
 	REFRESH: null,
 	OPEN_NOTEPAD: null,
+	WATCH_MODE: null
 });
