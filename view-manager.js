@@ -4,6 +4,7 @@ const path = require('path');
 const fs = require('fs');
 const util = require('electron-util');
 const layouts = require('./layouts');
+const utilities = require('./utilities');
 
 const requestFullscreen = fs.readFileSync(path.resolve(__dirname, 'set-video-fullscreen.js'), 'utf8');
 const exitFullscreen = fs.readFileSync(path.resolve(__dirname, 'exit-video-fullscreen.js'), 'utf8');
@@ -402,6 +403,17 @@ function createFrame() {
 
   frame.loadFile('renderer/frame.html');
   frame.setIgnoreMouseEvents(true);
+
+  // to avoid frame glitching sometimes on mac
+  setInterval(() => {
+    if (frame && frame.parent) {
+      let frameBounds = frame.getBounds();
+      let parentBounds = frame.parent.getBounds();
+      if (!utilities.isBoundsEqual(frameBounds, parentBounds)) {
+        frame.setBounds(parentBounds);
+      }
+    }
+  }, 1000);
 }
 
 function maximizeViews() {

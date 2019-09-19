@@ -63,9 +63,14 @@ function centerWindowToParentWindow(parent, child) {
     child.setBounds(childBounds);
 }
 
+function isBoundsEqual(b1, b2) {
+    return b1 && b2 && b1.x === b2.x && b1.y === b2.y && b1.width === b2.width && b1.height === b2.height; 
+}
+
 var exports = module.exports = {
     newGuid: uuidv4,
     downloadFile: downloadFile,
     icoToPng: icoToPng,
-    centerWindowToParentWindow: centerWindowToParentWindow
+    centerWindowToParentWindow: centerWindowToParentWindow,
+    isBoundsEqual: isBoundsEqual
 };
