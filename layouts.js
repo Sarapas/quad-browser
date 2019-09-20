@@ -228,12 +228,24 @@ function setRectangleLayout(parent, views, cols, rows) {
 }
 
 function getUsableBounds(parent) {
-    let parentX = parent.getPosition()[0];
-    let parentY = parent.getPosition()[1];
-    let contentBounds = parent.getContentBounds();
-    let offsetX = parentX;
-    let offsetY = parentY + (util.is.macos && !parent.isFullScreen() ? util.menuBarHeight() : 0);
-    return { x: offsetX, y: offsetY, width: contentBounds.width, height: contentBounds.height };
+    let usableBounds = parent.getContentBounds();
+
+    if (util.is.macos) {
+        usableBounds.x = parent.getPosition()[0];
+        usableBounds.y = parent.getPosition()[1];
+        if (!parent.isFullScreen()) {
+            usableBounds.y += util.menuBarHeight();
+        }
+    } else if (util.is.windows) {
+        // on windows the area seems to be a tiny bit too big
+        let MARGIN = 1;
+        usableBounds.x += MARGIN;
+        usableBounds.y += MARGIN;
+        usableBounds.height -= MARGIN * 2;
+        usableBounds.width -= MARGIN * 2;
+    }
+
+    return usableBounds;    
 }
 
 function updateLayout(layout, parent, views) {

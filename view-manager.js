@@ -91,6 +91,7 @@ function createView(number, title) {
     acceptFirstMouse: true,
     hasShadow: false,
     titleBarStyle: 'customButtonsOnHover', // together with frame: false makes corners not round on macos. It is a bug that we use as a feature
+    thickFrame: false
   });
 
   view.focusable = true; // adding custom property for macOs usage
@@ -306,6 +307,7 @@ function setSelected(view) {
   frame.setBounds(view.getBounds());
   frame.parent = view;
   frame.show();
+  frame.moveTop();
 }
 
 function getViewByNumber(number) {
