@@ -493,7 +493,6 @@ function getViewNames() {
 
 function setFocusable(focusable) {
   views.forEach(v => {
-    v.setFocusable(focusable);
     v.focusable = focusable;
   })
 }

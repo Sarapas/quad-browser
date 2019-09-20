@@ -50,6 +50,7 @@ function createNotepad(parent) {
       acceptFirstMouse: true,
       hasShadow: false,
       titleBarStyle: 'customButtonsOnHover', // together with frame: false makes corners not round on macos. It is a bug that we use as a feature
+      thickFrame: false,
       webPreferences: {
         nodeIntegration: true
       }
