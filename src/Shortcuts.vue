@@ -51,7 +51,7 @@ export default {
       currentWindow.close();
     },
     setDefault: function() {
-      this.shortcuts = this.defaults;
+      this.shortcuts = JSON.parse(JSON.stringify(this.defaults));
     },
     onChange: function(data) {
       let duplicate = this.shortcuts.find(
@@ -116,8 +116,8 @@ export default {
   border-radius: 100%;
 }
 .btn {
-  height: 50px;
-  width: 100px;
-  font-size: 200px;
+  height: 23px;
+  width: 60px;
+  font-size: 15px;
 }
 </style>

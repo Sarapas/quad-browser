@@ -78,8 +78,8 @@ a {
   font-size: 15px;
 }
 .btn {
-  height: 50px;
-  width: 100px;
-  font-size: 200px;
+  height: 23px;
+  width: 60px;
+  font-size: 15px;
 }
 </style>

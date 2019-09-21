@@ -121,7 +121,7 @@ function update(win, onModalOpen, onModalClose) {
         submenu: [
             ...addressSubmenu,
             { type: 'separator' },
-            { label: 'Change homepage', click: () => { changeHomepage(win); } }
+            { label: 'Change homepage', click: () => { changeHomepage(win, onModalOpen, onModalClose); } }
         ]
       },
       {
@@ -142,7 +142,10 @@ function update(win, onModalOpen, onModalClose) {
     Menu.setApplicationMenu(menu);
 }
 
-function changeHomepage(win) {
+function changeHomepage(win, onShow, onClose) {
+    if (onShow) {
+      onShow();
+    }
     prompt(
       {
         title: 'Change homepage',
@@ -160,6 +163,9 @@ function changeHomepage(win) {
       .then(result => {
         if (result !== null) {
           store.set('homepage', result);
+        }
+        if (onClose) {
+          onClose();
         }
       })
       .catch(console.error);

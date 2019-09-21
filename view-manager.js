@@ -75,7 +75,6 @@ function appendSwapMenu(number, ctxMenu) {
 }
 
 function createView(number, title) {
-  console.log("Creating view: " + number);
   let view = new BrowserWindow({
     parent: parent,
     frame: false,
@@ -87,7 +86,7 @@ function createView(number, title) {
     minimizable: false,
     fullscreenable: false,
     closable: false,
-    focusable: true,
+    focusable: false,
     acceptFirstMouse: true,
     hasShadow: false,
     titleBarStyle: 'customButtonsOnHover', // together with frame: false makes corners not round on macos. It is a bug that we use as a feature
@@ -98,35 +97,33 @@ function createView(number, title) {
   view.number = number;
   view.webContents.setAudioMuted(true);
   view.webContents.on('new-window', (e, url) => {
-    e.preventDefault();
-    view.webContents.loadURL(url);
-    view.isBlank = false;
+    if (view && view.webContents) {
+      e.preventDefault();
+      view.webContents.loadURL(url);
+      view.isBlank = false;
+    }
   });
   view.webContents.on('page-title-updated', (e, favicons) => {
-    // clearing old favicon
-    view.webContents.favicons = null;
-    view.webContents.setVisualZoomLevelLimits(1, 5);
-    if (!view.isBlank) {
-      if (newAddressLoadedCallbacks && newAddressLoadedCallbacks.length) {
-        newAddressLoadedCallbacks.forEach((cb) => {
-          cb({ title: view.webContents.getTitle(), url: view.webContents.getURL() });
-        })
+    if (view && view.webContents) {
+      // clearing old favicon
+      view.webContents.favicons = null;
+      view.webContents.setVisualZoomLevelLimits(1, 5);
+      if (!view.isBlank) {
+        if (newAddressLoadedCallbacks && newAddressLoadedCallbacks.length) {
+          newAddressLoadedCallbacks.forEach((cb) => {
+            cb({ title: view.webContents.getTitle(), url: view.webContents.getURL() });
+          })
+        }
       }
     }
   });
   view.webContents.on('page-favicon-updated', (e, favicons) => {
-    view.webContents.favicons = favicons;
+    if (view && view.webContents) {
+      view.webContents.favicons = favicons;
+    }
   });
-  // view.webContents.on('before-input-event', (e, input) => {
-  //   if (watch && input.type === 'keyDown') {
-  //     if (['1', '2', '3', '4', '5', '6', '7', '8', '9'].includes(input.key)) {
-  //       e.preventDefault();
-  //       console.log(`Prevented ${input.type} ${input.key}`);
-  //     }
-  //   }
-  // });
   view.on('focus', () => {
-    if (view.focusable) {
+    if (view && view.focusable) {
       setAudible(view);
       setSelected(view);
     }
