@@ -2,24 +2,17 @@
   "name": "QuadScreens",
   "version": "1.0.20",
   "description": "",
-  "main": "index.js",
+  "author": "",
   "scripts": {
-    "start": "electron .",
-    "package-windows": "vue-cli-service build && electron-packager . QuadScreens --overwrite --icon=assets/icons/win/icon.ico --platform=win32 --arch=x64 --prune=true --out=build",
     "package-mac": "vue-cli-service build; electron-packager . QuadScreens --overwrite --icon=./assets/icons/mac/icon.icns --platform=darwin --arch=x64 --prune=true --out=build",
     "package-mac-dmg": "vue-cli-service build; electron-installer-dmg ./build/QuadScreens-darwin-x64/QuadScreens.app QuadScreens --out=build/ --icon=assets/icons/mac/icon.icns --icon-size=80 --overwrite --debug",
-    "vue-serve": "vue-cli-service serve",
-    "vue-build": "vue-cli-service build"
+    "package-windows": "vue-cli-service build && electron-packager . QuadScreens --overwrite --icon=assets/icons/win/icon.ico --platform=win32 --arch=x64 --prune=true --out=build",
+    "start": "electron .",
+    "vue-build": "vue-cli-service build",
+    "vue-serve": "vue-cli-service serve"
   },
-  "author": "",
   "license": "MIT",
-  "devDependencies": {
-    "electron": "^6.0.1",
-    "electron-installer-dmg": "^3.0.0",
-    "electron-packager": "^14.0.4",
-    "@vue/cli-service": "^3.11.0",
-    "vue-template-compiler": "^2.6.10"
-  },
+  "main": "index.js",
   "dependencies": {
     "@exponent/electron-cookies": "^2.0.0",
     "arraybuffer-to-buffer": "0.0.7",
@@ -30,11 +23,25 @@
     "electron-reload": "^1.5.0",
     "electron-store": "^4.0.0",
     "electron-util": "^0.12.1",
+    "http": "0.0.0",
+    "https": "^1.0.0",
     "image-encode": "^1.3.0",
     "iohook": "^0.6.1",
     "request": "^2.88.0",
+    "url": "^0.11.0",
     "valid-url": "^1.0.9",
-    "vue": "^2.6.10"
+    "vue": "^2.6.10",
+    "vue-class-component": "^6.0.0",
+    "vue-property-decorator": "^7.0.0"
+  },
+  "devDependencies": {
+    "@vue/cli-service": "^3.11.0",
+    "electron": "^6.0.1",
+    "electron-installer-dmg": "^3.0.0",
+    "electron-packager": "^14.0.4",
+    "typescript": "^3.2.1",
+    "vue-cli-plugin-typescript": "0.0.1",
+    "vue-template-compiler": "^2.6.10"
   },
   "iohook": {
     "targets": [

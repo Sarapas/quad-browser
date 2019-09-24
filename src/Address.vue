@@ -5,20 +5,29 @@
       <img class="button" src="./assets/forward.svg" v-on:click="open"  />
       <img class="button close-button" src="./assets/close.svg" v-on:click="close" />
     </div>
+
+    <div v-for="(s, index) in suggestions" :key="index">
+      {{ s }}
+    </div>
   </div>
 </template>
 
 <script>
+import { getSearchSuggestions } from './suggestions/suggestions'
 
 export default {
   name: 'address',
     data: function() {
     return {
+      suggestions: []
     };
   },
   props: [ 'address' ],
   methods: {
     onAddressChange: function() {
+      getSearchSuggestions(this.address).then((suggestions) => {
+        this.suggestions = suggestions;
+      });
     },
     open: function() {
       if (!this.address)

@@ -3,42 +3,42 @@ module.exports = {
   pages: {
     index: {
       // having index for dev purposes, pointing to app currently developed
-      entry: 'src/shortcuts.js',
+      entry: 'src/shortcuts.ts',
       template: 'src/template.html',
       filename: 'index.html'
     },
     bookmarks: {
-      entry: 'src/bookmarks.js',
+      entry: 'src/bookmarks.ts',
       template: 'src/template.html',
       filename: 'bookmarks.html'
     },
     find: {
-      entry: 'src/find.js',
+      entry: 'src/find.ts',
       template: 'src/template.html',
       filename: 'find.html'
     },
     address: {
-      entry: 'src/address.js',
+      entry: 'src/address.ts',
       template: 'src/template.html',
       filename: 'address.html'
     },
     notepad: {
-      entry: 'src/notepad.js',
+      entry: 'src/notepad.ts',
       template: 'src/template.html',
       filename: 'notepad.html'
     },
     layouts: {
-      entry: 'src/layouts.js',
+      entry: 'src/layouts.ts',
       template: 'src/template.html',
       filename: 'layouts.html'
     },
     blank: {
-      entry: 'src/blank.js',
+      entry: 'src/blank.ts',
       template: 'src/template.html',
       filename: 'blank.html'
     },
     shortcuts: {
-      entry: 'src/shortcuts.js',
+      entry: 'src/shortcuts.ts',
       template: 'src/template.html',
       filename: 'shortcuts.html'
     }

@@ -1,4 +1,4 @@
-class Shortcut {
+interface Shortcut {
     title: string;
     hotkey: string;
 }
