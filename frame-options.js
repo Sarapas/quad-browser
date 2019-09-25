@@ -6,7 +6,7 @@ const store = new Store();
 let frameOptionsWin;
 let frame;
 
-function getFrame(parent) {
+function getFrame() {
     if (frame)
         return frame;
 
@@ -37,6 +37,7 @@ function getFrame(parent) {
 function closeFrame() {
     if (frame && !frame.isDestroyed()) {
         frame.close();
+        frame.destroy();
     }
     frame = null;
 }
@@ -78,7 +79,7 @@ function openOptions(parent, onClose) {
     ipcMain.on('receive-frame-options', (event, options) => {
         if (options) {
             setOptions(options);
-            frame = null;
+            frame.webContents.send('set-frame-style', options);
         }
     });
 }
