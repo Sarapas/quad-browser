@@ -34,7 +34,9 @@
     "iohook": "^0.6.1",
     "request": "^2.88.0",
     "valid-url": "^1.0.9",
-    "vue": "^2.6.10"
+    "vue": "^2.6.10",
+    "vue-slider-component": "^3.0.40",
+    "vue-swatches": "^1.0.4"
   },
   "iohook": {
     "targets": [

@@ -10,6 +10,7 @@ const bookmarks = require('./bookmarks');
 const history = require('./history');
 const viewManager = require('./view-manager');
 const shortcuts = require('./shortcuts');
+const frameOptions = require('./frame-options');
 
 function update(win, onModalOpen, onModalClose) {
     let addressSubmenu = [];
@@ -132,7 +133,16 @@ function update(win, onModalOpen, onModalClose) {
             shortcuts.open(win, () => {
               if (onModalClose) onModalClose();
             });
-          }}
+          }},
+          {
+            label: 'Frame',
+            click: () => {
+              if (onModalOpen) onModalOpen();
+              frameOptions.openOptions(win, () => {
+                if (onModalClose) onModalClose();
+              });
+            }
+          }
         ]
       }
     ];

@@ -4,7 +4,7 @@ const path = require('path');
 const fs = require('fs');
 const util = require('electron-util');
 const layouts = require('./layouts');
-const utilities = require('./utilities');
+const frameOptions = require('./frame-options');
 
 const requestFullscreen = fs.readFileSync(path.resolve(__dirname, 'set-video-fullscreen.js'), 'utf8');
 const exitFullscreen = fs.readFileSync(path.resolve(__dirname, 'exit-video-fullscreen.js'), 'utf8');
@@ -14,7 +14,6 @@ let activeViews;
 let parent;
 let isInitialized;
 let audibleView;
-let frame;
 let layoutPickerWnd;
 let layout;
 let previousLayout;
@@ -30,7 +29,7 @@ function init(parentWindow, defaultURL) {
   if (isInitialized) throw new Error('Already initialized');
   parent = parentWindow;
   homepage = defaultURL;
-  if (!frame) createFrame();
+  frameOptions.getFrame(); // constructs frame
   isInitialized = true;
   setLayout(layouts.QUAD, true); // default layout
 }
@@ -185,7 +184,7 @@ function suspendAudible() {
     audibleView.webContents.setAudioMuted(true);
   }
 
-  frame.hide();
+  frameOptions.getFrame().hide();
 }
 
 function resumeAudible() {
@@ -289,17 +288,17 @@ function setAudible(view) {
 function setSelected(view) {
   checkInitialized();
 
+  let frame = frameOptions.getFrame();
+
   if (layout === layouts.SINGLE && frame) {
     frame.hide();
     return;
   }
 
   if (!parent.isVisible() || !view || !view.isVisible()) {
-    if (frame) frame.hide();
+    frame.hide();
     return;
   }
-
-  if (!frame) createFrame();
 
   frame.setBounds(view.getBounds());
   frame.parent = view;
@@ -388,33 +387,6 @@ function changeLayout(callback) {
   });
 }
 
-function createFrame() {
-  frame = new BrowserWindow({
-    frame: false,
-    transparent: true,
-    show: false,
-    skipTaskbar: true,
-    parent: parent,
-    closable: false,
-    focusable: false,
-    fullscreenable: false
-  });
-
-  frame.loadFile('renderer/frame.html');
-  frame.setIgnoreMouseEvents(true);
-
-  // to avoid frame glitching sometimes on mac
-  setInterval(() => {
-    if (frame && frame.parent) {
-      let frameBounds = frame.getBounds();
-      let parentBounds = frame.parent.getBounds();
-      if (!utilities.isBoundsEqual(frameBounds, parentBounds)) {
-        frame.setBounds(parentBounds);
-      }
-    }
-  }, 1000);
-}
-
 function maximizeViews() {
   checkInitialized();
   injectToAll(requestFullscreen);
@@ -442,10 +414,7 @@ function unload() {
   parent = null;
   isInitialized = false;
   audibleView = null;
-  if (frame && !frame.isDestroyed()) {
-    frame.close();
-  }
-  frame = null;
+  frameOptions.closeFrame();
 }
 
 function onLayoutChange(callback) {

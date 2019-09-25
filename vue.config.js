@@ -3,7 +3,7 @@ module.exports = {
   pages: {
     index: {
       // having index for dev purposes, pointing to app currently developed
-      entry: 'src/shortcuts.js',
+      entry: 'src/frame-options.js',
       template: 'src/template.html',
       filename: 'index.html'
     },
@@ -41,6 +41,16 @@ module.exports = {
       entry: 'src/shortcuts.js',
       template: 'src/template.html',
       filename: 'shortcuts.html'
+    },
+    frame: {
+      entry: 'src/frame.js',
+      template: 'src/frame-template.html',
+      filename: 'frame.html'
+    },
+    frameOptions: {
+      entry: 'src/frame-options.js',
+      template: 'src/template.html',
+      filename: 'frame-options.html'
     }
   }
 }
