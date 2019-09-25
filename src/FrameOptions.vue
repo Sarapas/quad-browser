@@ -8,7 +8,7 @@
     <div class="form__field">
       <div class="form__label">
         <strong>Choose color:</strong>
-        <swatches v-model="color" inline></swatches>
+        <swatches v-model="color" background-color="transparent" inline></swatches>
       </div>
     </div>
 
