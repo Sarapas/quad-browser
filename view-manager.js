@@ -23,7 +23,7 @@ let autoRefresh = [];
 let homepage;
 let muted;
 let hover;
-let watch;
+let numberMode;
 
 function init(parentWindow, defaultURL) {
   if (isInitialized) throw new Error('Already initialized');
@@ -477,12 +477,12 @@ function isHoverMode() {
   return !!hover;
 }
 
-function toggleWatchMode() {
-  watch = !watch;
+function toggleNumberMode() {
+  numberMode = !numberMode;
 
   let viewNumbers = [1, 2, 3, 4, 5, 6, 7, 8, 9];
 
-  if (watch) {
+  if (numberMode) {
     viewNumbers.forEach(number => {
       globalShortcut.register(`${number}`, () => {
         let view = getViewByNumber(number);
@@ -496,8 +496,8 @@ function toggleWatchMode() {
   }
 }
 
-function isWatchMode() {
-  return !!watch;
+function isNumberMode() {
+  return !!numberMode;
 }
 
 var exports = (module.exports = {
@@ -527,7 +527,7 @@ var exports = (module.exports = {
   isMuted: isMuted,
   toggleHoverMode: toggleHoverMode,
   isHoverMode: isHoverMode,
-  toggleWatchMode: toggleWatchMode,
-  isWatchMode: isWatchMode,
+  toggleNumberMode: toggleNumberMode,
+  isNumberMode: isNumberMode,
   substituteView: substituteView
 });

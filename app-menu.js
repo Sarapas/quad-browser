@@ -89,12 +89,12 @@ function update(win, onModalOpen, onModalClose) {
             }
           },
           {
-            label: 'Watch mode',
+            label: 'Number mode',
             type: 'checkbox',
-            accelerator: shortcuts.WATCH_MODE,
-            checked: viewManager.isWatchMode(),
+            accelerator: shortcuts.NUMBER_MODE,
+            checked: viewManager.isNumberMode(),
             click: () => {
-                viewManager.toggleWatchMode();
+                viewManager.toggleNumberMode();
             }
           },
           { type: 'separator' },

@@ -94,7 +94,7 @@ function getDefaults() {
 		{ title: 'Find', hotkey: 'F' },
 		{ title: 'Refresh', hotkey: 'R' },
 		{ title: 'Open Notepad', hotkey: 'N' },
-		{ title: 'Watch Mode', hotkey: 'W' }
+		{ title: 'Number Mode', hotkey: 'W' }
 	];
 }
 
@@ -117,7 +117,7 @@ function set(shortcuts) {
 	updateHotkey('FIND', 'Find');
 	updateHotkey('REFRESH', 'Refresh');
 	updateHotkey('OPEN_NOTEPAD', 'Open Notepad');
-	updateHotkey('WATCH_MODE', 'Watch Mode');
+	updateHotkey('NUMBER_MODE', 'Number Mode');
 
 	if (onChange) {
 		onChange();
@@ -137,5 +137,5 @@ var exports = (module.exports = {
 	FIND: null,
 	REFRESH: null,
 	OPEN_NOTEPAD: null,
-	WATCH_MODE: null
+	NUMBER_MODE: null
 });
