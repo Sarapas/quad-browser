@@ -29,7 +29,7 @@ function init(parentWindow, defaultURL) {
   if (isInitialized) throw new Error('Already initialized');
   parent = parentWindow;
   homepage = defaultURL;
-  frameOptions.getFrame(); // constructs frame
+  frameOptions.getFrame(parent); // constructs frame
   isInitialized = true;
   setLayout(layouts.QUAD, true); // default layout
 }
@@ -184,7 +184,7 @@ function suspendAudible() {
     audibleView.webContents.setAudioMuted(true);
   }
 
-  frameOptions.getFrame().hide();
+  frameOptions.getFrame(parent).hide();
 }
 
 function resumeAudible() {
@@ -288,7 +288,7 @@ function setAudible(view) {
 function setSelected(view) {
   checkInitialized();
 
-  let frame = frameOptions.getFrame();
+  let frame = frameOptions.getFrame(parent);
 
   if (layout === layouts.SINGLE && frame) {
     frame.hide();

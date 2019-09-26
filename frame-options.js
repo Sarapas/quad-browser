@@ -6,7 +6,7 @@ const store = new Store();
 let frameOptionsWin;
 let frame;
 
-function getFrame() {
+function getFrame(parent) {
     if (frame)
         return frame;
 
@@ -15,12 +15,17 @@ function getFrame() {
         transparent: true,
         show: false,
         skipTaskbar: true,
+        parent: parent,
         closable: false,
         focusable: false,
         fullscreenable: false,
         webPreferences: {
             nodeIntegration: true
-        }
+        },
+        resizable: false,
+        hasShadow: false,
+        titleBarStyle: 'customButtonsOnHover', // together with frame: false makes corners not round on macos. It is a bug that we use as a feature
+        thickFrame: false
     });
 
     frame.loadFile('dist/frame.html');
