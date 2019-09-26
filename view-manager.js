@@ -493,7 +493,7 @@ function toggleNumberMode() {
       let nextNumber = 1;
       if (audibleView) {
         if (audibleView.number < activeViews.length) {
-          nextNumber++;
+          nextNumber = audibleView.number + 1;
         }
       }
       let view = getViewByNumber(nextNumber);
