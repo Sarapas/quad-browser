@@ -489,10 +489,21 @@ function toggleNumberMode() {
         if (view) setAudible(view);
       });
     });
+    globalShortcut.register('TAB', () => {
+      let nextNumber = 1;
+      if (audibleView) {
+        if (audibleView.number < activeViews.length) {
+          nextNumber++;
+        }
+      }
+      let view = getViewByNumber(nextNumber);
+      if (view) setAudible(view);
+    });
   } else {
     viewNumbers.forEach(number => {
       globalShortcut.unregister(`${number}`);
     });
+    globalShortcut.unregister('TAB');
   }
 }
 
