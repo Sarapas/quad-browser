@@ -72,6 +72,9 @@ function isBoundsEqual(b1, b2) {
 }
 
 function getNumberFromKey(keycode) {
+    if (!keycode)
+        return null;
+
     let keycodes;
     if (util.is.windows) {
         keycodes = winNumberKeyCodes;

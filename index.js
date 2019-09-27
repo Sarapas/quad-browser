@@ -5,6 +5,7 @@ const ioHook = require('iohook');
 const contextMenu = require('electron-context-menu');
 const Store = require('electron-store');
 const util = require('electron-util');
+const log = require('electron-log');
 const store = new Store();
 
 const viewManager = require('./view-manager');
@@ -51,6 +52,7 @@ function createWindow() {
   win.setMenuBarVisibility(false);
 
   function onKeyDown(event) {
+    log.info(JSON.stringify(event));
     if (viewManager.isNumberMode()) {
       let number = utilities.getNumberFromKey(event.rawcode);
       if (number) {
