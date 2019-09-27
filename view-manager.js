@@ -479,16 +479,8 @@ function isHoverMode() {
 
 function toggleNumberMode() {
   numberMode = !numberMode;
-
-  let viewNumbers = [1, 2, 3, 4, 5, 6, 7, 8, 9];
-
+  
   if (numberMode) {
-    viewNumbers.forEach(number => {
-      globalShortcut.register(`${number}`, () => {
-        let view = getViewByNumber(number);
-        if (view) setAudible(view);
-      });
-    });
     globalShortcut.register('TAB', () => {
       let nextNumber = 1;
       if (audibleView) {
@@ -500,9 +492,6 @@ function toggleNumberMode() {
       if (view) setAudible(view);
     });
   } else {
-    viewNumbers.forEach(number => {
-      globalShortcut.unregister(`${number}`);
-    });
     globalShortcut.unregister('TAB');
   }
 }

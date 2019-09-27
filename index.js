@@ -14,6 +14,7 @@ const history = require('./history');
 const appMenu = require('./app-menu');
 const viewContextMenu = require('./view-context-menu');
 const shortcuts = require('./shortcuts');
+const utilities = require('./utilities');
 
 let win;
 let isTrustedAccesibility;
@@ -48,6 +49,20 @@ function createWindow() {
 
   win.setFullScreen(true);
   win.setMenuBarVisibility(false);
+
+  function onKeyDown(event) {
+    if (viewManager.isNumberMode()) {
+      let number = utilities.getNumberFromKey(event.rawcode);
+      if (number) {
+        let view = viewManager.getViewByNumber(number);
+        if (view) viewManager.setAudible(view);
+      }
+    }
+  }
+
+  function onKeyUp(event) {
+    onKeyDown(event);
+  }
 
   function onMouseMove(event) {
     if (viewManager.isHoverMode() && !suspendViewFocus) {
@@ -108,6 +123,8 @@ function createWindow() {
 
     ioHook.on('mousedown', onMouseClick);
     ioHook.on('mousemove', onMouseMove);
+    ioHook.on('keydown', onKeyDown);
+    ioHook.on('keyup', onKeyUp);
     ioHook.start();
   }
 
@@ -180,6 +197,8 @@ function createWindow() {
     globalShortcut.unregisterAll();
     ioHook.removeListener('mousedown', onMouseClick);
     ioHook.removeListener('mousemove', onMouseMove);
+    ioHook.removeListener('keydown', onKeyDown);
+    ioHook.removeListener('keyup', onKeyUp);
     win = null;
   });
 

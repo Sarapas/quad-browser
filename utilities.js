@@ -1,8 +1,12 @@
-var request = require('request');
-var fs = require('fs');
+const request = require('request');
+const fs = require('fs');
 const encode = require('image-encode');
 const decodeIco = require('decode-ico')
-var arrayBufferToBuffer = require('arraybuffer-to-buffer');
+const arrayBufferToBuffer = require('arraybuffer-to-buffer');
+const util = require('electron-util');
+
+const winNumberKeyCodes = [ 48, 49, 50, 51, 52, 53, 54, 55, 56, 57 ];
+const macNumberKeyCodes = [ 29, 18, 19, 20, 21, 23, 22, 26, 28, 25 ];
 
 function icoToPng (source, size) {
     const images = decodeIco(source);
@@ -67,10 +71,26 @@ function isBoundsEqual(b1, b2) {
     return b1 && b2 && b1.x === b2.x && b1.y === b2.y && b1.width === b2.width && b1.height === b2.height; 
 }
 
+function getNumberFromKey(keycode) {
+    let keycodes;
+    if (util.is.windows) {
+        keycodes = winNumberKeyCodes;
+    } else if (util.is.mac) {
+        keycodes = macNumberKeyCodes;
+    }
+
+    let number = keycodes.indexOf(keycode);
+    if (number < 0)
+        return null;
+
+    return number;
+}
+
 var exports = module.exports = {
     newGuid: uuidv4,
     downloadFile: downloadFile,
     icoToPng: icoToPng,
     centerWindowToParentWindow: centerWindowToParentWindow,
-    isBoundsEqual: isBoundsEqual
+    isBoundsEqual: isBoundsEqual,
+    getNumberFromKey: getNumberFromKey
 };
