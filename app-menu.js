@@ -97,6 +97,15 @@ function update(win, onModalOpen, onModalClose) {
                 viewManager.toggleNumberMode();
             }
           },
+          {
+            label: 'Fullscreen number mode',
+            type: 'checkbox',
+            accelerator: shortcuts.FULLSCREEN_NUMBER_MODE,
+            checked: viewManager.isFullscreenNumberMode(),
+            click: () => {
+                viewManager.toggleFullscreenNumberMode();
+            }
+          },
           { type: 'separator' },
           {
             label: 'Fullscreen players',

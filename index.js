@@ -52,18 +52,21 @@ function createWindow() {
   win.setMenuBarVisibility(false);
 
   function onKeyDown(event) {
-    log.info(JSON.stringify(event));
     if (viewManager.isNumberMode()) {
       let number = utilities.getNumberFromKey(event.rawcode);
       if (number) {
         let view = viewManager.getViewByNumber(number);
         if (view) viewManager.setAudible(view);
       }
+    } else if (viewManager.isFullscreenNumberMode()) {
+      let number = utilities.getNumberFromKey(event.rawcode);
+      if (number === 0) {
+        viewManager.exitSingleLayout();
+      } else if (number > 0 && number <= 9) {
+        let view = viewManager.getViewByNumber(number);
+        if (view) viewManager.setSingleLayout(view);
+      }
     }
-  }
-
-  function onKeyUp(event) {
-    onKeyDown(event);
   }
 
   function onMouseMove(event) {
@@ -126,7 +129,6 @@ function createWindow() {
     ioHook.on('mousedown', onMouseClick);
     ioHook.on('mousemove', onMouseMove);
     ioHook.on('keydown', onKeyDown);
-    ioHook.on('keyup', onKeyUp);
     ioHook.start();
   }
 
@@ -200,7 +202,6 @@ function createWindow() {
     ioHook.removeListener('mousedown', onMouseClick);
     ioHook.removeListener('mousemove', onMouseMove);
     ioHook.removeListener('keydown', onKeyDown);
-    ioHook.removeListener('keyup', onKeyUp);
     win = null;
   });
 

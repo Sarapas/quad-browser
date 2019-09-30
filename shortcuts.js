@@ -94,7 +94,8 @@ function getDefaults() {
 		{ title: 'Find', hotkey: 'F' },
 		{ title: 'Refresh', hotkey: 'R' },
 		{ title: 'Open Notepad', hotkey: 'N' },
-		{ title: 'Number Mode', hotkey: 'W' }
+		{ title: 'Number Mode', hotkey: 'W' },
+		{ title: 'Fullscreen number mode', hotkey: 'T' }
 	];
 }
 
@@ -118,6 +119,7 @@ function set(shortcuts) {
 	updateHotkey('REFRESH', 'Refresh');
 	updateHotkey('OPEN_NOTEPAD', 'Open Notepad');
 	updateHotkey('NUMBER_MODE', 'Number Mode');
+	updateHotkey('FULLSCREEN_NUMBER_MODE', 'Fullscreen number mode');
 
 	if (onChange) {
 		onChange();
@@ -137,5 +139,6 @@ var exports = (module.exports = {
 	FIND: null,
 	REFRESH: null,
 	OPEN_NOTEPAD: null,
-	NUMBER_MODE: null
+	NUMBER_MODE: null,
+	FULLSCREEN_NUMBER_MODE: null
 });

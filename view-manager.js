@@ -24,6 +24,7 @@ let homepage;
 let muted;
 let hover;
 let numberMode;
+let fullscreenNumberMode;
 
 function init(parentWindow, defaultURL) {
   if (isInitialized) throw new Error('Already initialized');
@@ -198,7 +199,10 @@ function setLayout(newLayout, force, layoutViews = null) {
   checkInitialized();
 
   if (layout != newLayout || force) {
-    previousLayout = layout;
+    if (layout !== layouts.SINGLE) {
+      previousLayout = layout;
+    }
+
     layout = newLayout;
     let viewCount = layouts.getViewCount(layout);
 
@@ -244,12 +248,22 @@ function updateLayout() {
 }
 
 function toggleSingleLayout(view) {
-  checkInitialized();
-
   if (layout === layouts.SINGLE) {
     setLayout(previousLayout, true);
   } else {
     setLayout(layouts.SINGLE, true, [ view ]);
+  }
+}
+
+function setSingleLayout(view) {
+  if (view) {
+    setLayout(layouts.SINGLE, true, [ view ]);
+  }
+}
+
+function exitSingleLayout() {
+  if (layout === layouts.SINGLE) {
+    setLayout(previousLayout, true);
   }
 }
 
@@ -500,6 +514,14 @@ function isNumberMode() {
   return !!numberMode;
 }
 
+function toggleFullscreenNumberMode() {
+  fullscreenNumberMode = !fullscreenNumberMode;
+}
+
+function isFullscreenNumberMode() {
+  return !!fullscreenNumberMode;
+}
+
 var exports = (module.exports = {
   init: init,
   setAudible: setAudible,
@@ -510,6 +532,8 @@ var exports = (module.exports = {
   inView: inView,
   getViewByNumber: getViewByNumber,
   toggleSingleLayout: toggleSingleLayout,
+  setSingleLayout: setSingleLayout,
+  exitSingleLayout: exitSingleLayout,
   changeLayout: changeLayout,
   getViewNames: getViewNames,
   loadURL: loadURL,
@@ -529,5 +553,7 @@ var exports = (module.exports = {
   isHoverMode: isHoverMode,
   toggleNumberMode: toggleNumberMode,
   isNumberMode: isNumberMode,
+  isFullscreenNumberMode: isFullscreenNumberMode,
+  toggleFullscreenNumberMode: toggleFullscreenNumberMode,
   substituteView: substituteView
 });
