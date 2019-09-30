@@ -86,7 +86,7 @@ function createView(number, title) {
     minimizable: false,
     fullscreenable: false,
     closable: false,
-    focusable: false,
+    focusable: true,
     acceptFirstMouse: true,
     hasShadow: false,
     titleBarStyle: 'customButtonsOnHover', // together with frame: false makes corners not round on macos. It is a bug that we use as a feature
