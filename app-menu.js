@@ -88,6 +88,7 @@ function update(win, onModalOpen, onModalClose) {
                 viewManager.toggleHoverMode();
             }
           },
+          /*
           { type: 'separator' },
           {
             label: 'Number mode',
@@ -98,7 +99,7 @@ function update(win, onModalOpen, onModalClose) {
                 viewManager.toggleNumberMode();
                 update(win, onModalOpen, onModalClose); // since this affects fullscreen number mode
             }
-          },
+          },ß
           {
             label: 'Fullscreen number mode',
             type: 'checkbox',
@@ -108,7 +109,7 @@ function update(win, onModalOpen, onModalClose) {
                 viewManager.toggleFullscreenNumberMode();
                 update(win, onModalOpen, onModalClose); // since this affects number mode
             }
-          },
+          }, */
           { type: 'separator' },
           {
             label: 'Fullscreen players',
