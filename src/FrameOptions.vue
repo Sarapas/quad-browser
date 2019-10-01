@@ -1,7 +1,7 @@
 <template>
   <div id="app" class="page">
     <div class="header">
-      <h2>Frame</h2>
+      <h2>Border</h2>
       <img class="button close-button" src="./assets/close.svg" v-on:click="close" />
     </div>
     <hr />

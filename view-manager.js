@@ -495,6 +495,8 @@ function toggleNumberMode() {
   numberMode = !numberMode;
   
   if (numberMode) {
+    fullscreenNumberMode = false;
+    
     globalShortcut.register('TAB', () => {
       let nextNumber = 1;
       if (audibleView) {
@@ -516,6 +518,9 @@ function isNumberMode() {
 
 function toggleFullscreenNumberMode() {
   fullscreenNumberMode = !fullscreenNumberMode;
+  if (fullscreenNumberMode) {
+    numberMode = false;
+  }
 }
 
 function isFullscreenNumberMode() {

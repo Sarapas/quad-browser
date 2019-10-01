@@ -5,9 +5,6 @@ const decodeIco = require('decode-ico')
 const arrayBufferToBuffer = require('arraybuffer-to-buffer');
 const util = require('electron-util');
 
-const winNumberKeyCodes = [ 48, 49, 50, 51, 52, 53, 54, 55, 56, 57 ];
-const macNumberKeyCodes = [ 29, 18, 19, 20, 21, 23, 22, 26, 28, 25 ];
-
 function icoToPng (source, size) {
     const images = decodeIco(source);
     let arrayBuffer = encode(images[0], [ size, size ], 'png');
@@ -75,14 +72,16 @@ function getNumberFromKey(keycode) {
     if (!keycode)
         return null;
 
-    let keycodes;
+    let number = -1;
+
     if (util.is.windows) {
-        keycodes = winNumberKeyCodes;
+        const winNumberKeyCodes = [ 48, 49, 50, 51, 52, 53, 54, 55, 56, 57 ];
+        number = winNumberKeyCodes.indexOf(keycode);
     } else if (util.is.mac) {
-        keycodes = macNumberKeyCodes;
+        const macNumberKeyCodes = [ 29, 18, 19, 20, 21, 23, 22, 26, 28, 25 ];
+        number = macNumberKeyCodes.indexOf(keycode);
     }
 
-    let number = keycodes.indexOf(keycode);
     if (number < 0)
         return null;
 

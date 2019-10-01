@@ -88,6 +88,7 @@ function update(win, onModalOpen, onModalClose) {
                 viewManager.toggleHoverMode();
             }
           },
+          { type: 'separator' },
           {
             label: 'Number mode',
             type: 'checkbox',
@@ -95,6 +96,7 @@ function update(win, onModalOpen, onModalClose) {
             checked: viewManager.isNumberMode(),
             click: () => {
                 viewManager.toggleNumberMode();
+                update(win, onModalOpen, onModalClose); // since this affects fullscreen number mode
             }
           },
           {
@@ -104,6 +106,7 @@ function update(win, onModalOpen, onModalClose) {
             checked: viewManager.isFullscreenNumberMode(),
             click: () => {
                 viewManager.toggleFullscreenNumberMode();
+                update(win, onModalOpen, onModalClose); // since this affects number mode
             }
           },
           { type: 'separator' },
@@ -144,7 +147,7 @@ function update(win, onModalOpen, onModalClose) {
             });
           }},
           {
-            label: 'Frame',
+            label: 'Border',
             click: () => {
               if (onModalOpen) onModalOpen();
               frameOptions.openOptions(win, () => {
