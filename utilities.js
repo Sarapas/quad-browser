@@ -77,7 +77,7 @@ function getNumberFromKey(keycode) {
     if (util.is.windows) {
         const winNumberKeyCodes = [ 48, 49, 50, 51, 52, 53, 54, 55, 56, 57 ];
         number = winNumberKeyCodes.indexOf(keycode);
-    } else if (util.is.mac) {
+    } else if (util.is.macos) {
         const macNumberKeyCodes = [ 29, 18, 19, 20, 21, 23, 22, 26, 28, 25 ];
         number = macNumberKeyCodes.indexOf(keycode);
     }

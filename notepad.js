@@ -1,7 +1,8 @@
 const electron = require('electron');
-const { ipcMain, app, BrowserWindow } = electron;
+const { ipcMain, app } = electron;
 const storage = require('electron-json-storage');
 const viewManager = require('./view-manager');
+const viewFactory = require('./view-factory');
 
 const NOTEPAD_STORAGE = "notepad";
 let saveHandler;
@@ -35,27 +36,7 @@ function close() {
 }
 
 function createNotepad(parent) {
-    let notepad = new BrowserWindow({
-      parent: parent,
-      frame: false,
-      transparent: false,
-      show: false,
-      skipTaskbar: true,
-      resizable: false,
-      fullscreen: false,
-      minimizable: false,
-      fullscreenable: false,
-      closable: false,
-      focusable: true,
-      acceptFirstMouse: true,
-      hasShadow: false,
-      titleBarStyle: 'customButtonsOnHover', // together with frame: false makes corners not round on macos. It is a bug that we use as a feature
-      thickFrame: false,
-      webPreferences: {
-        nodeIntegration: true
-      }
-    });
-  
+    let notepad = viewFactory.create(parent, 0, true);
     notepad.isNotepad = true; // custom property
 
     storage.get(NOTEPAD_STORAGE, function(error, data) {
@@ -85,7 +66,7 @@ function createNotepad(parent) {
         });
     }
 
-    notepad.loadFile("dist/notepad.html");
+    notepad.webContents.loadFile("dist/notepad.html");
     return notepad;
 }
 

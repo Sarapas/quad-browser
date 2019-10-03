@@ -237,12 +237,9 @@ function getUsableBounds(parent) {
             usableBounds.y += util.menuBarHeight();
         }
     } else if (util.is.windows) {
-        // on windows the area seems to be a tiny bit too big
-        let MARGIN = 1;
-        usableBounds.x += MARGIN;
-        usableBounds.y += MARGIN;
-        usableBounds.height -= MARGIN * 2;
-        usableBounds.width -= MARGIN * 2;
+        // on Windows we're using BrowserViews and they're placed differently
+        usableBounds.x = 0;
+        usableBounds.y = 0;
     }
 
     return usableBounds;    

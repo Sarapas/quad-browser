@@ -1,6 +1,7 @@
 const electron = require('electron');
 const { BrowserWindow, ipcMain } = electron;
 const utilities = require('./utilities');
+const util = require('electron-util');
 
 let addressWindow;
 
@@ -12,6 +13,8 @@ function open(parent, view, onAddress) {
       closable: true,
       focusable: true,
       fullscreenable: false,
+      modal: util.is.windows,
+      parent: parent,
       width: 272,
       height: 40,
       webPreferences: {

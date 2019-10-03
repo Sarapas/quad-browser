@@ -5,6 +5,7 @@ const fs = require('fs');
 const util = require('electron-util');
 const layouts = require('./layouts');
 const frameOptions = require('./frame-options');
+const viewFactory = require('./view-factory');
 
 const requestFullscreen = fs.readFileSync(path.resolve(__dirname, 'set-video-fullscreen.js'), 'utf8');
 const exitFullscreen = fs.readFileSync(path.resolve(__dirname, 'exit-video-fullscreen.js'), 'utf8');
@@ -74,27 +75,9 @@ function appendSwapMenu(number, ctxMenu) {
   ctxMenu.append(swapMenu);
 }
 
-function createView(number, title) {
-  let view = new BrowserWindow({
-    parent: parent,
-    frame: false,
-    transparent: false,
-    show: false,
-    skipTaskbar: true,
-    resizable: false,
-    fullscreen: false,
-    minimizable: false,
-    fullscreenable: false,
-    closable: false,
-    focusable: true,
-    acceptFirstMouse: true,
-    hasShadow: false,
-    titleBarStyle: 'customButtonsOnHover', // together with frame: false makes corners not round on macos. It is a bug that we use as a feature
-    thickFrame: false
-  });
+function createView(number) {
+  let view = viewFactory.create(parent, number);
 
-  view.focusable = true; // adding custom property for macOs usage
-  view.number = number;
   view.webContents.setAudioMuted(true);
   view.webContents.on('new-window', (e, url) => {
     if (view && view.webContents) {
@@ -128,7 +111,7 @@ function createView(number, title) {
       setSelected(view);
     }
   });
-  view.loadURL(homepage);
+  view.webContents.loadURL(homepage);
   return view;
 }
 

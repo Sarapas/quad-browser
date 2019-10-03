@@ -28,7 +28,7 @@ function open(parent, onClose) {
 		modal: true,
 		focusable: true,
 		fullscreenable: false,
-		height: 670,
+		height: 700,
 		width: 600,
 		webPreferences: {
 			nodeIntegration: true

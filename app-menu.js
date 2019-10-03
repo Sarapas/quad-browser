@@ -173,7 +173,7 @@ function changeHomepage(win, onShow, onClose) {
       {
         title: 'Change homepage',
         label: 'Homepage:',
-        height: 150,
+        height: 210,
         width: 400,
         resizable: false,
         value: 'https://',
