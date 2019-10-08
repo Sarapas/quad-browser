@@ -105,6 +105,14 @@ function createView(number) {
       view.webContents.favicons = favicons;
     }
   });
+  view.webContents.on('before-input-event', (event, input) => {
+    if (numberMode || fullscreenNumberMode) {
+      let numberKeys = [ '1', '2', '3', '4', '5', '6', '7', '8', '9', '0' ];
+      if (numberKeys.includes(input.key)) {
+        event.preventDefault();
+      }
+    }
+  });
   view.on('focus', () => {
     if (view && view.focusable) {
       setAudible(view);

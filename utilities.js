@@ -79,7 +79,11 @@ function getNumberFromKey(keycode) {
         number = winNumberKeyCodes.indexOf(keycode);
     } else if (util.is.macos) {
         const macNumberKeyCodes = [ 29, 18, 19, 20, 21, 23, 22, 26, 28, 25 ];
+        const macNumberKeypadCodes = [ 82, 83, 84, 85, 86, 87, 88, 89, 91, 92 ];
         number = macNumberKeyCodes.indexOf(keycode);
+        if (number < 0) {
+            number = macNumberKeypadCodes.indexOf(keycode);
+        }
     }
 
     if (number < 0)
