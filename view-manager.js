@@ -254,7 +254,12 @@ function setSingleLayout(view) {
 
 function exitSingleLayout() {
   if (layout === layouts.SINGLE) {
+    let currentAudible = audibleView;
     setLayout(previousLayout, true);
+    if (currentAudible) {
+      currentAudible.focus();
+      setSelected(currentAudible);
+    }
   }
 }
 
@@ -295,10 +300,10 @@ function setSelected(view) {
 
   let frame = frameOptions.getFrame(parent);
 
-  if (layout === layouts.SINGLE && frame) {
-    frame.hide();
-    return;
-  }
+  // if (layout === layouts.SINGLE && frame) {
+  //   frame.hide();
+  //   return;
+  // }
 
   if (!parent.isVisible() || !view || !view.isVisible()) {
     frame.hide();
