@@ -16,6 +16,7 @@ const appMenu = require('./app-menu');
 const viewContextMenu = require('./view-context-menu');
 const shortcuts = require('./shortcuts');
 const utilities = require('./utilities');
+const walkthrough = require('./walkthrough');
 
 let win;
 let isTrustedAccesibility;
@@ -198,7 +199,7 @@ function createWindow() {
 
   win.on('closed', () => {
     viewManager.unload();
-    globalShortcut.unregisterAll();
+    globalShortcut.unregisterAll();f
     ioHook.removeListener('mousedown', onMouseClick);
     ioHook.removeListener('mousemove', onMouseMove);
     ioHook.removeListener('keydown', onKeyDown);
@@ -206,6 +207,7 @@ function createWindow() {
   });
 
   win.show();
+  walkthrough.show(win);
 }
 
 function unmaximize() {

@@ -3,7 +3,7 @@ module.exports = {
   pages: {
     index: {
       // having index for dev purposes, pointing to app currently developed
-      entry: 'src/frame-options.js',
+      entry: 'src/walkthrough.js',
       template: 'src/template.html',
       filename: 'index.html'
     },
@@ -51,6 +51,11 @@ module.exports = {
       entry: 'src/frame-options.js',
       template: 'src/template.html',
       filename: 'frame-options.html'
+    },
+    walkthrough: {
+      entry: 'src/walkthrough.js',
+      template: 'src/template.html',
+      filename: 'walkthrough.html'
     }
   }
 }
