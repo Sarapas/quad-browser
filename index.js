@@ -199,7 +199,7 @@ function createWindow() {
 
   win.on('closed', () => {
     viewManager.unload();
-    globalShortcut.unregisterAll();f
+    globalShortcut.unregisterAll();
     ioHook.removeListener('mousedown', onMouseClick);
     ioHook.removeListener('mousemove', onMouseMove);
     ioHook.removeListener('keydown', onKeyDown);

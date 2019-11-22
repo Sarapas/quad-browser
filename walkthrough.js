@@ -13,7 +13,7 @@ function show(parent, onClose) {
 		modal: true,
 		focusable: true,
 		fullscreenable: false,
-		height: 600,
+		height: 620,
 		width: 700,
 		webPreferences: {
 			nodeIntegration: true
