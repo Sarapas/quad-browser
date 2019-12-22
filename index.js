@@ -207,7 +207,11 @@ function createWindow() {
   });
 
   win.show();
-  walkthrough.show(win);
+  let shown = store.get('walkthrough_shown');
+  if (!shown) {
+    walkthrough.show(win);
+    store.set('walkthrough_shown', true);
+  }
 }
 
 function unmaximize() {

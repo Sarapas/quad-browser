@@ -11,6 +11,7 @@ const history = require('./history');
 const viewManager = require('./view-manager');
 const shortcuts = require('./shortcuts');
 const frameOptions = require('./frame-options');
+const walkthrough = require('./walkthrough');
 
 function update(win, onModalOpen, onModalClose) {
     let addressSubmenu = [];
@@ -155,6 +156,14 @@ function update(win, onModalOpen, onModalClose) {
               });
             }
           }
+        ]
+      },
+      {
+        label: 'Help',
+        submenu: [
+          { label: 'Get started', click: () => { 
+            walkthrough.show(win);
+          }}
         ]
       }
     ];
