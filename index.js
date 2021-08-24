@@ -55,7 +55,9 @@ function createWindow() {
   function onKeyDown(event) {
     if (viewManager.isNumberMode()) {
       let number = utilities.getNumberFromKey(event.rawcode);
-      if (number) {
+      if (number === 0) {
+        viewManager.muteAll(!viewManager.isMuted());
+      } else if (number) {
         let view = viewManager.getViewByNumber(number);
         if (view) viewManager.setAudible(view);
       }
