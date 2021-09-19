@@ -33,7 +33,7 @@ function getFrame(parent) {
     //frame.webContents.openDevTools();
 
     ipcMain.on('frame-loaded', () => {
-        frame.webContents.send('set-frame-style', getOptions());
+        frame.webContents.send('set-frame-options', getOptions());
     });
 
     return frame;
@@ -84,7 +84,7 @@ function openOptions(parent, onClose) {
     ipcMain.on('receive-frame-options', (event, options) => {
         if (options) {
             setOptions(options);
-            frame.webContents.send('set-frame-style', options);
+            frame.webContents.send('set-frame-options', options);
         }
     });
 }
@@ -100,8 +100,18 @@ function setOptions(options) {
     store.set('frame-color', options.color);
 }
 
+function setFrameDashed() {
+    frame.webContents.send('set-frame-style', "dashed");
+}
+
+function setFrameSolid() {
+    frame.webContents.send('set-frame-style', "solid");
+}
+
 var exports = (module.exports = {
     getFrame: getFrame,
+    setFrameDashed: setFrameDashed,
+    setFrameSolid: setFrameSolid,
     closeFrame: closeFrame,
     openOptions: openOptions
 });

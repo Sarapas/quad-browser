@@ -142,8 +142,10 @@ function muteAll(mute) {
     views.forEach(v => {
       v.webContents.setAudioMuted(true);
     });
+    frameOptions.setFrameDashed();
   } else if (audibleView) {
     setAudible(audibleView);
+    frameOptions.setFrameSolid();
   }
 }
 
