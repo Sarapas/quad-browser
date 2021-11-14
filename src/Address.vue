@@ -1,43 +1,48 @@
 <template>
   <div id="app">
     <div class="container">
-      <input type="text" autofocus v-model="address" @keyup="onAddressChange" v-on:keyup.esc="close" v-on:keyup.enter="open" class="address-field" placeholder="Address" />
+      <!-- <input type="text" autofocus v-model="address" @keyup="onAddressChange" v-on:keyup.esc="close" v-on:keyup.enter="open" class="address-field" placeholder="Address" />
       <img class="button" src="./assets/forward.svg" v-on:click="open"  />
-      <img class="button close-button" src="./assets/close.svg" v-on:click="close" />
+      <img class="button close-button" src="./assets/close.svg" v-on:click="close" />-->
+      <!-- <my-react-component :message="message" @reset="reset" /> -->
     </div>
   </div>
 </template>
 
 <script>
+  import MyReactComponent from './MyReactComponent'
 
 export default {
-  name: 'address',
-    data: function() {
+  name: "address",
+  data: function() {
     return {
+      message: "Hi from React"
     };
   },
-  props: [ 'address' ],
+  props: ["address"],
   methods: {
-    onAddressChange: function() {
+    reset: function() {
+      this.message = "";
     },
+    onAddressChange: function() {},
     open: function() {
-      if (!this.address)
-        return;
+      if (!this.address) return;
 
-      const { ipcRenderer } = window.require('electron');
-      ipcRenderer.send('load-url', this.address);
+      const { ipcRenderer } = window.require("electron");
+      ipcRenderer.send("load-url", this.address);
       this.close();
     },
     close: function() {
-      const { remote } = window.require('electron');
+      const { remote } = window.require("electron");
       const currentWindow = remote.getCurrentWindow();
       currentWindow.close();
-    },
+    }
   },
   mounted: function() {
     this.address = "https://";
-  }
-}
+  },
+  components: { 'my-react-component': MyReactComponent }
+};
 </script>
 
 <style>
@@ -45,7 +50,7 @@ body {
   margin: 0px;
 }
 #app {
-  font-family: 'Avenir', Helvetica, Arial, sans-serif;
+  font-family: "Avenir", Helvetica, Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-align: center;
@@ -74,7 +79,7 @@ body {
   border-radius: 100%;
 }
 .address-field {
-  font-family: 'Avenir', Helvetica, Arial, sans-serif;
+  font-family: "Avenir", Helvetica, Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   width: 100%;
