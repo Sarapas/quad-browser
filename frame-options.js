@@ -102,10 +102,14 @@ function setOptions(options) {
 
 function setFrameDashed() {
     frame.webContents.send('set-frame-style', "dashed");
+    var options = getOptions();
+    options.color = "#FFFFFF"; // frame should we white when dashed
+    frame.webContents.send('set-frame-options', options);
 }
 
 function setFrameSolid() {
     frame.webContents.send('set-frame-style', "solid");
+    frame.webContents.send('set-frame-options', getOptions()); // restore to default options
 }
 
 var exports = (module.exports = {
