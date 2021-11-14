@@ -57,5 +57,22 @@ module.exports = {
       template: 'src/template.html',
       filename: 'walkthrough.html'
     }
-  }
+  },
+  configureWebpack: {
+    module: {
+      rules: [
+        {
+          test: /(tsx)$/,
+          exclude: /(node_modules)/,
+          use: {
+            loader: 'babel-loader',
+            options: {
+              presets: ['@babel/preset-react'],
+              plugins: ['transform-react-jsx']
+            }
+          }
+        },
+      ]
+    }
+  },
 }
