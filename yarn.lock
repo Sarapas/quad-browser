@@ -2360,6 +2360,11 @@ electron-json-storage@^4.1.7:
     rimraf "^2.5.1"
     write-file-atomic "^2.4.2"
 
+electron-log@^3.0.8:
+  version "3.0.9"
+  resolved "https://registry.yarnpkg.com/electron-log/-/electron-log-3.0.9.tgz#53ff1fcdb2f3e4a73ea7096d2f7204121109ec6f"
+  integrity sha512-kfV4riUqW8uooYLAfrlB3EJW66W29ePipJU4/Fm8UxQekVNcR2qHI/0tiJX3oWM79VdAUiiYqL9V49lhnSIO8g==
+
 electron-notarize@^0.1.1:
   version "0.1.1"
   resolved "https://registry.yarnpkg.com/electron-notarize/-/electron-notarize-0.1.1.tgz#c3563d70c5e7b3315f44e8495b30050a8c408b91"
@@ -6738,9 +6743,9 @@ shebang-regex@^1.0.0:
   integrity sha1-2kL0l0DAtC2yypcoVxyxkMmO/qM=
 
 shell-quote@^1.6.1:
-  version "1.7.2"
-  resolved "https://registry.yarnpkg.com/shell-quote/-/shell-quote-1.7.2.tgz#67a7d02c76c9da24f99d20808fcaded0e0e04be2"
-  integrity sha512-mRz/m/JVscCrkMyPqHc/bczi3OQHkLTqXHEFu0zDhK/qfv3UcOA4SVmRCLmos4bhjr9ekVQubj/R7waKapmiQg==
+  version "1.7.3"
+  resolved "https://registry.yarnpkg.com/shell-quote/-/shell-quote-1.7.3.tgz#aa40edac170445b9a431e17bb62c0b881b9c4123"
+  integrity sha512-Vpfqwm4EnqGdlsBFNmHhxhElJYrdfcxPThu+ryKS5J8L/fhAwLazFZtq+S+TWZ9ANj2piSQLGj6NQg+lKPmxrw==
 
 signal-exit@^3.0.0, signal-exit@^3.0.2:
   version "3.0.2"
