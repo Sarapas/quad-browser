@@ -17,7 +17,7 @@
     "electron": "^6.0.10",
     "electron-installer-dmg": "^3.0.0",
     "electron-packager": "^14.0.4",
-    "@vue/cli-service": "^3.11.0",
+    "@vue/cli-service": "^5.0.8",
     "vue-template-compiler": "^2.6.10"
   },
   "dependencies": {
